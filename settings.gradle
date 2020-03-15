@@ -1,0 +1,2 @@
+include ':app', ':consecutivescroller'
+rootProject.name='ConsecutiveScroller'
