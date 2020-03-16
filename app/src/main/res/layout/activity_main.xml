@@ -9,7 +9,9 @@
     <com.donkingliang.consecutivescroller.ConsecutiveScrollerLayout
         android:id="@+id/scrollView"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:padding="20dp"
+        android:scrollbars="vertical">
 
         <TextView
             android:layout_width="match_parent"
@@ -205,15 +207,6 @@
                     android:layout_width="match_parent"
                     android:layout_height="60dp"
                     android:background="@android:color/holo_green_light" />
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="60dp"
-                    android:background="@android:color/holo_purple" />
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="60dp"
-                    android:background="@android:color/holo_green_light" />
 
                 <TextView
                     android:layout_width="match_parent"
@@ -244,6 +237,17 @@
                     android:layout_width="match_parent"
                     android:layout_height="60dp"
                     android:background="@android:color/holo_green_light" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="60dp"
+                    android:background="@android:color/holo_purple" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="60dp"
+                    android:background="@android:color/holo_green_light" />
+
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="60dp"
