@@ -24,6 +24,13 @@ public class MainActivity extends AppCompatActivity {
                 Log.e("eee",scrollY + " " + oldScrollY);
             }
         });
+
+        findViewById(R.id.text).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                v.setVisibility(View.GONE);
+            }
+        });
     }
 
 }
