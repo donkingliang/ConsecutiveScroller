@@ -257,7 +257,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                     } else {
                         int selfOldScrollY = getScrollY();
                         scrollOffset = Math.min(remainder,
-                                firstVisibleView.getBottom() - getScrollY());
+                                firstVisibleView.getBottom() - getPaddingTop() - getScrollY() );
                         scrollOffset = Math.min(scrollOffset, mScrollRange - scrollOffset);
                         super.scrollTo(0, getScrollY() + scrollOffset);
                         scrollOffset = getScrollY() - selfOldScrollY;
@@ -275,7 +275,6 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
 
     private void scrollDown(int offset) {
         int scrollOffset = 0;
-        int scrollY = getScrollY();
         int remainder = offset;
         int oldScrollY = mOwnScrollY;
         do {
@@ -292,9 +291,10 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                         lastVisibleView.scrollBy(0, scrollOffset);
                         scrollOffset = lastVisibleView.getScrollY() - childOldScrollY;
                     } else {
+                        int scrollY = getScrollY();
                         int selfOldScrollY = getScrollY();
                         scrollOffset = Math.max(remainder,
-                                lastVisibleView.getTop() - scrollY - getHeight());
+                                lastVisibleView.getTop() + getPaddingBottom() - scrollY - getHeight());
                         scrollOffset = Math.max(scrollOffset, -scrollY);
                         super.scrollTo(0, scrollY + scrollOffset);
                         scrollOffset = getScrollY() - selfOldScrollY;
@@ -384,7 +384,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
         int count = children.size();
         for (int i = 0; i < count; i++) {
             View child = children.get(i);
-            if (child.getTop() <= offset && child.getBottom() > offset){
+            if (child.getTop() <= offset && child.getBottom() > offset) {
                 return child;
             }
         }
@@ -397,12 +397,12 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
      * @return
      */
     private View findLastVisibleView() {
-        int offset = getHeight() - getPaddingBottom() + getScrollY() ;
+        int offset = getHeight() - getPaddingBottom() + getScrollY();
         List<View> children = getNonGoneChildren();
         int count = children.size();
         for (int i = 0; i < count; i++) {
             View child = children.get(i);
-            if (child.getTop() < offset && child.getBottom() >= offset){
+            if (child.getTop() < offset && child.getBottom() >= offset) {
                 return child;
             }
         }
