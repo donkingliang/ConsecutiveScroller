@@ -2,6 +2,7 @@ package com.donkingliang.consecutivescroller;
 
 import android.content.Context;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.VelocityTracker;
 import android.view.View;
@@ -19,6 +20,39 @@ import java.util.List;
  * @Date 2020/3/13
  */
 public class ConsecutiveScrollerLayout extends ViewGroup {
+
+    /**
+     * 记录布局垂直的偏移量，它是包括了自己的偏移量(mScrollY)和所有子View的偏移量的总和，
+     * 取代View原有的mScrollY作为对外提供的偏移量值
+     */
+    private int mOwnScrollY;
+
+    /**
+     * 联动容器可滚动的范围
+     */
+    private int mScrollRange;
+
+    /**
+     * 联动容器滚动定位子view
+     */
+    private Scroller mScroller;
+
+    /**
+     * VelocityTracker
+     */
+    private VelocityTracker mVelocityTracker;
+
+    /**
+     * MaximumVelocity
+     */
+    private int mMaximumVelocity;
+
+    /**
+     * MinimumVelocity
+     */
+    private int mMinimumVelocity;
+
+    private int mTouchSlop;
 
     /**
      * 手指滑动方向
@@ -41,34 +75,11 @@ public class ConsecutiveScrollerLayout extends ViewGroup {
      * 手指触摸屏幕时的触摸点
      */
     private int mTouchY;
+    private int mEventX;
+    private int mEventY;
 
-    /**
-     * 记录布局垂直的偏移量，它是包括了自己的偏移量(mScrollY)和所有子View的偏移量的总和，
-     * 取代View原有的mScrollY作为对外提供的偏移量值
-     */
-    private int mOwnScrollY;
-
-    /**
-     * 联动容器可滚动的范围
-     */
-    private int mScrollRange;
-
-    /**
-     * 联动容器滚动定位子view
-     */
-    private Scroller mScroller;
-    /**
-     * VelocityTracker
-     */
-    private VelocityTracker mVelocityTracker;
-    /**
-     * MaximumVelocity
-     */
-    private int mMaximumVelocity;
-    /**
-     * MinimumVelocity
-     */
-    private int mMinimumVelocity;
+    /** 是否处于拖拽状态 */
+    private boolean mIsDragging;
 
     /**
      * 滑动监听
@@ -91,7 +102,8 @@ public class ConsecutiveScrollerLayout extends ViewGroup {
         ViewConfiguration viewConfiguration = ViewConfiguration.get(context);
         mMaximumVelocity = viewConfiguration.getScaledMaximumFlingVelocity();
         mMinimumVelocity = viewConfiguration.getScaledMinimumFlingVelocity();
-
+        mTouchSlop = viewConfiguration.getTouchSlop();
+        Log.e("eee",mTouchSlop + " mTouchSlop");
         // 确保联动容器调用onDraw()方法
         setWillNotDraw(false);
         // enable vertical scrollbar
@@ -146,35 +158,76 @@ public class ConsecutiveScrollerLayout extends ViewGroup {
 
     @Override
     public boolean dispatchTouchEvent(MotionEvent ev) {
-        if (ev.getAction() == MotionEvent.ACTION_DOWN) {
-            // 停止滑动
-            stopScroll();
+        switch (ev.getAction()){
+            case MotionEvent.ACTION_DOWN:
+                // 停止滑动
+                stopScroll();
+                checkTargetsScroll();
 
-            checkTargetsScroll();
+                mEventX = (int)ev.getX();
+                mEventY = (int)ev.getY();
+                Log.e("eee","dispatchTouchEvent ACTION_DOWN");
+                break;
+            case MotionEvent.ACTION_MOVE:
+                Log.e("eee","dispatchTouchEvent ACTION_MOVE  ");
+                int offsetX = (int)ev.getX() - mEventX;
+                int offsetY = (int)ev.getY() - mEventY;
+                if (Math.abs(offsetY) >= 5) {
+                    mScrollOrientation = SCROLL_ORIENTATION_VERTICAL;
+                }
+                if (Math.abs(offsetX) >= mTouchSlop) {
+                    mScrollOrientation = SCROLL_ORIENTATION_HORIZONTAL;
+                }
+
+                mEventX = (int)ev.getX();
+                mEventY = (int)ev.getY();
+                break;
+            case MotionEvent.ACTION_CANCEL:
+            case MotionEvent.ACTION_UP:
+                Log.e("eee","dispatchTouchEvent ACTION_UP");
+                mIsDragging = false;
+                mEventX = 0;
+                mEventY = 0;
+
+                mScrollOrientation = SCROLL_ORIENTATION_NONE;
+                break;
         }
+
         return super.dispatchTouchEvent(ev);
     }
 
     @Override
     public boolean onInterceptTouchEvent(MotionEvent ev) {
-
-        if (ev.getAction() == MotionEvent.ACTION_MOVE) {
-            // 拦截所有的滑动事件，自己处理
-            return true;
-        } else {
-            return super.onInterceptTouchEvent(ev);
+        switch (ev.getAction()) {
+            case MotionEvent.ACTION_DOWN:
+                Log.e("eee","onInterceptTouchEvent ACTION_DOWN");
+                break;
+            case MotionEvent.ACTION_MOVE:
+                Log.e("eee","onInterceptTouchEvent ACTION_MOVE  " + (mScrollOrientation == SCROLL_ORIENTATION_VERTICAL));
+                // 如果是上下滑动，拦截事件
+                if (mScrollOrientation == SCROLL_ORIENTATION_VERTICAL){
+                    return true;
+                }
+                break;
+            case MotionEvent.ACTION_CANCEL:
+            case MotionEvent.ACTION_UP:
+                Log.e("eee","onInterceptTouchEvent ACTION_UP");
+                break;
         }
+        return super.onInterceptTouchEvent(ev);
     }
 
     @Override
     public boolean onTouchEvent(MotionEvent ev) {
         switch (ev.getAction()) {
             case MotionEvent.ACTION_DOWN:
+                Log.e("eee","onTouchEvent ACTION_DOWN");
                 mTouchY = (int) ev.getY();
                 initOrResetVelocityTracker();
                 mVelocityTracker.addMovement(ev);
                 break;
             case MotionEvent.ACTION_MOVE:
+                Log.e("eee","onTouchEvent ACTION_MOVE");
                 if (mTouchY == 0) {
                     mTouchY = (int) ev.getY();
                     return true;
@@ -189,6 +242,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup {
                 break;
             case MotionEvent.ACTION_CANCEL:
             case MotionEvent.ACTION_UP:
+                Log.e("eee","onTouchEvent ACTION_UP");
                 mTouchY = 0;
 
                 if (mVelocityTracker != null) {
@@ -260,14 +314,12 @@ public class ConsecutiveScrollerLayout extends ViewGroup {
                     if (bottomOffset > 0) {
                         int childOldScrollY = ScrollUtils.computeVerticalScrollOffset(firstVisibleView);
                         scrollOffset = Math.min(remainder, bottomOffset);
-//                        firstVisibleView.scrollBy(0, scrollOffset);
                         scrollChild(firstVisibleView, scrollOffset);
                         scrollOffset = ScrollUtils.computeVerticalScrollOffset(firstVisibleView) - childOldScrollY;
                     } else {
                         int selfOldScrollY = getScrollY();
                         scrollOffset = Math.min(remainder,
                                 firstVisibleView.getBottom() - getPaddingTop() - getScrollY());
-//                        scrollOffset = Math.min(scrollOffset, mScrollRange - scrollOffset);
                         scrollSelf(getScrollY() + scrollOffset);
                         scrollOffset = getScrollY() - selfOldScrollY;
                     }
@@ -305,7 +357,6 @@ public class ConsecutiveScrollerLayout extends ViewGroup {
                         int selfOldScrollY = getScrollY();
                         scrollOffset = Math.max(remainder,
                                 lastVisibleView.getTop() + getPaddingBottom() - scrollY - getHeight());
-//                        scrollOffset = Math.max(scrollOffset, -scrollY);
                         scrollSelf(scrollY + scrollOffset);
                         scrollOffset = getScrollY() - selfOldScrollY;
                     }
