@@ -42,6 +42,8 @@ public class ConsecutiveScrollerLayout extends ViewGroup {
      */
     private VelocityTracker mVelocityTracker;
 
+    private Scroller mAdjustScroller;
+    private VelocityTracker mAdjustVelocityTracker;
     /**
      * MaximumVelocity
      */
@@ -78,14 +80,15 @@ public class ConsecutiveScrollerLayout extends ViewGroup {
     private int mEventX;
     private int mEventY;
 
-    /** 是否处于拖拽状态 */
+    /**
+     * 是否处于拖拽状态
+     */
     private boolean mIsDragging;
 
     /**
      * 滑动监听
      */
     protected OnScrollChangeListener mOnScrollChangeListener;
-
 
     public ConsecutiveScrollerLayout(Context context) {
         this(context, null);
@@ -102,8 +105,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup {
         ViewConfiguration viewConfiguration = ViewConfiguration.get(context);
         mMaximumVelocity = viewConfiguration.getScaledMaximumFlingVelocity();
         mMinimumVelocity = viewConfiguration.getScaledMinimumFlingVelocity();
-        mTouchSlop = viewConfiguration.getTouchSlop();
-        Log.e("eee",mTouchSlop + " mTouchSlop");
+        mTouchSlop = viewConfiguration.getScaledTouchSlop();
         // 确保联动容器调用onDraw()方法
         setWillNotDraw(false);
         // enable vertical scrollbar
@@ -156,35 +158,48 @@ public class ConsecutiveScrollerLayout extends ViewGroup {
         checkScroll();
     }
 
+    int mScrollOffset = 0;
+
     @Override
     public boolean dispatchTouchEvent(MotionEvent ev) {
-        switch (ev.getAction()){
+        switch (ev.getAction()) {
             case MotionEvent.ACTION_DOWN:
                 // 停止滑动
                 stopScroll();
                 checkTargetsScroll();
 
-                mEventX = (int)ev.getX();
-                mEventY = (int)ev.getY();
-                Log.e("eee","dispatchTouchEvent ACTION_DOWN");
+                mEventX = (int) ev.getX();
+                mEventY = (int) ev.getY();
                 break;
             case MotionEvent.ACTION_MOVE:
-                Log.e("eee","dispatchTouchEvent ACTION_MOVE  ");
-                int offsetX = (int)ev.getX() - mEventX;
-                int offsetY = (int)ev.getY() - mEventY;
-                if (Math.abs(offsetY) >= 5) {
-                    mScrollOrientation = SCROLL_ORIENTATION_VERTICAL;
-                }
-                if (Math.abs(offsetX) >= mTouchSlop) {
-                    mScrollOrientation = SCROLL_ORIENTATION_HORIZONTAL;
+                int offsetX = (int) ev.getX() - mEventX;
+                int offsetY = (int) ev.getY() - mEventY;
+
+                View target = getTouchTarget((int) ev.getRawX(), (int) ev.getRawY());
+                if (target != null && ScrollUtils.canScrollVertically(target)) {
+                    if (Math.abs(offsetY) >= mTouchSlop) {
+                        mScrollOrientation = SCROLL_ORIENTATION_VERTICAL;
+                    }
+
+//                getTouchables()
+
+//                if (Math.abs(offsetX) >= mTouchSlop) {
+//                    mScrollOrientation = SCROLL_ORIENTATION_HORIZONTAL;
+//                }
+
+                    if (mScrollOrientation == SCROLL_ORIENTATION_NONE) {
+                        return true;
+                    }
                 }
 
-                mEventX = (int)ev.getX();
-                mEventY = (int)ev.getY();
+                mScrollOffset = offsetY;
+
+                mEventX = (int) ev.getX();
+                mEventY = (int) ev.getY();
                 break;
             case MotionEvent.ACTION_CANCEL:
             case MotionEvent.ACTION_UP:
-                Log.e("eee","dispatchTouchEvent ACTION_UP");
+                mScrollOffset = 0;
                 mIsDragging = false;
                 mEventX = 0;
                 mEventY = 0;
@@ -193,25 +208,57 @@ public class ConsecutiveScrollerLayout extends ViewGroup {
                 break;
         }
 
-        return super.dispatchTouchEvent(ev);
+        List<View> views = ScrollUtils.getTouchViews(this, (int) ev.getRawX(), (int) ev.getRawY());
+        List<Integer> offset = ScrollUtils.getScrollOffsetForViews(views);
+
+        boolean dispatch = super.dispatchTouchEvent(ev);
+
+        switch (ev.getAction()) {
+            case MotionEvent.ACTION_DOWN:
+                initOrResetAdjustVelocityTracker();
+                mAdjustVelocityTracker.addMovement(ev);
+                break;
+            case MotionEvent.ACTION_MOVE:
+                if (mScrollOffset != 0) {
+                    if (ScrollUtils.equalsOffsets(offset, ScrollUtils.getScrollOffsetForViews(views))) {
+                        scrollBy(0, -mScrollOffset);
+                    }
+                }
+                initAdjustVelocityTrackerIfNotExists();
+                mAdjustVelocityTracker.addMovement(ev);
+                break;
+            case MotionEvent.ACTION_CANCEL:
+            case MotionEvent.ACTION_UP:
+                if (mAdjustVelocityTracker != null) {
+                    if (mScroller.isFinished()) {
+                        mAdjustVelocityTracker.computeCurrentVelocity(1000, mMaximumVelocity);
+                        int yVelocity = (int) mAdjustVelocityTracker.getYVelocity();
+                        recycleAdjustVelocityTracker();
+                        fling(-yVelocity);
+                    }
+                }
+                break;
+        }
+        return dispatch;
     }
 
     @Override
     public boolean onInterceptTouchEvent(MotionEvent ev) {
         switch (ev.getAction()) {
             case MotionEvent.ACTION_DOWN:
-                Log.e("eee","onInterceptTouchEvent ACTION_DOWN");
                 break;
             case MotionEvent.ACTION_MOVE:
-                Log.e("eee","onInterceptTouchEvent ACTION_MOVE  " + (mScrollOrientation == SCROLL_ORIENTATION_VERTICAL));
-                // 如果是上下滑动，拦截事件
-                if (mScrollOrientation == SCROLL_ORIENTATION_VERTICAL){
-                    return true;
+                View target = getTouchTarget((int) ev.getRawX(), (int) ev.getRawY());
+                if (target != null && ScrollUtils.canScrollVertically(target)) {
+                    // 如果是上下滑动，拦截事件
+                    if (mScrollOrientation == SCROLL_ORIENTATION_VERTICAL) {
+                        return true;
+                    }
                 }
+
                 break;
             case MotionEvent.ACTION_CANCEL:
             case MotionEvent.ACTION_UP:
-                Log.e("eee","onInterceptTouchEvent ACTION_UP");
                 break;
         }
         return super.onInterceptTouchEvent(ev);
@@ -221,13 +268,11 @@ public class ConsecutiveScrollerLayout extends ViewGroup {
     public boolean onTouchEvent(MotionEvent ev) {
         switch (ev.getAction()) {
             case MotionEvent.ACTION_DOWN:
-                Log.e("eee","onTouchEvent ACTION_DOWN");
                 mTouchY = (int) ev.getY();
                 initOrResetVelocityTracker();
                 mVelocityTracker.addMovement(ev);
                 break;
             case MotionEvent.ACTION_MOVE:
-                Log.e("eee","onTouchEvent ACTION_MOVE");
                 if (mTouchY == 0) {
                     mTouchY = (int) ev.getY();
                     return true;
@@ -242,7 +287,6 @@ public class ConsecutiveScrollerLayout extends ViewGroup {
                 break;
             case MotionEvent.ACTION_CANCEL:
             case MotionEvent.ACTION_UP:
-                Log.e("eee","onTouchEvent ACTION_UP");
                 mTouchY = 0;
 
                 if (mVelocityTracker != null) {
@@ -286,6 +330,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup {
      * @param y
      */
     private void dispatchScroll(int y) {
+//        Log.e("eee","滚动分发");
         int offset = y - mOwnScrollY;
         if (mOwnScrollY < y) {
             scrollUp(offset);
@@ -527,6 +572,36 @@ public class ConsecutiveScrollerLayout extends ViewGroup {
     }
 
     /**
+     * 初始化VelocityTracker
+     */
+    private void initOrResetAdjustVelocityTracker() {
+        if (mAdjustVelocityTracker == null) {
+            mAdjustVelocityTracker = VelocityTracker.obtain();
+        } else {
+            mAdjustVelocityTracker.clear();
+        }
+    }
+
+    /**
+     * 初始化VelocityTracker
+     */
+    private void initAdjustVelocityTrackerIfNotExists() {
+        if (mAdjustVelocityTracker == null) {
+            mAdjustVelocityTracker = VelocityTracker.obtain();
+        }
+    }
+
+    /**
+     * 回收VelocityTracker
+     */
+    private void recycleAdjustVelocityTracker() {
+        if (mAdjustVelocityTracker != null) {
+            mAdjustVelocityTracker.recycle();
+            mAdjustVelocityTracker = null;
+        }
+    }
+
+    /**
      * 停止滑动
      */
     private void stopScroll() {
@@ -667,6 +742,20 @@ public class ConsecutiveScrollerLayout extends ViewGroup {
     @Override
     public int computeVerticalScrollExtent() {
         return getHeight() - getPaddingTop() - getPaddingBottom();
+    }
+
+    //根据坐标返回触摸到的View
+    private View getTouchTarget(int touchX, int touchY) {
+        View targetView = null;
+        // 获取可触摸的View
+        List<View> touchableViews = getNonGoneChildren();
+        for (View touchableView : touchableViews) {
+            if (ScrollUtils.isTouchPointInView(touchableView, touchX, touchY)) {
+                targetView = touchableView;
+                break;
+            }
+        }
+        return targetView;
     }
 
     public interface OnScrollChangeListener {

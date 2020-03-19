@@ -9,9 +9,11 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.webkit.WebView;
+import android.widget.AdapterView;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.ScrollView;
+import android.widget.Toast;
 
 import com.donkingliang.consecutivescroller.ConsecutiveScrollerLayout;
 import com.donkingliang.consecutivescrollerdemo.adapter.ListViewAdapter;
@@ -67,17 +69,29 @@ public class MainActivity extends AppCompatActivity {
 //        });
 
         RecyclerView recyclerView = findViewById(R.id.recyclerView);
-        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        recyclerView.setLayoutManager(new LinearLayoutManager(this,LinearLayoutManager.VERTICAL,false));
         adapter = new RecyclerViewAdapter(this);
-        adapter.setCount(40);
+        adapter.setCount(30);
         recyclerView.setAdapter(adapter);
 
         ListView listView = findViewById(R.id.listView);
         listViewAdapter = new ListViewAdapter(this);
         listViewAdapter.setCount(10);
         listView.setAdapter(listViewAdapter);
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                Toast.makeText(MainActivity.this,"item被点击",Toast.LENGTH_SHORT).show();
+            }
+        });
 
-
+//        listView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+//            @Override
+//            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+//                Toast.makeText(MainActivity.this,"item被长按",Toast.LENGTH_SHORT).show();
+//                return true;
+//            }
+//        });
         WebView webView = findViewById(R.id.webView);
         webView.loadUrl("https://github.com/donkingliang");
 
