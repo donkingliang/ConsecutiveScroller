@@ -8,6 +8,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 import android.widget.AdapterView;
 import android.widget.ListAdapter;
@@ -24,6 +25,7 @@ public class MainActivity extends AppCompatActivity {
     RecyclerViewAdapter adapter;
 
     ListViewAdapter listViewAdapter;
+    ConsecutiveScrollerLayout scrollerLayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,10 +35,10 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.button1).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (listViewAdapter.getCount() > 5) {
-                    listViewAdapter.setCount(5);
+                if (adapter.getItemCount() > 5) {
+                    adapter.setCount(5);
                 } else {
-                    listViewAdapter.setCount(40);
+                    adapter.setCount(40);
                 }
             }
         });
@@ -53,7 +55,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-//        ConsecutiveScrollerLayout scrollView = findViewById(R.id.scrollView);
+        scrollerLayout = findViewById(R.id.scrollView);
 //        scrollView.setOnVerticalScrollChangeListener(new ConsecutiveScrollerLayout.OnScrollChangeListener() {
 //            @Override
 //            public void onScrollChange(View v, int scrollY, int oldScrollY) {
@@ -69,7 +71,7 @@ public class MainActivity extends AppCompatActivity {
 //        });
 
         RecyclerView recyclerView = findViewById(R.id.recyclerView);
-        recyclerView.setLayoutManager(new LinearLayoutManager(this,LinearLayoutManager.VERTICAL,false));
+        recyclerView.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
         adapter = new RecyclerViewAdapter(this);
         adapter.setCount(30);
         recyclerView.setAdapter(adapter);
@@ -81,7 +83,7 @@ public class MainActivity extends AppCompatActivity {
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Toast.makeText(MainActivity.this,"item被点击",Toast.LENGTH_SHORT).show();
+                Toast.makeText(MainActivity.this, "item被点击", Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -94,6 +96,16 @@ public class MainActivity extends AppCompatActivity {
 //        });
         WebView webView = findViewById(R.id.webView);
         webView.loadUrl("https://github.com/donkingliang");
+
+        webView.setWebChromeClient(new WebChromeClient() {
+            @Override
+            public void onProgressChanged(WebView view, int newProgress) {
+                super.onProgressChanged(view, newProgress);
+                // 在webView加载的过程中，用户滚动了webView内容，可能会使webView的显示与scrollerLayout断层，
+                // 需要让scrollerLayout重新检查一下所有View的显示位置
+                scrollerLayout.checkScrollInLayoutChange();
+            }
+        });
 
     }
 

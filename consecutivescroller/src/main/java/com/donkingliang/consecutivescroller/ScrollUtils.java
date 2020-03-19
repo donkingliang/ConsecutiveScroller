@@ -67,7 +67,7 @@ public class ScrollUtils {
      * @return
      */
     static int getScrollTopOffset(View view) {
-        if (canScrollVertically(view, -1)) {
+        if (isConsecutiveScrollerChild(view) && canScrollVertically(view, -1)) {
             return -computeVerticalScrollOffset(view);
         } else {
             return 0;
@@ -81,7 +81,7 @@ public class ScrollUtils {
      * @return
      */
     static int getScrollBottomOffset(View view) {
-        if (canScrollVertically(view, 1)) {
+        if (isConsecutiveScrollerChild(view) && canScrollVertically(view, 1)) {
             return computeVerticalScrollRange(view) - computeVerticalScrollOffset(view)
                     - computeVerticalScrollExtent(view);
         } else {
@@ -96,43 +96,41 @@ public class ScrollUtils {
      * @return
      */
     static boolean canScrollVertically(View view) {
-        return canScrollVertically(view, 1) || canScrollVertically(view, -1)
-//                || isVerticallyScrollView(view)
-                ;
+        return isConsecutiveScrollerChild(view) && (canScrollVertically(view, 1) || canScrollVertically(view, -1));
     }
 
-    /**
-     * 是否是垂直滚动布局
-     *
-     * @param view
-     * @return
-     */
-    static boolean isVerticallyScrollView(View view) {
-        if (view instanceof ScrollView
-                || view instanceof NestedScrollView
-                || view instanceof AbsListView
-                || view instanceof WebView) {
-            return true;
-        }
-
-        if (view instanceof RecyclerView) {
-            RecyclerView recyclerView = (RecyclerView) view;
-            LayoutManager lm = recyclerView.getLayoutManager();
-            if (lm != null) {
-                if (lm instanceof LinearLayoutManager) {
-                    return ((LinearLayoutManager) lm).getOrientation() == RecyclerView.VERTICAL;
-                }
-
-                if (lm instanceof StaggeredGridLayoutManager) {
-                    return ((StaggeredGridLayoutManager) lm).getOrientation() == RecyclerView.VERTICAL;
-                }
-            }
-
-            return true;
-        }
-
-        return false;
-    }
+//    /**
+//     * 是否是垂直滚动布局
+//     *
+//     * @param view
+//     * @return
+//     */
+//    static boolean isVerticallyScrollView(View view) {
+//        if (view instanceof ScrollView
+//                || view instanceof NestedScrollView
+//                || view instanceof AbsListView
+//                || view instanceof WebView) {
+//            return true;
+//        }
+//
+//        if (view instanceof RecyclerView) {
+//            RecyclerView recyclerView = (RecyclerView) view;
+//            LayoutManager lm = recyclerView.getLayoutManager();
+//            if (lm != null) {
+//                if (lm instanceof LinearLayoutManager) {
+//                    return ((LinearLayoutManager) lm).getOrientation() == RecyclerView.VERTICAL;
+//                }
+//
+//                if (lm instanceof StaggeredGridLayoutManager) {
+//                    return ((StaggeredGridLayoutManager) lm).getOrientation() == RecyclerView.VERTICAL;
+//                }
+//            }
+//
+//            return true;
+//        }
+//
+//        return false;
+//    }
 
     /**
      * Check if this view can be scrolled vertically in a certain direction.
@@ -206,6 +204,20 @@ public class ScrollUtils {
                 return false;
             }
         }
+        return true;
+    }
+
+    /**
+     * 判断View是否是支持连续滚动的
+     *
+     * @param view
+     * @return
+     */
+    static boolean isConsecutiveScrollerChild(View view) {
+        if (view instanceof IConsecutiveScroller) {
+            return ((IConsecutiveScroller) view).isConsecutiveScroller();
+        }
+
         return true;
     }
 }
