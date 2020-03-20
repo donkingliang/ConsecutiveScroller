@@ -11,6 +11,7 @@ import android.view.View;
 import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 import android.widget.AdapterView;
+import android.widget.LinearLayout;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.ScrollView;
@@ -55,7 +56,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        scrollerLayout = findViewById(R.id.scrollView);
+        scrollerLayout = findViewById(R.id.scrollerLayout);
 //        scrollView.setOnVerticalScrollChangeListener(new ConsecutiveScrollerLayout.OnScrollChangeListener() {
 //            @Override
 //            public void onScrollChange(View v, int scrollY, int oldScrollY) {

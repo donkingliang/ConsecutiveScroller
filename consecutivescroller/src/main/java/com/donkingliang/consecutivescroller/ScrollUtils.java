@@ -2,20 +2,11 @@ package com.donkingliang.consecutivescroller;
 
 import android.view.View;
 import android.view.ViewGroup;
-import android.webkit.WebView;
 import android.widget.AbsListView;
-import android.widget.ListView;
-import android.widget.ScrollView;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
-
-import androidx.core.widget.NestedScrollView;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-import androidx.recyclerview.widget.RecyclerView.LayoutManager;
-import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 
 /**
  * @Author teach liang
@@ -99,39 +90,6 @@ public class ScrollUtils {
         return isConsecutiveScrollerChild(view) && (canScrollVertically(view, 1) || canScrollVertically(view, -1));
     }
 
-//    /**
-//     * 是否是垂直滚动布局
-//     *
-//     * @param view
-//     * @return
-//     */
-//    static boolean isVerticallyScrollView(View view) {
-//        if (view instanceof ScrollView
-//                || view instanceof NestedScrollView
-//                || view instanceof AbsListView
-//                || view instanceof WebView) {
-//            return true;
-//        }
-//
-//        if (view instanceof RecyclerView) {
-//            RecyclerView recyclerView = (RecyclerView) view;
-//            LayoutManager lm = recyclerView.getLayoutManager();
-//            if (lm != null) {
-//                if (lm instanceof LinearLayoutManager) {
-//                    return ((LinearLayoutManager) lm).getOrientation() == RecyclerView.VERTICAL;
-//                }
-//
-//                if (lm instanceof StaggeredGridLayoutManager) {
-//                    return ((StaggeredGridLayoutManager) lm).getOrientation() == RecyclerView.VERTICAL;
-//                }
-//            }
-//
-//            return true;
-//        }
-//
-//        return false;
-//    }
-
     /**
      * Check if this view can be scrolled vertically in a certain direction.
      *
@@ -214,8 +172,11 @@ public class ScrollUtils {
      * @return
      */
     static boolean isConsecutiveScrollerChild(View view) {
-        if (view instanceof IConsecutiveScroller) {
-            return ((IConsecutiveScroller) view).isConsecutiveScroller();
+
+        ViewGroup.LayoutParams lp = view.getLayoutParams();
+
+        if (lp instanceof ConsecutiveScrollerLayout.LayoutParams) {
+            return ((ConsecutiveScrollerLayout.LayoutParams) lp).isConsecutive;
         }
 
         return true;

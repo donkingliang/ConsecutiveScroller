@@ -1,6 +1,7 @@
 package com.donkingliang.consecutivescroller;
 
 import android.content.Context;
+import android.content.res.TypedArray;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -8,8 +9,6 @@ import android.view.VelocityTracker;
 import android.view.View;
 import android.view.ViewConfiguration;
 import android.view.ViewGroup;
-import android.webkit.WebChromeClient;
-import android.webkit.WebView;
 import android.widget.AbsListView;
 import android.widget.Scroller;
 
@@ -58,28 +57,13 @@ public class ConsecutiveScrollerLayout extends ViewGroup {
     private int mTouchSlop;
 
     /**
-     * 手指滑动方向
-     */
-    private static int SCROLL_ORIENTATION_NONE = -1;
-    /**
-     * 手指滑动方向 -- 垂直
-     */
-    private static int SCROLL_ORIENTATION_VERTICAL = 0;
-    /**
-     * 手指滑动方向 -- 水平
-     */
-    private static int SCROLL_ORIENTATION_HORIZONTAL = 1;
-    /**
-     * 手指滑动方向
-     */
-    private int mScrollOrientation = SCROLL_ORIENTATION_NONE;
-
-    /**
      * 手指触摸屏幕时的触摸点
      */
     private int mTouchY;
     private int mEventX;
     private int mEventY;
+    private int mScrollOffset = 0;
+    private boolean isConsecutiveScrollerChild = false;
 
     /**
      * 是否处于拖拽状态
@@ -114,7 +98,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup {
     }
 
     @Override
-    public void addView(View child, int index, LayoutParams params) {
+    public void addView(View child, int index, ViewGroup.LayoutParams params) {
         super.addView(child, index, params);
 
         // 去掉子View的滚动条。选择在这里做这个操作，而不是在onFinishInflate方法中完成，是为了兼顾用代码add子View的情况
@@ -159,8 +143,21 @@ public class ConsecutiveScrollerLayout extends ViewGroup {
         checkScrollInLayoutChange();
     }
 
-    int mScrollOffset = 0;
-    boolean isConsecutiveScrollerChild = false;
+
+    @Override
+    protected LayoutParams generateDefaultLayoutParams() {
+        return new LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+    }
+
+    @Override
+    protected LayoutParams generateLayoutParams(ViewGroup.LayoutParams p) {
+        return new LayoutParams(p);
+    }
+
+    @Override
+    public LayoutParams generateLayoutParams(AttributeSet attrs) {
+        return new LayoutParams(getContext(), attrs);
+    }
 
     @Override
     public boolean dispatchTouchEvent(MotionEvent ev) {
@@ -200,8 +197,6 @@ public class ConsecutiveScrollerLayout extends ViewGroup {
                 mIsDragging = false;
                 mEventX = 0;
                 mEventY = 0;
-
-                mScrollOrientation = SCROLL_ORIENTATION_NONE;
                 break;
         }
         boolean dispatch;
@@ -235,6 +230,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup {
                 break;
             case MotionEvent.ACTION_CANCEL:
             case MotionEvent.ACTION_UP:
+                isConsecutiveScrollerChild = false;
                 if (mAdjustVelocityTracker != null) {
                     if (mScroller.isFinished()) {
                         mAdjustVelocityTracker.computeCurrentVelocity(1000, mMaximumVelocity);
@@ -787,15 +783,43 @@ public class ConsecutiveScrollerLayout extends ViewGroup {
     private boolean isIntercept(MotionEvent ev) {
         View target = getTouchTarget((int) ev.getRawX(), (int) ev.getRawY());
 
-        if (target instanceof IConsecutiveScroller) {
-            return ((IConsecutiveScroller) target).isConsecutiveScroller();
-        }
+        if (target != null) {
+            ViewGroup.LayoutParams lp = target.getLayoutParams();
+            if (lp instanceof ConsecutiveScrollerLayout.LayoutParams) {
+                if (!((ConsecutiveScrollerLayout.LayoutParams) lp).isConsecutive){
+                    return false;
+                }
+            }
 
-        if (target != null && ScrollUtils.canScrollVertically(target)) {
-            return true;
+            if (ScrollUtils.canScrollVertically(target)) {
+                return true;
+            }
         }
 
         return false;
+    }
+
+    public static class LayoutParams extends ViewGroup.LayoutParams {
+
+        public boolean isConsecutive = true;
+        public boolean isSticky = false;
+
+        public LayoutParams(Context c, AttributeSet attrs) {
+            super(c, attrs);
+            TypedArray a = c.obtainStyledAttributes(attrs, R.styleable.ConsecutiveScrollerLayout_Layout);
+
+            isConsecutive = a.getBoolean(R.styleable.ConsecutiveScrollerLayout_Layout_layout_isConsecutive, true);
+            isSticky = a.getBoolean(R.styleable.ConsecutiveScrollerLayout_Layout_layout_isSticky, false);
+            a.recycle();
+        }
+
+        public LayoutParams(int width, int height) {
+            super(width, height);
+        }
+
+        public LayoutParams(ViewGroup.LayoutParams source) {
+            super(source);
+        }
     }
 
     public interface OnScrollChangeListener {

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resources>
+    <declare-styleable name="ConsecutiveScrollerLayout_Layout">
+        <attr name="layout_isConsecutive" format="boolean"/>
+        <attr name="layout_isSticky" format="boolean"/>
+    </declare-styleable>
+</resources>
