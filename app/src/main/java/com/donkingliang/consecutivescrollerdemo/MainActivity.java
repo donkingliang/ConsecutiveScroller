@@ -1,20 +1,16 @@
 package com.donkingliang.consecutivescrollerdemo;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.widget.NestedScrollView;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 import android.widget.AdapterView;
-import android.widget.LinearLayout;
-import android.widget.ListAdapter;
 import android.widget.ListView;
-import android.widget.ScrollView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.donkingliang.consecutivescroller.ConsecutiveScrollerLayout;
@@ -27,6 +23,7 @@ public class MainActivity extends AppCompatActivity {
 
     ListViewAdapter listViewAdapter;
     ConsecutiveScrollerLayout scrollerLayout;
+    TextView text2;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,12 +61,25 @@ public class MainActivity extends AppCompatActivity {
 //            }
 //        });
 //
-//        findViewById(R.id.text).setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                v.setVisibility(View.GONE);
-//            }
-//        });
+        text2 = findViewById(R.id.text2);
+        findViewById(R.id.text).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+//                Toast.makeText(MainActivity.this, "TextView被点击", Toast.LENGTH_SHORT).show();
+                ConsecutiveScrollerLayout.LayoutParams lp = (ConsecutiveScrollerLayout.LayoutParams)text2.getLayoutParams();
+                lp.isSticky = !lp.isSticky;
+                text2.setLayoutParams(lp);
+            }
+        });
+        text2.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                ConsecutiveScrollerLayout.LayoutParams lp = (ConsecutiveScrollerLayout.LayoutParams)text2.getLayoutParams();
+                lp.isSticky = !lp.isSticky;
+                text2.setLayoutParams(lp);
+            }
+        });
+        findViewById(R.id.linearLayout).setClickable(true);
 
         RecyclerView recyclerView = findViewById(R.id.recyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
@@ -104,7 +114,7 @@ public class MainActivity extends AppCompatActivity {
                 super.onProgressChanged(view, newProgress);
                 // 在webView加载的过程中，用户滚动了webView内容，可能会使webView的显示与scrollerLayout断层，
                 // 需要让scrollerLayout重新检查一下所有View的显示位置
-                scrollerLayout.checkScrollInLayoutChange();
+                scrollerLayout.checkLayoutChange();
             }
         });
 

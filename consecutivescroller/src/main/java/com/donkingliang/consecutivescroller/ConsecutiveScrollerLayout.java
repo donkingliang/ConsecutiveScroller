@@ -1,9 +1,10 @@
 package com.donkingliang.consecutivescroller;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.res.TypedArray;
+import android.os.Build;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.VelocityTracker;
 import android.view.View;
@@ -60,7 +61,6 @@ public class ConsecutiveScrollerLayout extends ViewGroup {
      * 手指触摸屏幕时的触摸点
      */
     private int mTouchY;
-    private int mEventX;
     private int mEventY;
     private int mScrollOffset = 0;
     private boolean isConsecutiveScrollerChild = false;
@@ -140,7 +140,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup {
         mScrollRange -= getMeasuredHeight() - getPaddingTop() - getPaddingBottom();
 
         // 布局发生变化，检测滑动位置
-        checkScrollInLayoutChange();
+        checkLayoutChange();
     }
 
 
@@ -167,13 +167,11 @@ public class ConsecutiveScrollerLayout extends ViewGroup {
                 stopScroll();
                 checkTargetsScroll(false);
 
-                mEventX = (int) ev.getX();
                 mEventY = (int) ev.getY();
 
                 isConsecutiveScrollerChild = ScrollUtils.isConsecutiveScrollerChild(getTouchTarget((int) ev.getRawX(), (int) ev.getRawY()));
                 break;
             case MotionEvent.ACTION_MOVE:
-                int offsetX = (int) ev.getX() - mEventX;
                 int offsetY = (int) ev.getY() - mEventY;
 
                 if (isIntercept(ev)) {
@@ -187,15 +185,12 @@ public class ConsecutiveScrollerLayout extends ViewGroup {
                 }
 
                 mScrollOffset = offsetY;
-
-                mEventX = (int) ev.getX();
                 mEventY = (int) ev.getY();
                 break;
             case MotionEvent.ACTION_CANCEL:
             case MotionEvent.ACTION_UP:
                 mScrollOffset = 0;
                 mIsDragging = false;
-                mEventX = 0;
                 mEventY = 0;
                 break;
         }
@@ -208,6 +203,13 @@ public class ConsecutiveScrollerLayout extends ViewGroup {
         return dispatch;
     }
 
+    /**
+     * 追踪手指的垂直滑动轨迹，通过计算ConsecutiveScrollerLayout及其后代View的滑动情况来确定
+     * ConsecutiveScrollerLayout是否需要消费事件，确保滑动布局的滑动情况与用户的滑动操作保持一致。
+     *
+     * @param ev
+     * @return
+     */
     private boolean adjustScroll(MotionEvent ev) {
         List<View> views = ScrollUtils.getTouchViews(this, (int) ev.getRawX(), (int) ev.getRawY());
         List<Integer> offset = ScrollUtils.getScrollOffsetForViews(views);
@@ -246,18 +248,11 @@ public class ConsecutiveScrollerLayout extends ViewGroup {
 
     @Override
     public boolean onInterceptTouchEvent(MotionEvent ev) {
-        switch (ev.getAction()) {
-            case MotionEvent.ACTION_DOWN:
-                break;
-            case MotionEvent.ACTION_MOVE:
-                if (isIntercept(ev)) {
-                    return true;
-                }
-
-                break;
-            case MotionEvent.ACTION_CANCEL:
-            case MotionEvent.ACTION_UP:
-                break;
+        if (ev.getAction() == MotionEvent.ACTION_MOVE) {
+            // 需要拦截事件
+            if (isIntercept(ev)) {
+                return true;
+            }
         }
         return super.onInterceptTouchEvent(ev);
     }
@@ -328,7 +323,6 @@ public class ConsecutiveScrollerLayout extends ViewGroup {
      * @param y
      */
     private void dispatchScroll(int y) {
-//        Log.e("eee","滚动分发");
         int offset = y - mOwnScrollY;
         if (mOwnScrollY < y) {
             scrollUp(offset);
@@ -374,6 +368,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup {
 
         if (oldScrollY != mOwnScrollY) {
             onScrollChange(mOwnScrollY, oldScrollY);
+            resetSticky();
         }
     }
 
@@ -411,6 +406,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup {
 
         if (oldScrollY != mOwnScrollY) {
             onScrollChange(mOwnScrollY, oldScrollY);
+            resetSticky();
         }
     }
 
@@ -457,16 +453,17 @@ public class ConsecutiveScrollerLayout extends ViewGroup {
         }
     }
 
-    // 校验滚动位置是否正确
-    public void checkScrollInLayoutChange() {
-        int oldScrollY = mOwnScrollY;
-
+    /**
+     * 布局发生变化，重新检查所有子View是否正确显示
+     */
+    public void checkLayoutChange() {
         scrollSelf(getScrollY());
         checkTargetsScroll(true);
 
-        if (oldScrollY != mOwnScrollY) {
-            onScrollChange(mOwnScrollY, oldScrollY);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            resetChildren();
         }
+        resetSticky();
     }
 
     /**
@@ -507,6 +504,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup {
 
         if (oldScrollY != mOwnScrollY) {
             onScrollChange(mOwnScrollY, oldScrollY);
+            resetSticky();
         }
     }
 
@@ -621,6 +619,126 @@ public class ConsecutiveScrollerLayout extends ViewGroup {
     }
 
     /**
+     * 返回所有的非GONE子View
+     *
+     * @return
+     */
+    private List<View> getNonGoneChildren() {
+        List<View> children = new ArrayList<>();
+        int count = getChildCount();
+        for (int i = 0; i < count; i++) {
+            View child = getChildAt(i);
+            if (child.getVisibility() != GONE) {
+                children.add(child);
+            }
+        }
+        return children;
+    }
+
+    /**
+     * 返回所有的吸顶子View(非GONE)
+     *
+     * @return
+     */
+    private List<View> getStickyChildren() {
+        List<View> children = new ArrayList<>();
+        int count = getChildCount();
+        for (int i = 0; i < count; i++) {
+            View child = getChildAt(i);
+            if (child.getVisibility() != GONE && isStickyChild(child)) {
+                children.add(child);
+            }
+        }
+        return children;
+    }
+
+    /**
+     * 是否是需要吸顶的View
+     *
+     * @param child
+     * @return
+     */
+    private boolean isStickyChild(View child) {
+        ViewGroup.LayoutParams lp = child.getLayoutParams();
+        if (lp instanceof LayoutParams) {
+            return ((LayoutParams) lp).isSticky;
+        }
+        return false;
+    }
+
+    /**
+     * 布局发生变化，可能是某个吸顶布局的isSticky发生改变，需要重新重置一下所有子View的translationY、translationZ
+     */
+    @SuppressLint("NewApi")
+    private void resetChildren() {
+        List<View> children = getNonGoneChildren();
+        for (View child : children) {
+            child.setTranslationY(0);
+            child.setTranslationZ(0);
+        }
+    }
+
+    /**
+     * 重置吸顶
+     */
+    private void resetSticky() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            List<View> children = getStickyChildren();
+            if (!children.isEmpty()) {
+                int count = children.size();
+
+                // 让所有的View恢复原来的状态
+                for (int i = 0; i < count; i++) {
+                    View child = children.get(i);
+                    child.setTranslationY(0);
+                    child.setTranslationZ(0);
+                }
+
+                // 需要吸顶的View
+                View stickyView = null;
+                // 下一个需要吸顶的View
+                View nextStickyView = null;
+
+                // 找到需要吸顶的View
+                for (int i = count - 1; i >= 0; i--) {
+                    View child = children.get(i);
+                    if (child.getTop() <= getScrollY()) {
+                        stickyView = child;
+                        if (i != count - 1) {
+                            nextStickyView = children.get(i + 1);
+                        }
+                        break;
+                    }
+                }
+
+                if (stickyView != null) {
+                    int offset = 0;
+                    if (nextStickyView != null) {
+                        offset = Math.max(0, stickyView.getHeight() - (nextStickyView.getTop() - getScrollY()));
+                    }
+                    stickyChild(stickyView, offset);
+                }
+            }
+        }
+    }
+
+    /**
+     * 子View吸顶
+     *
+     * @param child
+     * @param offset
+     */
+    @SuppressLint("NewApi")
+    private void stickyChild(View child, int offset) {
+        child.setY(getScrollY() - offset);
+        child.setTranslationZ(1);
+
+        // 把View设置为可点击的，避免吸顶View与其他子View重叠是，触摸事件透过吸顶View传递给下面的View，
+        // 导致ConsecutiveScrollerLayout追踪布局的滑动出现偏差
+        child.setClickable(true);
+    }
+
+    /**
      * 使用这个方法取代View的getScrollY
      *
      * @return
@@ -634,7 +752,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup {
      *
      * @return
      */
-    private View findFirstVisibleView() {
+    public View findFirstVisibleView() {
         int offset = getScrollY() + getPaddingTop();
         List<View> children = getNonGoneChildren();
         int count = children.size();
@@ -648,11 +766,11 @@ public class ConsecutiveScrollerLayout extends ViewGroup {
     }
 
     /**
-     * 找到当前显示的第最后一个View
+     * 找到当前显示的最后一个View
      *
      * @return
      */
-    private View findLastVisibleView() {
+    public View findLastVisibleView() {
         int offset = getHeight() - getPaddingBottom() + getScrollY();
         List<View> children = getNonGoneChildren();
         int count = children.size();
@@ -670,7 +788,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup {
      *
      * @return
      */
-    private boolean isScrollTop() {
+    public boolean isScrollTop() {
         List<View> children = getNonGoneChildren();
         if (children.size() > 0) {
             View child = children.get(0);
@@ -684,30 +802,13 @@ public class ConsecutiveScrollerLayout extends ViewGroup {
      *
      * @return
      */
-    private boolean isScrollBottom() {
+    public boolean isScrollBottom() {
         List<View> children = getNonGoneChildren();
         if (children.size() > 0) {
             View child = children.get(children.size() - 1);
             return getScrollY() >= mScrollRange && !child.canScrollVertically(1);
         }
         return true;
-    }
-
-    /**
-     * 返回所有的非GONE子View
-     *
-     * @return
-     */
-    private List<View> getNonGoneChildren() {
-        List<View> children = new ArrayList<>();
-        int count = getChildCount();
-        for (int i = 0; i < count; i++) {
-            View child = getChildAt(i);
-            if (child.getVisibility() != GONE) {
-                children.add(child);
-            }
-        }
-        return children;
     }
 
     /**
@@ -785,8 +886,8 @@ public class ConsecutiveScrollerLayout extends ViewGroup {
 
         if (target != null) {
             ViewGroup.LayoutParams lp = target.getLayoutParams();
-            if (lp instanceof ConsecutiveScrollerLayout.LayoutParams) {
-                if (!((ConsecutiveScrollerLayout.LayoutParams) lp).isConsecutive){
+            if (lp instanceof LayoutParams) {
+                if (!((LayoutParams) lp).isConsecutive) {
                     return false;
                 }
             }
@@ -826,5 +927,4 @@ public class ConsecutiveScrollerLayout extends ViewGroup {
 
         void onScrollChange(View v, int scrollY, int oldScrollY);
     }
-
 }
