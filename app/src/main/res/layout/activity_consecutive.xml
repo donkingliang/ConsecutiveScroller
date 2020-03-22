@@ -10,9 +10,9 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:padding="10dp"
-        android:text="这个页面演示子View不与ConsecutiveScrollerLayout布局整体一起滑动，而是自己处理处理滑动数据的情况。这适用于布局中的某个区域单独滑动的情况。"
+        android:text="这个页面演示子View不与ConsecutiveScrollerLayout布局整体一起滑动，而是自己处理滑动数据的情况。这适用于布局中的局部区域单独滑动的情况。"
         android:textColor="@android:color/black"
-        android:textSize="18sp"/>
+        android:textSize="18sp" />
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -32,9 +32,11 @@
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recyclerView1"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_margin="30dp"
-            android:background="@android:color/holo_red_dark"/>
+            android:layout_height="300dp"
+            android:layout_marginLeft="50dp"
+            android:layout_marginRight="50dp"
+            android:layout_marginBottom="30dp"
+            android:background="@android:color/holo_red_dark" />
 
     </LinearLayout>
 
@@ -42,9 +44,9 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:padding="10dp"
-        android:text="下面的是个HorizontalScrollView。对应水平滑动的布局，如HorizontalScrollView，水平方向的RecyclerView等，ConsecutiveScrollerLayout都能很好的处理它的滑动事件，无需再做其他处理。"
+        android:text="下面的是个HorizontalScrollView。对于水平滑动的布局，如HorizontalScrollView，水平方向的RecyclerView等，ConsecutiveScrollerLayout都能很好的处理它的滑动事件，无需再做其他处理。"
         android:textColor="@android:color/black"
-        android:textSize="18sp"/>
+        android:textSize="18sp" />
 
     <HorizontalScrollView
         android:layout_width="match_parent"
@@ -58,83 +60,84 @@
             <TextView
                 android:layout_width="100dp"
                 android:layout_height="100dp"
-                android:background="@android:color/holo_green_light"/>
+                android:background="@android:color/holo_green_light" />
 
             <TextView
                 android:layout_width="100dp"
                 android:layout_height="100dp"
-                android:background="@android:color/holo_purple"/>
+                android:background="@android:color/holo_purple" />
 
             <TextView
                 android:layout_width="100dp"
                 android:layout_height="100dp"
-                android:background="@android:color/holo_green_light"/>
+                android:background="@android:color/holo_green_light" />
 
             <TextView
                 android:layout_width="100dp"
                 android:layout_height="100dp"
-                android:background="@android:color/holo_purple"/>
+                android:background="@android:color/holo_purple" />
 
             <TextView
                 android:layout_width="100dp"
                 android:layout_height="100dp"
-                android:background="@android:color/holo_green_light"/>
+                android:background="@android:color/holo_green_light" />
 
             <TextView
                 android:layout_width="100dp"
                 android:layout_height="100dp"
-                android:background="@android:color/holo_purple"/>
+                android:background="@android:color/holo_purple" />
 
             <TextView
                 android:layout_width="100dp"
                 android:layout_height="100dp"
-                android:background="@android:color/holo_green_light"/>
+                android:background="@android:color/holo_green_light" />
 
             <TextView
                 android:layout_width="100dp"
                 android:layout_height="100dp"
-                android:background="@android:color/holo_purple"/>
+                android:background="@android:color/holo_purple" />
 
             <TextView
                 android:layout_width="100dp"
                 android:layout_height="100dp"
-                android:background="@android:color/holo_green_light"/>
+                android:background="@android:color/holo_green_light" />
 
             <TextView
                 android:layout_width="100dp"
                 android:layout_height="100dp"
-                android:background="@android:color/holo_purple"/>
+                android:background="@android:color/holo_purple" />
 
             <TextView
                 android:layout_width="100dp"
                 android:layout_height="100dp"
-                android:background="@android:color/holo_green_light"/>
+                android:background="@android:color/holo_green_light" />
 
             <TextView
                 android:layout_width="100dp"
                 android:layout_height="100dp"
-                android:background="@android:color/holo_purple"/>
+                android:background="@android:color/holo_purple" />
 
             <TextView
                 android:layout_width="100dp"
                 android:layout_height="100dp"
-                android:background="@android:color/holo_green_light"/>
+                android:background="@android:color/holo_green_light" />
 
             <TextView
                 android:layout_width="100dp"
                 android:layout_height="100dp"
-                android:background="@android:color/holo_purple"/>
+                android:background="@android:color/holo_purple" />
 
         </LinearLayout>
 
     </HorizontalScrollView>
+
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:padding="10dp"
         android:text="下面的是个NestedScrollView，它在自己的范围内单独滑动。"
         android:textColor="@android:color/black"
-        android:textSize="18sp"/>
+        android:textSize="18sp" />
 
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
@@ -151,6 +154,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="200dp"
+                android:gravity="center"
                 android:text="NestedScrollView"
                 android:textColor="@android:color/black"
                 android:textSize="24sp" />
@@ -158,6 +162,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="200dp"
+                android:gravity="center"
                 android:text="NestedScrollView"
                 android:textColor="@android:color/black"
                 android:textSize="24sp" />
@@ -165,6 +170,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="200dp"
+                android:gravity="center"
                 android:text="NestedScrollView"
                 android:textColor="@android:color/black"
                 android:textSize="24sp" />
@@ -172,6 +178,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="200dp"
+                android:gravity="center"
                 android:text="NestedScrollView"
                 android:textColor="@android:color/black"
                 android:textSize="24sp" />
@@ -179,6 +186,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="200dp"
+                android:gravity="center"
                 android:text="NestedScrollView"
                 android:textColor="@android:color/black"
                 android:textSize="24sp" />
@@ -186,6 +194,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="200dp"
+                android:gravity="center"
                 android:text="NestedScrollView"
                 android:textColor="@android:color/black"
                 android:textSize="24sp" />
