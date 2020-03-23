@@ -9,14 +9,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * @Author teach liang
+ * @Author donkingliang
  * @Description
  * @Date 2020/3/17
  */
 public class ScrollUtils {
 
     static int computeVerticalScrollOffset(View view) {
-
         try {
             Method method = View.class.getDeclaredMethod("computeVerticalScrollOffset");
             method.setAccessible(true);
@@ -28,7 +27,6 @@ public class ScrollUtils {
     }
 
     static int computeVerticalScrollRange(View view) {
-
         try {
             Method method = View.class.getDeclaredMethod("computeVerticalScrollRange");
             method.setAccessible(true);
@@ -40,7 +38,6 @@ public class ScrollUtils {
     }
 
     static int computeVerticalScrollExtent(View view) {
-
         try {
             Method method = View.class.getDeclaredMethod("computeVerticalScrollExtent");
             method.setAccessible(true);
@@ -105,6 +102,13 @@ public class ScrollUtils {
         }
     }
 
+    /**
+     * 获取当前触摸点下的View
+     * @param rootView
+     * @param touchX
+     * @param touchY
+     * @return
+     */
     static List<View> getTouchViews(View rootView, int touchX, int touchY) {
         List views = new ArrayList();
         addTouchViews(views, rootView, touchX, touchY);
@@ -125,7 +129,13 @@ public class ScrollUtils {
         }
     }
 
-    //(x,y)是否在view的区域内
+    /**
+     * 判断触摸点是否在View内
+     * @param view
+     * @param x
+     * @param y
+     * @return
+     */
     static boolean isTouchPointInView(View view, int x, int y) {
         if (view == null) {
             return false;
