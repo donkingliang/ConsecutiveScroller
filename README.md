@@ -19,7 +19,7 @@ allprojects {
 ```
 在Module的build.gradle在添加以下代码
 ```groovy
-implementation 'com.github.donkingliang:ConsecutiveScroller:1.0.0'
+implementation 'com.github.donkingliang:ConsecutiveScroller:1.0.1'
 ```
 
 ### 基本使用
