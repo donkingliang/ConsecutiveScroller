@@ -2,8 +2,8 @@ ConsecutiveScrollerLayout是Android下支持多个滑动布局(RecyclerView、We
 
 #### 效果图
 
-![sample](https://github.com/donkingliang/ConsecutiveScroller/blob/master/image/sample.gif) 
-![sticky](https://github.com/donkingliang/ConsecutiveScroller/blob/master/image/sticky.gif)
+![sample](https://upload-images.jianshu.io/upload_images/2365010-1d0ebf289428ce8c.gif?imageMogr2/auto-orient/strip) 
+![sticky](https://upload-images.jianshu.io/upload_images/2365010-f2b64d20022d2566.gif?imageMogr2/auto-orient/strip)
 
 ### 引入依赖
 
@@ -17,7 +17,7 @@ allprojects {
 		}
 	}
 ```
-
+在Module的build.gradle在添加以下代码
 ```groovy
 implementation 'com.github.donkingliang:ConsecutiveScroller:1.0.0'
 ```
