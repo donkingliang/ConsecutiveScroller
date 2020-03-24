@@ -840,7 +840,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup {
         int count = children.size();
         for (int i = 0; i < count; i++) {
             View child = children.get(i);
-            if (ScrollUtils.isConsecutiveScrollerChild(child)) {
+            if (!ScrollUtils.isConsecutiveScrollerChild(child)) {
                 range += child.getHeight();
             } else {
                 range += Math.max(ScrollUtils.computeVerticalScrollRange(child) + child.getPaddingTop() + child.getPaddingBottom(),
