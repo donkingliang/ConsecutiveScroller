@@ -19,7 +19,7 @@ allprojects {
 ```
 在Module的build.gradle在添加以下代码
 ```groovy
-implementation 'com.github.donkingliang:ConsecutiveScroller:1.0.0'
+implementation 'com.github.donkingliang:ConsecutiveScroller:1.0.1'
 ```
 
 ### 基本使用
@@ -231,6 +231,51 @@ ConsecutiveScrollerLayout将所有的子View视作一个整体，由它统一处
 ```
 
 在这个例子中NestedScrollView希望在自己的高度里滑动自己的内容，而不是跟随ConsecutiveScrollerLayout滑动，只要给它设置layout_isConsecutive="false"就可以了。而LinearLayout虽然不是滑动布局，但是在下面嵌套了个滑动布局RecyclerView，所以它也需要设置layout_isConsecutive="false"。
+
+### 使用腾讯x5的WebView
+由于腾讯x5的VebView是一个FrameLayout嵌套WebView的布局，而不是一个WebView的子类，所以要在ConsecutiveScrollerLayout里使用它，需要把它的滑动交给它里面的WebView。自定义MyWebView继承腾讯的WebView,重写它的scrollBy()方法即可。
+```java
+public class MyWebView extends com.tencent.smtt.sdk.WebView {
+
+    public MyWebView(Context context, boolean b) {
+        super(context, b);
+    }
+
+    public MyWebView(Context context) {
+        super(context);
+    }
+
+    public MyWebView(Context context, AttributeSet attributeSet) {
+        super(context, attributeSet);
+    }
+
+    public MyWebView(Context context, AttributeSet attributeSet, int i) {
+        super(context, attributeSet, i);
+    }
+
+    public MyWebView(Context context, AttributeSet attributeSet, int i, boolean b) {
+        super(context, attributeSet, i, b);
+    }
+
+    public MyWebView(Context context, AttributeSet attributeSet, int i, Map<String, Object> map, boolean b) {
+        super(context, attributeSet, i, map, b);
+    }
+
+	
+    @Override
+    public void scrollBy(int x, int y) {
+    	// 把滑动交给它的子view
+        getView().scrollBy(x, y);
+    }
+}
+```
+另外需要隐藏它的子view的滚动条
+```java
+View view = webView.getView();
+view.setVerticalScrollBarEnabled(false);
+view.setHorizontalScrollBarEnabled(false);
+view.setOverScrollMode(OVER_SCROLL_NEVER);
+```
 
 ### 其他注意事项
 
