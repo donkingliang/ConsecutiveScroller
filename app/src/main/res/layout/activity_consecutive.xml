@@ -24,10 +24,9 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:padding="10dp"
-            android:text="下面的红色区域是个RecyclerView，它在自己的范围内单独滑动。"
+            android:text="下面的红色区域是个RecyclerView，它在自己的范围内单独滑动。由于RecyclerView支持嵌套滑动机制，当它滑动完成后会将滑动事件给给父布局。"
             android:textColor="@android:color/black"
-            android:textSize="18sp"
-            app:layout_isSticky="true" />
+            android:textSize="16sp"/>
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recyclerView1"
@@ -46,7 +45,7 @@
         android:padding="10dp"
         android:text="下面的是个HorizontalScrollView。对于水平滑动的布局，如HorizontalScrollView，水平方向的RecyclerView等，ConsecutiveScrollerLayout都能很好的处理它的滑动事件，无需再做其他处理。"
         android:textColor="@android:color/black"
-        android:textSize="18sp" />
+        android:textSize="16sp" />
 
     <HorizontalScrollView
         android:layout_width="match_parent"
@@ -135,14 +134,15 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:padding="10dp"
-        android:text="下面的是个NestedScrollView，它在自己的范围内单独滑动。"
+        android:text="下面的是个NestedScrollView，它在自己的范围内单独滑动。给下面的NestedScrollView设置layout_isNestedScroll=false。它将不会与父布局嵌套滑动，也就是它滑动完成后不会把事件交给父布局。"
         android:textColor="@android:color/black"
-        android:textSize="18sp" />
+        android:textSize="16sp" />
 
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="250dp"
-        app:layout_isConsecutive="false">
+        app:layout_isConsecutive="false"
+        app:layout_isNestedScroll="false">
 
         <LinearLayout
             android:layout_width="match_parent"

@@ -16,12 +16,17 @@ import android.widget.Scroller;
 import java.util.ArrayList;
 import java.util.List;
 
+import androidx.annotation.NonNull;
+import androidx.core.view.NestedScrollingParent;
+import androidx.core.view.NestedScrollingParentHelper;
+import androidx.core.view.ViewCompat;
+
 /**
  * @Author donkingliang QQ:1043214265 github:https://github.com/donkingliang
  * @Description
  * @Date 2020/3/13
  */
-public class ConsecutiveScrollerLayout extends ViewGroup {
+public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScrollingParent {
 
     /**
      * 记录布局垂直的偏移量，它是包括了自己的偏移量(mScrollY)和所有子View的偏移量的总和，
@@ -77,6 +82,8 @@ public class ConsecutiveScrollerLayout extends ViewGroup {
 
     private int mActivePointerId;
 
+    private NestedScrollingParentHelper mParentHelper;
+
     public ConsecutiveScrollerLayout(Context context) {
         this(context, null);
     }
@@ -97,6 +104,8 @@ public class ConsecutiveScrollerLayout extends ViewGroup {
         setWillNotDraw(false);
         // enable vertical scrollbar
         setVerticalScrollBarEnabled(true);
+
+        mParentHelper = new NestedScrollingParentHelper(this);
     }
 
     @Override
@@ -925,8 +934,23 @@ public class ConsecutiveScrollerLayout extends ViewGroup {
 
     public static class LayoutParams extends ViewGroup.LayoutParams {
 
+        /**
+         * 是否与父布局整体滑动，设置为false时，父布局不会拦截它的事件，滑动事件将由子view处理。
+         * 可以实现子view内部的垂直滑动。
+         */
         public boolean isConsecutive = true;
+
+        /**
+         * 是否支持嵌套滑动，默认支持，如果子view或它内部的下级view实现了NestedScrollingChild接口，
+         * 它可以与ConsecutiveScrollerLayout嵌套滑动，把isNestedScroll设置为false可以禁止它与ConsecutiveScrollerLayout嵌套滑动。
+         */
+        public boolean isNestedScroll = true;
+
+        /**
+         * 设置子view吸顶悬浮
+         */
         public boolean isSticky = false;
+
 
         public LayoutParams(Context c, AttributeSet attrs) {
             super(c, attrs);
@@ -934,6 +958,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup {
 
             isConsecutive = a.getBoolean(R.styleable.ConsecutiveScrollerLayout_Layout_layout_isConsecutive, true);
             isSticky = a.getBoolean(R.styleable.ConsecutiveScrollerLayout_Layout_layout_isSticky, false);
+            isNestedScroll = a.getBoolean(R.styleable.ConsecutiveScrollerLayout_Layout_layout_isNestedScroll, true);
             a.recycle();
         }
 
@@ -949,5 +974,67 @@ public class ConsecutiveScrollerLayout extends ViewGroup {
     public interface OnScrollChangeListener {
 
         void onScrollChange(View v, int scrollY, int oldScrollY);
+    }
+
+    @Override
+    public boolean onStartNestedScroll(@NonNull View child, @NonNull View target, int axes) {
+        boolean isNestedScroll = false;
+        ViewGroup.LayoutParams lp = child.getLayoutParams();
+        if (lp instanceof LayoutParams) {
+            isNestedScroll = ((LayoutParams) lp).isNestedScroll;
+        }
+        if (isNestedScroll) {
+            return (axes & ViewCompat.SCROLL_AXIS_VERTICAL) != 0;
+        } else {
+            return false;
+        }
+    }
+
+    @Override
+    public void onNestedScrollAccepted(@NonNull View child, @NonNull View target, int axes) {
+        mParentHelper.onNestedScrollAccepted(child, target, axes);
+        checkTargetsScroll(false);
+    }
+
+    @Override
+    public void onStopNestedScroll(@NonNull View target) {
+        mParentHelper.onStopNestedScroll(target);
+    }
+
+    @Override
+    public void onNestedScroll(@NonNull View target, int dxConsumed, int dyConsumed, int dxUnconsumed, int dyUnconsumed) {
+        scrollBy(0, dyUnconsumed);
+    }
+
+    @Override
+    public void onNestedPreScroll(@NonNull View target, int dx, int dy, @NonNull int[] consumed) {
+    }
+
+    @Override
+    public boolean onNestedFling(View target, float velocityX, float velocityY, boolean consumed) {
+        if (velocityY > 0) {
+            // 向上滑动
+            if (isScrollBottom()) {
+                return false;
+            }
+
+            if (!target.canScrollVertically(1)) {
+                fling((int) velocityY);
+                return true;
+            }
+
+        } else {
+            // 向下滑动
+            if (isScrollTop()) {
+                return false;
+            }
+
+            if (!target.canScrollVertically(-1)) {
+                fling((int) velocityY);
+                return true;
+            }
+        }
+
+        return super.onNestedFling(target, velocityX, velocityY, consumed);
     }
 }
