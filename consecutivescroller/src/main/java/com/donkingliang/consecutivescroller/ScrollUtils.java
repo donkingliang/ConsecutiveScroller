@@ -1,5 +1,6 @@
 package com.donkingliang.consecutivescroller;
 
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AbsListView;
@@ -131,6 +132,7 @@ public class ScrollUtils {
 
     /**
      * 判断触摸点是否在View内
+     *
      * @param view
      * @param x
      * @param y
@@ -150,6 +152,28 @@ public class ScrollUtils {
             return true;
         }
         return false;
+    }
+
+    static int getRawX(View rootView,MotionEvent ev,int pointerIndex){
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+            return  (int)ev.getRawX(pointerIndex);
+        } else {
+            int[] position = new int[2];
+            rootView.getLocationOnScreen(position);
+            int left = position[0];
+            return (int) (left + ev.getX(pointerIndex));
+        }
+    }
+
+    static int getRawY(View rootView,MotionEvent ev,int pointerIndex){
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+            return  (int)ev.getRawY(pointerIndex);
+        } else {
+            int[] position = new int[2];
+            rootView.getLocationOnScreen(position);
+            int top = position[1];
+            return (int) (top + ev.getY(pointerIndex));
+        }
     }
 
     static List<Integer> getScrollOffsetForViews(List<View> views) {

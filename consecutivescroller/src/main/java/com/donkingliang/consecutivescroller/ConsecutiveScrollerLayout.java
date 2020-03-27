@@ -75,6 +75,8 @@ public class ConsecutiveScrollerLayout extends ViewGroup {
      */
     protected OnScrollChangeListener mOnScrollChangeListener;
 
+    private int mActivePointerId;
+
     public ConsecutiveScrollerLayout(Context context) {
         this(context, null);
     }
@@ -161,18 +163,24 @@ public class ConsecutiveScrollerLayout extends ViewGroup {
 
     @Override
     public boolean dispatchTouchEvent(MotionEvent ev) {
-        switch (ev.getAction()) {
+        final int actionIndex = ev.getActionIndex();
+
+        switch (ev.getActionMasked()) {
             case MotionEvent.ACTION_DOWN:
                 // 停止滑动
                 stopScroll();
                 checkTargetsScroll(false);
-
-                mEventY = (int) ev.getY();
-
-                isConsecutiveScrollerChild = ScrollUtils.isConsecutiveScrollerChild(getTouchTarget((int) ev.getRawX(), (int) ev.getRawY()));
+            case MotionEvent.ACTION_POINTER_DOWN:
+                mActivePointerId = ev.getPointerId(actionIndex);
+                mEventY = (int) ev.getY(actionIndex);
+                // 改变滑动的手指，重新询问事件拦截
+                requestDisallowInterceptTouchEvent(false);
+                isConsecutiveScrollerChild = ScrollUtils.isConsecutiveScrollerChild(getTouchTarget(
+                        ScrollUtils.getRawX(this, ev, actionIndex), ScrollUtils.getRawY(this, ev, actionIndex)));
                 break;
             case MotionEvent.ACTION_MOVE:
-                int offsetY = (int) ev.getY() - mEventY;
+                final int pointerIndex = ev.findPointerIndex(mActivePointerId);
+                int offsetY = (int) ev.getY(pointerIndex) - mEventY;
 
                 if (isIntercept(ev)) {
                     if (Math.abs(offsetY) >= mTouchSlop) {
@@ -185,7 +193,17 @@ public class ConsecutiveScrollerLayout extends ViewGroup {
                 }
 
                 mScrollOffset = offsetY;
-                mEventY = (int) ev.getY();
+                mEventY = (int) ev.getY(pointerIndex);
+                break;
+            case MotionEvent.ACTION_POINTER_UP:
+                if (mActivePointerId == ev.getPointerId(actionIndex)) { // 如果松开的是活动手指, 让还停留在屏幕上的最后一根手指作为活动手指
+                    // This was our active pointer going up. Choose a new
+                    // active pointer and adjust accordingly.
+                    // pointerIndex都是像0, 1, 2这样连续的
+                    final int newPointerIndex = actionIndex == 0 ? 1 : 0;
+                    mActivePointerId = ev.getPointerId(newPointerIndex);
+                    mEventY = (int) ev.getY(newPointerIndex);
+                }
                 break;
             case MotionEvent.ACTION_CANCEL:
             case MotionEvent.ACTION_UP:
@@ -213,11 +231,12 @@ public class ConsecutiveScrollerLayout extends ViewGroup {
     private boolean adjustScroll(MotionEvent ev) {
         List<View> views = ScrollUtils.getTouchViews(this, (int) ev.getRawX(), (int) ev.getRawY());
         List<Integer> offset = ScrollUtils.getScrollOffsetForViews(views);
-
         boolean dispatch = super.dispatchTouchEvent(ev);
 
-        switch (ev.getAction()) {
+        switch (ev.getActionMasked()) {
             case MotionEvent.ACTION_DOWN:
+            case MotionEvent.ACTION_POINTER_DOWN:
+            case MotionEvent.ACTION_POINTER_UP:
                 initOrResetAdjustVelocityTracker();
                 mAdjustVelocityTracker.addMovement(ev);
                 break;
@@ -248,7 +267,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup {
 
     @Override
     public boolean onInterceptTouchEvent(MotionEvent ev) {
-        if (ev.getAction() == MotionEvent.ACTION_MOVE) {
+        if (ev.getActionMasked() == MotionEvent.ACTION_MOVE) {
             // 需要拦截事件
             if (isIntercept(ev)) {
                 return true;
@@ -259,18 +278,21 @@ public class ConsecutiveScrollerLayout extends ViewGroup {
 
     @Override
     public boolean onTouchEvent(MotionEvent ev) {
-        switch (ev.getAction()) {
+        final int pointerIndex = ev.findPointerIndex(mActivePointerId);
+        switch (ev.getActionMasked()) {
             case MotionEvent.ACTION_DOWN:
-                mTouchY = (int) ev.getY();
+            case MotionEvent.ACTION_POINTER_DOWN:
+            case MotionEvent.ACTION_POINTER_UP:
+                mTouchY = (int) ev.getY(pointerIndex);
                 initOrResetVelocityTracker();
                 mVelocityTracker.addMovement(ev);
                 break;
             case MotionEvent.ACTION_MOVE:
                 if (mTouchY == 0) {
-                    mTouchY = (int) ev.getY();
+                    mTouchY = (int) ev.getY(pointerIndex);
                     return true;
                 }
-                int y = (int) ev.getY();
+                int y = (int) ev.getY(pointerIndex);
                 int dy = y - mTouchY;
                 mTouchY = y;
                 scrollBy(0, -dy);
@@ -387,7 +409,6 @@ public class ConsecutiveScrollerLayout extends ViewGroup {
                     if (childScrollOffset < 0) {
                         int childOldScrollY = ScrollUtils.computeVerticalScrollOffset(lastVisibleView);
                         scrollOffset = Math.max(remainder, childScrollOffset);
-//                        lastVisibleView.scrollBy(0, scrollOffset);
                         scrollChild(lastVisibleView, scrollOffset);
                         scrollOffset = ScrollUtils.computeVerticalScrollOffset(lastVisibleView) - childOldScrollY;
                     } else {
@@ -882,7 +903,9 @@ public class ConsecutiveScrollerLayout extends ViewGroup {
      * @return
      */
     private boolean isIntercept(MotionEvent ev) {
-        View target = getTouchTarget((int) ev.getRawX(), (int) ev.getRawY());
+        final int pointerIndex = ev.findPointerIndex(mActivePointerId);
+        View target = getTouchTarget(ScrollUtils.getRawX(this, ev, pointerIndex),
+                ScrollUtils.getRawY(this, ev, pointerIndex));
 
         if (target != null) {
             ViewGroup.LayoutParams lp = target.getLayoutParams();
