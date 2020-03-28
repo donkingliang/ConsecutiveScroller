@@ -19,8 +19,16 @@ allprojects {
 ```
 在Module的build.gradle在添加以下代码
 ```groovy
-implementation 'com.github.donkingliang:ConsecutiveScroller:1.0.1'
+// 使用了Androidx
+implementation 'com.github.donkingliang:ConsecutiveScroller:2.1.0'
+
+// 或者
+
+// 使用Android support包
+implementation 'com.github.donkingliang:ConsecutiveScroller:1.1.0'
 ```
+由于Androidx和Android support包不兼容，所以ConsecutiveScroller使用两个版本分别支持使用Androidx和使用Android support包的项目。
+大版本号1使用Android support包，大版本号2使用Androidx。
 
 ### 基本使用
 
@@ -231,6 +239,7 @@ ConsecutiveScrollerLayout将所有的子View视作一个整体，由它统一处
 ```
 
 在这个例子中NestedScrollView希望在自己的高度里滑动自己的内容，而不是跟随ConsecutiveScrollerLayout滑动，只要给它设置layout_isConsecutive="false"就可以了。而LinearLayout虽然不是滑动布局，但是在下面嵌套了个滑动布局RecyclerView，所以它也需要设置layout_isConsecutive="false"。
+ConsecutiveScrollerLayout支持NestedScrolling机制，如果你的局部滑动的view实现了NestedScrollingChild接口(如：RecyclerView、NestedScrollView等)，它滑动完成后会把滑动事件交给父布局。如果你不想你的子view或它的下级view与父布局嵌套滑动，可以给子view设置app:layout_isNestedScroll="false"。它可以禁止子view与ConsecutiveScrollerLayout的嵌套滑动
 
 ### 使用腾讯x5的WebView
 由于腾讯x5的VebView是一个FrameLayout嵌套WebView的布局，而不是一个WebView的子类，所以要在ConsecutiveScrollerLayout里使用它，需要把它的滑动交给它里面的WebView。自定义MyWebView继承腾讯的WebView,重写它的scrollBy()方法即可。
