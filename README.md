@@ -239,6 +239,7 @@ ConsecutiveScrollerLayout将所有的子View视作一个整体，由它统一处
 ```
 
 在这个例子中NestedScrollView希望在自己的高度里滑动自己的内容，而不是跟随ConsecutiveScrollerLayout滑动，只要给它设置layout_isConsecutive="false"就可以了。而LinearLayout虽然不是滑动布局，但是在下面嵌套了个滑动布局RecyclerView，所以它也需要设置layout_isConsecutive="false"。
+
 ConsecutiveScrollerLayout支持NestedScrolling机制，如果你的局部滑动的view实现了NestedScrollingChild接口(如：RecyclerView、NestedScrollView等)，它滑动完成后会把滑动事件交给父布局。如果你不想你的子view或它的下级view与父布局嵌套滑动，可以给子view设置app:layout_isNestedScroll="false"。它可以禁止子view与ConsecutiveScrollerLayout的嵌套滑动
 
 ### 使用腾讯x5的WebView
