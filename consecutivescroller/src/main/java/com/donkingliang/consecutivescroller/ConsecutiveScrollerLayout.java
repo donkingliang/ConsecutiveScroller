@@ -124,11 +124,8 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScroll
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-        int count = getChildCount();
-        for (int i = 0; i < count; i++) {
-            View child = getChildAt(i);
-            measureChild(child, widthMeasureSpec, heightMeasureSpec);
-        }
+        // 测量子view
+        measureChildren(widthMeasureSpec,heightMeasureSpec);
     }
 
     @Override
@@ -544,11 +541,16 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScroll
      * @param target
      */
     private void scrollTargetContentToTop(View target) {
-        int offset = ScrollUtils.getScrollTopOffset(target);
-        while (offset < 0) {
-            scrollChild(target, offset);
-            offset = ScrollUtils.getScrollTopOffset(target);
-        }
+        int scrollY = 0;
+        do {
+            scrollY = 0;
+            int offset = ScrollUtils.getScrollTopOffset(target);
+            if (offset > 0) {
+                int childOldScrollY = ScrollUtils.computeVerticalScrollOffset(target);
+                scrollChild(target, offset);
+                scrollY = childOldScrollY - ScrollUtils.computeVerticalScrollOffset(target);
+            }
+        } while (scrollY != 0);
     }
 
     /**
@@ -557,11 +559,16 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScroll
      * @param target
      */
     private void scrollTargetContentToBottom(View target) {
-        int offset = ScrollUtils.getScrollBottomOffset(target);
-        while (offset > 0) {
-            scrollChild(target, offset);
-            offset = ScrollUtils.getScrollBottomOffset(target);
-        }
+        int scrollY = 0;
+        do {
+            scrollY = 0;
+            int offset = ScrollUtils.getScrollBottomOffset(target);
+            if (offset > 0) {
+                int childOldScrollY = ScrollUtils.computeVerticalScrollOffset(target);
+                scrollChild(target, offset);
+                scrollY = childOldScrollY - ScrollUtils.computeVerticalScrollOffset(target);
+            }
+        } while (scrollY != 0);
     }
 
     /**
@@ -659,6 +666,21 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScroll
         for (int i = 0; i < count; i++) {
             View child = getChildAt(i);
             if (child.getVisibility() != GONE) {
+                children.add(child);
+            }
+        }
+        return children;
+    }
+
+    /**
+     * 返回所有高度不为0的view
+     */
+    private List<View> getEffectiveChildren() {
+        List<View> children = new ArrayList<>();
+        int count = getChildCount();
+        for (int i = 0; i < count; i++) {
+            View child = getChildAt(i);
+            if (child.getVisibility() != GONE && child.getHeight() > 0) {
                 children.add(child);
             }
         }
@@ -784,7 +806,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScroll
      */
     public View findFirstVisibleView() {
         int offset = getScrollY() + getPaddingTop();
-        List<View> children = getNonGoneChildren();
+        List<View> children = getEffectiveChildren();
         int count = children.size();
         for (int i = 0; i < count; i++) {
             View child = children.get(i);
@@ -802,7 +824,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScroll
      */
     public View findLastVisibleView() {
         int offset = getHeight() - getPaddingBottom() + getScrollY();
-        List<View> children = getNonGoneChildren();
+        List<View> children = getEffectiveChildren();
         int count = children.size();
         for (int i = 0; i < count; i++) {
             View child = children.get(i);
@@ -819,7 +841,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScroll
      * @return
      */
     public boolean isScrollTop() {
-        List<View> children = getNonGoneChildren();
+        List<View> children = getEffectiveChildren();
         if (children.size() > 0) {
             View child = children.get(0);
             return getScrollY() <= 0 && !child.canScrollVertically(-1);
@@ -833,7 +855,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScroll
      * @return
      */
     public boolean isScrollBottom() {
-        List<View> children = getNonGoneChildren();
+        List<View> children = getEffectiveChildren();
         if (children.size() > 0) {
             View child = children.get(children.size() - 1);
             return getScrollY() >= mScrollRange && !child.canScrollVertically(1);
@@ -1011,7 +1033,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScroll
     }
 
     @Override
-    public boolean onNestedFling(View target, float velocityX, float velocityY, boolean consumed) {
+    public boolean onNestedFling(@NonNull View target, float velocityX, float velocityY, boolean consumed) {
         if (velocityY > 0) {
             // 向上滑动
             if (isScrollBottom()) {
@@ -1036,5 +1058,10 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScroll
         }
 
         return super.onNestedFling(target, velocityX, velocityY, consumed);
+    }
+
+    @Override
+    public boolean onNestedPreFling(@NonNull View target, float velocityX, float velocityY) {
+        return super.onNestedPreFling(target, velocityX, velocityY);
     }
 }
