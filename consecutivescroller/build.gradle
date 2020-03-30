@@ -1,6 +1,6 @@
 apply plugin: 'com.android.library'
 
-group='com.github.donkingliang.support' // 指定group，com.github.<用户名>
+group='com.github.donkingliang' // 指定group，com.github.<用户名>
 
 android {
     compileSdkVersion 29
