@@ -141,8 +141,8 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScroll
     @Override
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
         mScrollRange = 0;
-        int childTop = t + getPaddingTop();
-        int left = l + getPaddingLeft();
+        int childTop = getPaddingTop();
+        int left = getPaddingLeft();
 
         List<View> children = getNonGoneChildren();
         int count = children.size();
