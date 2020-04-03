@@ -104,7 +104,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScroll
     public ConsecutiveScrollerLayout(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
 
-        mScroller = new OverScroller(getContext(),sQuinticInterpolator);
+        mScroller = new OverScroller(getContext(), sQuinticInterpolator);
         ViewConfiguration viewConfiguration = ViewConfiguration.get(context);
         mMaximumVelocity = viewConfiguration.getScaledMaximumFlingVelocity();
         mMinimumVelocity = viewConfiguration.getScaledMinimumFlingVelocity();
@@ -134,14 +134,14 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScroll
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
         // 测量子view
-        measureChildren(widthMeasureSpec,heightMeasureSpec);
+        measureChildren(widthMeasureSpec, heightMeasureSpec);
     }
 
     @Override
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
         mScrollRange = 0;
-        int childTop = t + getPaddingTop();
-        int left = l + getPaddingLeft();
+        int childTop = getPaddingTop();
+        int left = getPaddingLeft();
 
         List<View> children = getNonGoneChildren();
         int count = children.size();
