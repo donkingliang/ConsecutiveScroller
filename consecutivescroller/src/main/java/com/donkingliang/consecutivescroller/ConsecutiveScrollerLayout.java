@@ -10,8 +10,9 @@ import android.view.VelocityTracker;
 import android.view.View;
 import android.view.ViewConfiguration;
 import android.view.ViewGroup;
+import android.view.animation.Interpolator;
 import android.widget.AbsListView;
-import android.widget.Scroller;
+import android.widget.OverScroller;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -42,7 +43,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScroll
     /**
      * 联动容器滚动定位子view
      */
-    private Scroller mScroller;
+    private OverScroller mScroller;
 
     /**
      * VelocityTracker
@@ -84,6 +85,15 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScroll
 
     private NestedScrollingParentHelper mParentHelper;
 
+    // 这是RecyclerView的代码，让ConsecutiveScrollerLayout的fling效果更接近于RecyclerView。
+    static final Interpolator sQuinticInterpolator = new Interpolator() {
+        @Override
+        public float getInterpolation(float t) {
+            t -= 1.0f;
+            return t * t * t * t * t + 1.0f;
+        }
+    };
+
     public ConsecutiveScrollerLayout(Context context) {
         this(context, null);
     }
@@ -95,11 +105,11 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScroll
     public ConsecutiveScrollerLayout(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
 
-        mScroller = new Scroller(getContext());
+        mScroller = new OverScroller(getContext(), sQuinticInterpolator);
         ViewConfiguration viewConfiguration = ViewConfiguration.get(context);
         mMaximumVelocity = viewConfiguration.getScaledMaximumFlingVelocity();
         mMinimumVelocity = viewConfiguration.getScaledMinimumFlingVelocity();
-        mTouchSlop = viewConfiguration.getScaledTouchSlop();
+        mTouchSlop = viewConfiguration.getTouchSlop();
         // 确保联动容器调用onDraw()方法
         setWillNotDraw(false);
         // enable vertical scrollbar
@@ -125,7 +135,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScroll
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
         // 测量子view
-        measureChildren(widthMeasureSpec,heightMeasureSpec);
+        measureChildren(widthMeasureSpec, heightMeasureSpec);
     }
 
     @Override
@@ -259,6 +269,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScroll
             case MotionEvent.ACTION_UP:
                 isConsecutiveScrollerChild = false;
                 if (mAdjustVelocityTracker != null) {
+                    mAdjustVelocityTracker.addMovement(ev);
                     if (mScroller.isFinished()) {
                         mAdjustVelocityTracker.computeCurrentVelocity(1000, mMaximumVelocity);
                         int yVelocity = (int) mAdjustVelocityTracker.getYVelocity();
@@ -311,8 +322,10 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScroll
                 mTouchY = 0;
 
                 if (mVelocityTracker != null) {
+                    mVelocityTracker.addMovement(ev);
                     mVelocityTracker.computeCurrentVelocity(1000, mMaximumVelocity);
                     int yVelocity = (int) mVelocityTracker.getYVelocity();
+                    yVelocity = Math.max(-mMaximumVelocity, Math.min(yVelocity, mMaximumVelocity));
                     recycleVelocityTracker();
                     fling(-yVelocity);
                 }
@@ -325,7 +338,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScroll
         if (Math.abs(velocityY) > mMinimumVelocity) {
             mScroller.fling(0, mOwnScrollY,
                     1, velocityY,
-                    0, 0,
+                    Integer.MIN_VALUE, Integer.MIN_VALUE,
                     Integer.MIN_VALUE, Integer.MAX_VALUE);
             invalidate();
         }
