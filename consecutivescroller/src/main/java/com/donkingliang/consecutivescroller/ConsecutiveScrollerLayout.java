@@ -74,6 +74,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScroll
      * 是否处于拖拽状态
      */
     private boolean mIsDragging;
+    private boolean isAdjust = true;
 
     /**
      * 滑动监听
@@ -254,11 +255,14 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScroll
             case MotionEvent.ACTION_POINTER_UP:
                 initOrResetAdjustVelocityTracker();
                 mAdjustVelocityTracker.addMovement(ev);
+                isAdjust = true;
                 break;
             case MotionEvent.ACTION_MOVE:
-                if (mScrollOffset != 0) {
+                if (isAdjust && Math.abs(mScrollOffset) >= mTouchSlop) {
                     if (ScrollUtils.equalsOffsets(offset, ScrollUtils.getScrollOffsetForViews(views))) {
                         scrollBy(0, -mScrollOffset);
+                    } else {
+                        isAdjust = false;
                     }
                 }
                 initAdjustVelocityTrackerIfNotExists();
@@ -269,13 +273,14 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScroll
                 isConsecutiveScrollerChild = false;
                 if (mAdjustVelocityTracker != null) {
                     mAdjustVelocityTracker.addMovement(ev);
-                    if (mScroller.isFinished()) {
+                    if (isAdjust && mScroller.isFinished()) {
                         mAdjustVelocityTracker.computeCurrentVelocity(1000, mMaximumVelocity);
                         int yVelocity = (int) mAdjustVelocityTracker.getYVelocity();
                         recycleAdjustVelocityTracker();
                         fling(-yVelocity);
                     }
                 }
+                isAdjust = true;
                 break;
         }
         return dispatch;
