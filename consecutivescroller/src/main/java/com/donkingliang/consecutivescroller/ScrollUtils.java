@@ -5,6 +5,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AbsListView;
 
+import androidx.recyclerview.widget.RecyclerView;
+
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
@@ -217,5 +219,9 @@ public class ScrollUtils {
             return true;
         }
         return false;
+    }
+
+    static boolean isRecyclerLayout(View view){
+        return view instanceof RecyclerView || view instanceof AbsListView;
     }
 }

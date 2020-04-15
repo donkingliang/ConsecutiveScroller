@@ -110,7 +110,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScroll
         ViewConfiguration viewConfiguration = ViewConfiguration.get(context);
         mMaximumVelocity = viewConfiguration.getScaledMaximumFlingVelocity();
         mMinimumVelocity = viewConfiguration.getScaledMinimumFlingVelocity();
-        mTouchSlop = viewConfiguration.getTouchSlop();
+        mTouchSlop = ViewConfiguration.getTouchSlop();
         // 确保联动容器调用onDraw()方法
         setWillNotDraw(false);
         // enable vertical scrollbar
@@ -398,7 +398,10 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScroll
                         int childOldScrollY = ScrollUtils.computeVerticalScrollOffset(firstVisibleView);
                         scrollOffset = Math.min(remainder, bottomOffset);
                         scrollChild(firstVisibleView, scrollOffset);
-                        scrollOffset = ScrollUtils.computeVerticalScrollOffset(firstVisibleView) - childOldScrollY;
+                        int childNewScrollY = ScrollUtils.computeVerticalScrollOffset(firstVisibleView);
+                        if(!ScrollUtils.isRecyclerLayout(firstVisibleView)){
+                            scrollOffset = childNewScrollY - childOldScrollY;
+                        }
                     } else {
                         int selfOldScrollY = getScrollY();
                         scrollOffset = Math.min(remainder,
@@ -434,7 +437,10 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScroll
                         int childOldScrollY = ScrollUtils.computeVerticalScrollOffset(lastVisibleView);
                         scrollOffset = Math.max(remainder, childScrollOffset);
                         scrollChild(lastVisibleView, scrollOffset);
-                        scrollOffset = ScrollUtils.computeVerticalScrollOffset(lastVisibleView) - childOldScrollY;
+                        int childNewScrollY = ScrollUtils.computeVerticalScrollOffset(lastVisibleView);
+                        if(!ScrollUtils.isRecyclerLayout(lastVisibleView)){
+                            scrollOffset = childNewScrollY - childOldScrollY;
+                        }
                     } else {
                         int scrollY = getScrollY();
                         int selfOldScrollY = getScrollY();
