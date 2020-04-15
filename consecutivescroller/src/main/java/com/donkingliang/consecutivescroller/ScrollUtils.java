@@ -214,7 +214,8 @@ public class ScrollUtils {
             if (lp instanceof ConsecutiveScrollerLayout.LayoutParams) {
                 return ((ConsecutiveScrollerLayout.LayoutParams) lp).isConsecutive;
             }
+            return true;
         }
-        return true;
+        return false;
     }
 }
