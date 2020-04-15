@@ -105,6 +105,7 @@ public class ScrollUtils {
 
     /**
      * 获取当前触摸点下的View
+     *
      * @param rootView
      * @param touchX
      * @param touchY
@@ -154,9 +155,9 @@ public class ScrollUtils {
         return false;
     }
 
-    static int getRawX(View rootView,MotionEvent ev,int pointerIndex){
+    static int getRawX(View rootView, MotionEvent ev, int pointerIndex) {
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
-            return  (int)ev.getRawX(pointerIndex);
+            return (int) ev.getRawX(pointerIndex);
         } else {
             int[] position = new int[2];
             rootView.getLocationOnScreen(position);
@@ -165,9 +166,9 @@ public class ScrollUtils {
         }
     }
 
-    static int getRawY(View rootView,MotionEvent ev,int pointerIndex){
+    static int getRawY(View rootView, MotionEvent ev, int pointerIndex) {
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
-            return  (int)ev.getRawY(pointerIndex);
+            return (int) ev.getRawY(pointerIndex);
         } else {
             int[] position = new int[2];
             rootView.getLocationOnScreen(position);
@@ -207,12 +208,13 @@ public class ScrollUtils {
      */
     static boolean isConsecutiveScrollerChild(View view) {
 
-        ViewGroup.LayoutParams lp = view.getLayoutParams();
+        if (view != null) {
+            ViewGroup.LayoutParams lp = view.getLayoutParams();
 
-        if (lp instanceof ConsecutiveScrollerLayout.LayoutParams) {
-            return ((ConsecutiveScrollerLayout.LayoutParams) lp).isConsecutive;
+            if (lp instanceof ConsecutiveScrollerLayout.LayoutParams) {
+                return ((ConsecutiveScrollerLayout.LayoutParams) lp).isConsecutive;
+            }
         }
-
         return true;
     }
 }
