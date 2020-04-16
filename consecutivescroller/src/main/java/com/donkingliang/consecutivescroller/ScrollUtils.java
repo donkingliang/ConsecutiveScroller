@@ -1,5 +1,6 @@
 package com.donkingliang.consecutivescroller;
 
+import android.support.v7.widget.RecyclerView;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
@@ -206,13 +207,18 @@ public class ScrollUtils {
      * @return
      */
     static boolean isConsecutiveScrollerChild(View view) {
+        if (view != null) {
+            ViewGroup.LayoutParams lp = view.getLayoutParams();
 
-        ViewGroup.LayoutParams lp = view.getLayoutParams();
-
-        if (lp instanceof ConsecutiveScrollerLayout.LayoutParams) {
-            return ((ConsecutiveScrollerLayout.LayoutParams) lp).isConsecutive;
+            if (lp instanceof ConsecutiveScrollerLayout.LayoutParams) {
+                return ((ConsecutiveScrollerLayout.LayoutParams) lp).isConsecutive;
+            }
+            return true;
         }
+        return false;
+    }
 
-        return true;
+    static boolean isRecyclerLayout(View view){
+        return view instanceof RecyclerView || view instanceof AbsListView;
     }
 }
