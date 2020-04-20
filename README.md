@@ -243,7 +243,8 @@ ConsecutiveScrollerLayout将所有的子View视作一个整体，由它统一处
 ConsecutiveScrollerLayout支持NestedScrolling机制，如果你的局部滑动的view实现了NestedScrollingChild接口(如：RecyclerView、NestedScrollView等)，它滑动完成后会把滑动事件交给父布局。如果你不想你的子view或它的下级view与父布局嵌套滑动，可以给子view设置app:layout_isNestedScroll="false"。它可以禁止子view与ConsecutiveScrollerLayout的嵌套滑动
 
 ### 滑动子view的下级view
-ConsecutiveScrollerLayout默认情况下只会处理它的直接子view的滑动，但有时候需要滑动的布局可能不是ConsecutiveScrollerLayout的直接子view，而是子view所嵌套的下级view。ConsecutiveScrollerLayout嵌套FrameLayout,FrameLayout嵌套ScrollView，我们希望ConsecutiveScrollerLayout也能正常处理ScrollView的滑动。为了支持这种需求，ConsecutiveScroller提供了一个接口：IConsecutiveScroller。子view实现IConsecutiveScroller接口，并通过实现接口方法告诉ConsecutiveScrollerLayout需要滑动的下级view,ConsecutiveScrollerLayout就能正确地处理它的滑动事件。IConsecutiveScroller需要实现两个方法：
+
+ConsecutiveScrollerLayout默认情况下只会处理它的直接子view的滑动，但有时候需要滑动的布局可能不是ConsecutiveScrollerLayout的直接子view，而是子view所嵌套的下级view。比如ConsecutiveScrollerLayout嵌套FrameLayout,FrameLayout嵌套ScrollView，我们希望ConsecutiveScrollerLayout也能正常处理ScrollView的滑动。为了支持这种需求，ConsecutiveScroller提供了一个接口：IConsecutiveScroller。子view实现IConsecutiveScroller接口，并通过实现接口方法告诉ConsecutiveScrollerLayout需要滑动的下级view,ConsecutiveScrollerLayout就能正确地处理它的滑动事件。IConsecutiveScroller需要实现两个方法：
 ```java
     /**
      * 返回当前需要滑动的下级view。在一个时间点里只能有一个view可以滑动。
@@ -298,7 +299,7 @@ public class MyFrameLayout extends FrameLayout implements IConsecutiveScroller {
     </com.donkingliang.consecutivescrollerdemo.widget.MyFrameLayout>
 </com.donkingliang.consecutivescroller.ConsecutiveScrollerLayout>
 ```
-这样ConsecutiveScrollerLayout就能正确地处理ScrollView的滑动。这是一个简单的例子，再实际的需求中，我们一般不需要这样做。
+这样ConsecutiveScrollerLayout就能正确地处理ScrollView的滑动。这是一个简单的例子，在实际的需求中，我们一般不需要这样做。
 
 **注意：** getCurrentScrollerView()和getScrolledViews()必须正确地返回需要滑动的view，这些view可以是经过多层嵌套的，不一定是直接子view。所以使用者应该按照自己的实际场景去实现者两个方法。
 
@@ -340,6 +341,8 @@ IConsecutiveScroller的一个常用的场景是对ViewPager的支持。ViewPager
     }
 }
 ```
+我在demo中提供了ViewPager实现IConsecutiveScroller的例子和效果，有兴趣的朋友可以去体验一下。
+
 **重要：** 再提醒一次，我在这里提供的例子并不是通用的，使用者应该按照自己的实际场景去实现者两个方法。
 
 ### 使用腾讯x5的WebView
@@ -379,7 +382,6 @@ view.setVerticalScrollBarEnabled(false);
 view.setHorizontalScrollBarEnabled(false);
 view.setOverScrollMode(OVER_SCROLL_NEVER);
 ```
-
 
 ### 其他注意事项
 
