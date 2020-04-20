@@ -11,21 +11,21 @@ ConsecutiveScrollerLayout是Android下支持多个滑动布局(RecyclerView、We
 
 ```groovy
 allprojects {
-		repositories {
-			...
-			maven { url 'https://jitpack.io' }
-		}
-	}
+      repositories {
+         ...
+         maven { url 'https://jitpack.io' }
+      }
+   }
 ```
 在Module的build.gradle在添加以下代码
 ```groovy
 // 使用了Androidx
-implementation 'com.github.donkingliang:ConsecutiveScroller:2.3.0'
+implementation 'com.github.donkingliang:ConsecutiveScroller:2.4.0'
 
 // 或者
 
 // 使用Android support包
-implementation 'com.github.donkingliang:ConsecutiveScroller:1.3.0'
+implementation 'com.github.donkingliang:ConsecutiveScroller:1.4.0'
 ```
 由于Androidx和Android support包不兼容，所以ConsecutiveScroller使用两个版本分别支持使用Androidx和使用Android support包的项目。
 大版本号1使用Android support包，大版本号2使用Androidx。
@@ -242,41 +242,134 @@ ConsecutiveScrollerLayout将所有的子View视作一个整体，由它统一处
 
 ConsecutiveScrollerLayout支持NestedScrolling机制，如果你的局部滑动的view实现了NestedScrollingChild接口(如：RecyclerView、NestedScrollView等)，它滑动完成后会把滑动事件交给父布局。如果你不想你的子view或它的下级view与父布局嵌套滑动，可以给子view设置app:layout_isNestedScroll="false"。它可以禁止子view与ConsecutiveScrollerLayout的嵌套滑动
 
+### 滑动子view的下级view
+ConsecutiveScrollerLayout默认情况下只会处理它的直接子view的滑动，但有时候需要滑动的布局可能不是ConsecutiveScrollerLayout的直接子view，而是子view所嵌套的下级view。ConsecutiveScrollerLayout嵌套FrameLayout,FrameLayout嵌套ScrollView，我们希望ConsecutiveScrollerLayout也能正常处理ScrollView的滑动。为了支持这种需求，ConsecutiveScroller提供了一个接口：IConsecutiveScroller。子view实现IConsecutiveScroller接口，并通过实现接口方法告诉ConsecutiveScrollerLayout需要滑动的下级view,ConsecutiveScrollerLayout就能正确地处理它的滑动事件。IConsecutiveScroller需要实现两个方法：
+```java
+    /**
+     * 返回当前需要滑动的下级view。在一个时间点里只能有一个view可以滑动。
+     */
+    View getCurrentScrollerView();
+
+    /**
+     * 返回所有可以滑动的子view。由于ConsecutiveScrollerLayout允许它的子view包含多个可滑动的子view，所以返回一个view列表。
+     */
+    List<View> getScrolledViews();
+```
+在前面提到的例子中，我们可以这样实现：
+```java
+public class MyFrameLayout extends FrameLayout implements IConsecutiveScroller {
+
+    @Override
+    public View getCurrentScrollerView() {
+        // 返回需要滑动的ScrollView
+        return getChildAt(0);
+    }
+
+    @Override
+    public List<View> getScrolledViews() {
+        // 返回需要滑动的ScrollView
+        List<View> views = new ArrayList<>();
+        views.add(getChildAt(0));
+        return views;
+    }
+}
+```
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<com.donkingliang.consecutivescroller.ConsecutiveScrollerLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/scrollerLayout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:scrollbars="vertical">
+
+    <com.donkingliang.consecutivescrollerdemo.widget.MyFrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+            </LinearLayout>
+        </ScrollView>
+    </com.donkingliang.consecutivescrollerdemo.widget.MyFrameLayout>
+</com.donkingliang.consecutivescroller.ConsecutiveScrollerLayout>
+```
+这样ConsecutiveScrollerLayout就能正确地处理ScrollView的滑动。这是一个简单的例子，再实际的需求中，我们一般不需要这样做。
+
+**注意：** getCurrentScrollerView()和getScrolledViews()必须正确地返回需要滑动的view，这些view可以是经过多层嵌套的，不一定是直接子view。所以使用者应该按照自己的实际场景去实现者两个方法。
+
+#### 对ViewPager的支持
+IConsecutiveScroller的一个常用的场景是对ViewPager的支持。ViewPager是左右滑动的控件，但是我们一般会在ViewPager下嵌套RecyclerView等列表布局。为了能让ConsecutiveScrollerLayout正确地滑动ViewPager下的RecyclerView，使RecyclerView与ConsecutiveScrollerLayout形成一个滑动整体。需要让ViewPager实现IConsecutiveScroller接口，并返回需要滑动的RecyclerView。
+```java
+	public class MyViewPager extends ViewPager implements IConsecutiveScroller {
+
+    /**
+     * 返回当前需要滑动的view。
+     */
+    @Override
+    public View getCurrentScrollerView() {
+        int count = getChildCount();
+        for (int i = 0; i < count; i++) {
+            View view = getChildAt(i);
+            if (view.getX() == getScrollX()) {
+                return view;
+            }
+        }
+        return this;
+    }
+
+    /**
+     * 返回全部需要滑动的下级view
+     */
+    @Override
+    public List<View> getScrolledViews() {
+        List<View> views = new ArrayList<>();
+        int count = getChildCount();
+        if (count > 0) {
+            for (int i = 0; i < count; i++) {
+                views.add(getChildAt(i));
+            }
+        } else {
+            views.add(this);
+        }
+        return views;
+    }
+}
+```
+**重要：** 再提醒一次，我在这里提供的例子并不是通用的，使用者应该按照自己的实际场景去实现者两个方法。
+
 ### 使用腾讯x5的WebView
 由于腾讯x5的VebView是一个FrameLayout嵌套WebView的布局，而不是一个WebView的子类，所以要在ConsecutiveScrollerLayout里使用它，需要把它的滑动交给它里面的WebView。自定义MyWebView继承腾讯的WebView,重写它的scrollBy()方法即可。
 ```java
 public class MyWebView extends com.tencent.smtt.sdk.WebView {
 
-    public MyWebView(Context context, boolean b) {
-        super(context, b);
-    }
-
-    public MyWebView(Context context) {
-        super(context);
-    }
-
-    public MyWebView(Context context, AttributeSet attributeSet) {
-        super(context, attributeSet);
-    }
-
-    public MyWebView(Context context, AttributeSet attributeSet, int i) {
-        super(context, attributeSet, i);
-    }
-
-    public MyWebView(Context context, AttributeSet attributeSet, int i, boolean b) {
-        super(context, attributeSet, i, b);
-    }
-
-    public MyWebView(Context context, AttributeSet attributeSet, int i, Map<String, Object> map, boolean b) {
-        super(context, attributeSet, i, map, b);
-    }
-
-	
     @Override
     public void scrollBy(int x, int y) {
-    	// 把滑动交给它的子view
+       // 把滑动交给它的子view
         getView().scrollBy(x, y);
     }
+}
+```
+通过实现IConsecutiveScroller接口同样可以实现对x5的WebView支持。
+```java
+public class MyWebView extends com.tencent.smtt.sdk.WebView {
+
+    @Override
+    public View getCurrentScrollerView() {
+        return getView();
+    }
+
+    @Override
+    public List<View> getScrolledViews() {
+        List<View> views = new ArrayList<>();
+        views.add(getView());
+        return views;
+    }
+   
 }
 ```
 另外需要隐藏它的子view的滚动条
@@ -286,6 +379,7 @@ view.setVerticalScrollBarEnabled(false);
 view.setHorizontalScrollBarEnabled(false);
 view.setOverScrollMode(OVER_SCROLL_NEVER);
 ```
+
 
 ### 其他注意事项
 
@@ -308,4 +402,3 @@ webView.setWebChromeClient(new WebChromeClient() {
 4、使用ConsecutiveScrollerLayout提供的setOnVerticalScrollChangeListener()方法监听布局的滑动事件。View所提供的setOnScrollChangeListener()方法已无效。
 
 5、通过getOwnScrollY()方法获取ConsecutiveScrollerLayout的垂直滑动距离，View的getScrollY()方法获取的不是ConsecutiveScrollerLayout的整体滑动距离。
-
