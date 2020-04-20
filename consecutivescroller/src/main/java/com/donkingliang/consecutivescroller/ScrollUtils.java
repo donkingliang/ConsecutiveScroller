@@ -19,36 +19,39 @@ import java.util.List;
 public class ScrollUtils {
 
     static int computeVerticalScrollOffset(View view) {
+        View scrolledView = getScrolledView(view);
         try {
             Method method = View.class.getDeclaredMethod("computeVerticalScrollOffset");
             method.setAccessible(true);
-            return (int) method.invoke(view);
+            return (int) method.invoke(scrolledView);
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return view.getScrollY();
+        return scrolledView.getScrollY();
     }
 
     static int computeVerticalScrollRange(View view) {
+        View scrolledView = getScrolledView(view);
         try {
             Method method = View.class.getDeclaredMethod("computeVerticalScrollRange");
             method.setAccessible(true);
-            return (int) method.invoke(view);
+            return (int) method.invoke(scrolledView);
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return view.getHeight();
+        return scrolledView.getHeight();
     }
 
     static int computeVerticalScrollExtent(View view) {
+        View scrolledView = getScrolledView(view);
         try {
             Method method = View.class.getDeclaredMethod("computeVerticalScrollExtent");
             method.setAccessible(true);
-            return (int) method.invoke(view);
+            return (int) method.invoke(scrolledView);
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return view.getHeight();
+        return scrolledView.getHeight();
     }
 
     /**
@@ -91,17 +94,18 @@ public class ScrollUtils {
     }
 
     /**
-     * Check if this view can be scrolled vertically in a certain direction.
-     *
-     * @param direction Negative to check scrolling up, positive to check scrolling down.
-     * @return true if this view can be scrolled in the specified direction, false otherwise.
+     * 判断是否可以滑动
+     * @param view
+     * @param direction
+     * @return
      */
     static boolean canScrollVertically(View view, int direction) {
-        if (view instanceof AbsListView) {
-            AbsListView listView = (AbsListView) view;
+        View scrolledView = getScrolledView(view);
+        if (scrolledView instanceof AbsListView) {
+            AbsListView listView = (AbsListView) scrolledView;
             return listView.canScrollList(direction);
         } else {
-            return view.canScrollVertically(direction);
+            return scrolledView.canScrollVertically(direction);
         }
     }
 
@@ -224,4 +228,12 @@ public class ScrollUtils {
     static boolean isRecyclerLayout(View view){
         return view instanceof RecyclerView || view instanceof AbsListView;
     }
+
+    static View getScrolledView(View view){
+        if (view instanceof IConsecutiveScroller){
+            return ((IConsecutiveScroller) view).getCurrentScrollerView();
+        }
+        return view;
+    }
+
 }
