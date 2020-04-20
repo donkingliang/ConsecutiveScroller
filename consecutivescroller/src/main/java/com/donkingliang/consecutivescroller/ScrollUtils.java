@@ -18,36 +18,39 @@ import java.util.List;
 public class ScrollUtils {
 
     static int computeVerticalScrollOffset(View view) {
+        View scrolledView = getScrolledView(view);
         try {
             Method method = View.class.getDeclaredMethod("computeVerticalScrollOffset");
             method.setAccessible(true);
-            return (int) method.invoke(view);
+            return (int) method.invoke(scrolledView);
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return view.getScrollY();
+        return scrolledView.getScrollY();
     }
 
     static int computeVerticalScrollRange(View view) {
+        View scrolledView = getScrolledView(view);
         try {
             Method method = View.class.getDeclaredMethod("computeVerticalScrollRange");
             method.setAccessible(true);
-            return (int) method.invoke(view);
+            return (int) method.invoke(scrolledView);
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return view.getHeight();
+        return scrolledView.getHeight();
     }
 
     static int computeVerticalScrollExtent(View view) {
+        View scrolledView = getScrolledView(view);
         try {
             Method method = View.class.getDeclaredMethod("computeVerticalScrollExtent");
             method.setAccessible(true);
-            return (int) method.invoke(view);
+            return (int) method.invoke(scrolledView);
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return view.getHeight();
+        return scrolledView.getHeight();
     }
 
     /**
@@ -90,22 +93,25 @@ public class ScrollUtils {
     }
 
     /**
-     * Check if this view can be scrolled vertically in a certain direction.
+     * 判断是否可以滑动
      *
-     * @param direction Negative to check scrolling up, positive to check scrolling down.
-     * @return true if this view can be scrolled in the specified direction, false otherwise.
+     * @param view
+     * @param direction
+     * @return
      */
     static boolean canScrollVertically(View view, int direction) {
-        if (view instanceof AbsListView) {
-            AbsListView listView = (AbsListView) view;
+        View scrolledView = getScrolledView(view);
+        if (scrolledView instanceof AbsListView) {
+            AbsListView listView = (AbsListView) scrolledView;
             return listView.canScrollList(direction);
         } else {
-            return view.canScrollVertically(direction);
+            return scrolledView.canScrollVertically(direction);
         }
     }
 
     /**
      * 获取当前触摸点下的View
+     *
      * @param rootView
      * @param touchX
      * @param touchY
@@ -155,9 +161,9 @@ public class ScrollUtils {
         return false;
     }
 
-    static int getRawX(View rootView,MotionEvent ev,int pointerIndex){
+    static int getRawX(View rootView, MotionEvent ev, int pointerIndex) {
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
-            return  (int)ev.getRawX(pointerIndex);
+            return (int) ev.getRawX(pointerIndex);
         } else {
             int[] position = new int[2];
             rootView.getLocationOnScreen(position);
@@ -166,9 +172,9 @@ public class ScrollUtils {
         }
     }
 
-    static int getRawY(View rootView,MotionEvent ev,int pointerIndex){
+    static int getRawY(View rootView, MotionEvent ev, int pointerIndex) {
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
-            return  (int)ev.getRawY(pointerIndex);
+            return (int) ev.getRawY(pointerIndex);
         } else {
             int[] position = new int[2];
             rootView.getLocationOnScreen(position);
@@ -207,6 +213,7 @@ public class ScrollUtils {
      * @return
      */
     static boolean isConsecutiveScrollerChild(View view) {
+
         if (view != null) {
             ViewGroup.LayoutParams lp = view.getLayoutParams();
 
@@ -218,7 +225,28 @@ public class ScrollUtils {
         return false;
     }
 
-    static boolean isRecyclerLayout(View view){
+    /**
+     * 判断是否是item复用的view(RecyclerView、AbsListView)
+     * @param view
+     * @return
+     */
+    static boolean isRecyclerLayout(View view) {
         return view instanceof RecyclerView || view instanceof AbsListView;
     }
+
+    /**
+     * 返回需要滑动的view，如果没有，就返回本身。
+     * @param view
+     * @return
+     */
+    static View getScrolledView(View view) {
+        if (view instanceof IConsecutiveScroller) {
+            View scrolledView = ((IConsecutiveScroller) view).getCurrentScrollerView();
+            if (scrolledView != null) {
+                return scrolledView;
+            }
+        }
+        return view;
+    }
+
 }
