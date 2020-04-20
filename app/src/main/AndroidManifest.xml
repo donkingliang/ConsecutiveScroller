@@ -14,6 +14,7 @@
         <activity android:name=".ConsecutiveActivity"></activity>
         <activity android:name=".StickyActivity" />
         <activity android:name=".SampleActivity" />
+        <activity android:name=".ViewPagerActivity" />
         <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
