@@ -14,7 +14,7 @@
         android:text="吸顶View - 1"
         android:textColor="@android:color/black"
         android:textSize="18sp"
-        app:layout_isSticky="true" />
+        app:layout_isSticky="false" />
 
     <WebView
         android:id="@+id/webView"
@@ -26,7 +26,7 @@
         android:layout_height="wrap_content"
         android:background="@android:color/white"
         android:orientation="vertical"
-        app:layout_isSticky="true">
+        app:layout_isSticky="false">
 
         <TextView
             android:layout_width="match_parent"
@@ -51,7 +51,7 @@
         android:text="吸顶View - 3"
         android:textColor="@android:color/black"
         android:textSize="18sp"
-        app:layout_isSticky="true" />
+        app:layout_isSticky="false" />
 
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
@@ -115,7 +115,6 @@
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 
-
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -124,11 +123,11 @@
         android:text="吸顶View - 4"
         android:textColor="@android:color/black"
         android:textSize="18sp"
-        app:layout_isSticky="true" />
+        app:layout_isSticky="false" />
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recyclerView2"
+    <com.donkingliang.consecutivescrollerdemo.widget.MyViewPager
+        android:id="@+id/viewPager"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="match_parent"/>
 
 </com.donkingliang.consecutivescroller.ConsecutiveScrollerLayout>
