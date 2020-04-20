@@ -27,9 +27,13 @@ public class MyViewPager extends ViewPager implements IConsecutiveScroller {
         super(context, attrs);
     }
 
+    /**
+     * 返回当前需要滑动的view。
+     * 注意：这个view不一定是ViewPager的直接子view，使用者应该根据自己的业务情况返回需要滑动的下级view。
+     * @return
+     */
     @Override
     public View getCurrentScrollerView() {
-
         int count = getChildCount();
         for (int i = 0; i < count; i++) {
             View view = getChildAt(i);
@@ -37,10 +41,13 @@ public class MyViewPager extends ViewPager implements IConsecutiveScroller {
                 return view;
             }
         }
-
         return this;
     }
 
+    /**
+     * 返回全部需要滑动的下级view
+     * @return
+     */
     @Override
     public List<View> getScrolledViews() {
         List<View> views = new ArrayList<>();
