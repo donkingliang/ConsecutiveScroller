@@ -159,6 +159,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScroll
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
         // 测量子view
         measureChildren(widthMeasureSpec, heightMeasureSpec);
+
     }
 
     @Override
@@ -504,7 +505,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScroll
             // 如果是要滑动到指定的View，判断滑动到目标位置，就停止滑动
             if (mScrollToIndex != -1) {
                 View view = getChildAt(mScrollToIndex);
-                if (getScrollY() + getPaddingTop() >= view.getTop()
+                if (getScrollY() + getPaddingTop() <= view.getTop()
                         && ScrollUtils.getScrollTopOffset(view) >= 0) {
                     mScrollToIndex = -1;
                     mSmoothScrollOffset = 0;
