@@ -95,6 +95,7 @@ public class ScrollUtils {
 
     /**
      * 判断是否可以滑动
+     *
      * @param view
      * @param direction
      * @return
@@ -225,13 +226,26 @@ public class ScrollUtils {
         return false;
     }
 
-    static boolean isRecyclerLayout(View view){
+    /**
+     * 判断是否是item复用的view(RecyclerView、AbsListView)
+     * @param view
+     * @return
+     */
+    static boolean isRecyclerLayout(View view) {
         return view instanceof RecyclerView || view instanceof AbsListView;
     }
 
-    static View getScrolledView(View view){
-        if (view instanceof IConsecutiveScroller){
-            return ((IConsecutiveScroller) view).getCurrentScrollerView();
+    /**
+     * 返回需要滑动的view，如果没有，就返回本身。
+     * @param view
+     * @return
+     */
+    static View getScrolledView(View view) {
+        if (view instanceof IConsecutiveScroller) {
+            View scrolledView = ((IConsecutiveScroller) view).getCurrentScrollerView();
+            if (scrolledView != null) {
+                return scrolledView;
+            }
         }
         return view;
     }
