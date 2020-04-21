@@ -97,6 +97,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScroll
     private View mScrollToTopView;
     private int mAdjust;
 
+
     /**
      * 滑动到指定view，目标view的index
      */
@@ -106,6 +107,9 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScroll
      * 滑动到指定view，平滑滑动时，每次滑动的距离
      */
     private int mSmoothScrollOffset = 0;
+
+
+    private boolean isPermanent;
 
     // 这是RecyclerView的代码，让ConsecutiveScrollerLayout的fling效果更接近于RecyclerView。
     static final Interpolator sQuinticInterpolator = new Interpolator() {
@@ -126,7 +130,14 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScroll
 
     public ConsecutiveScrollerLayout(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-
+        TypedArray a = null;
+        try {
+            a = context.obtainStyledAttributes(attrs, R.styleable.ConsecutiveScrollerLayout);
+            isPermanent = a.getBoolean(R.styleable.ConsecutiveScrollerLayout_layout_isPermanent, false);
+        } finally {
+            if (a != null)
+                a.recycle();
+        }
         mScroller = new OverScroller(getContext(), sQuinticInterpolator);
         ViewConfiguration viewConfiguration = ViewConfiguration.get(context);
         mMaximumVelocity = viewConfiguration.getScaledMaximumFlingVelocity();
@@ -895,38 +906,41 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScroll
             List<View> children = getStickyChildren();
             if (!children.isEmpty()) {
                 int count = children.size();
-
                 // 让所有的View恢复原来的状态
                 for (int i = 0; i < count; i++) {
                     View child = children.get(i);
                     child.setTranslationY(0);
                     child.setTranslationZ(0);
                 }
+                if (isPermanent) {//常驻
+                    permanentStickyChild(children);
+                } else {//
+                    // 需要吸顶的View
+                    View stickyView = null;
+                    // 下一个需要吸顶的View
+                    View nextStickyView = null;
 
-                // 需要吸顶的View
-                View stickyView = null;
-                // 下一个需要吸顶的View
-                View nextStickyView = null;
-
-                // 找到需要吸顶的View
-                for (int i = count - 1; i >= 0; i--) {
-                    View child = children.get(i);
-                    if (child.getTop() <= getScrollY()) {
-                        stickyView = child;
-                        if (i != count - 1) {
-                            nextStickyView = children.get(i + 1);
+                    // 找到需要吸顶的View
+                    for (int i = count - 1; i >= 0; i--) {
+                        View child = children.get(i);
+                        if (child.getTop() <= getScrollY()) {
+                            stickyView = child;
+                            if (i != count - 1) {
+                                nextStickyView = children.get(i + 1);
+                            }
+                            break;
                         }
-                        break;
+                    }
+
+                    if (stickyView != null) {
+                        int offset = 0;
+                        if (nextStickyView != null) {
+                            offset = Math.max(0, stickyView.getHeight() - (nextStickyView.getTop() - getScrollY()));
+                        }
+                        stickyChild(stickyView, offset);
                     }
                 }
 
-                if (stickyView != null) {
-                    int offset = 0;
-                    if (nextStickyView != null) {
-                        offset = Math.max(0, stickyView.getHeight() - (nextStickyView.getTop() - getScrollY()));
-                    }
-                    stickyChild(stickyView, offset);
-                }
             }
         }
     }
@@ -945,6 +959,32 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScroll
         // 把View设置为可点击的，避免吸顶View与其他子View重叠是，触摸事件透过吸顶View传递给下面的View，
         // 导致ConsecutiveScrollerLayout追踪布局的滑动出现偏差
         child.setClickable(true);
+    }
+
+    /**
+     * 子View吸顶常驻
+     * @param children
+     */
+    @SuppressLint("NewApi")
+    private void permanentStickyChild(List<View> children) {
+        for (int i = 0; i < children.size(); i++) {
+            View child = children.get(i);
+            int permanentHeight = getPermanentHeight(children, i);
+            if (child.getTop() <= getScrollY() + permanentHeight) {
+                child.setY(getScrollY() + permanentHeight);
+                child.setTranslationZ(1);
+                child.setClickable(true);
+            }
+        }
+    }
+
+    private int getPermanentHeight(List<View> children, int currentPosition) {
+        int height = 0;
+        for (int i = 0; i < currentPosition; i++) {
+            View child = children.get(i);
+            height += child.getMeasuredHeight();
+        }
+        return height;
     }
 
     /**
