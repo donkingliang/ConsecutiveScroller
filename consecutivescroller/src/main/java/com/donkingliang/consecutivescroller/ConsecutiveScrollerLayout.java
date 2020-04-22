@@ -230,8 +230,8 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScroll
                 mEventX = (int) ev.getX(actionIndex);
                 // 改变滑动的手指，重新询问事件拦截
                 requestDisallowInterceptTouchEvent(false);
-                isConsecutiveScrollerChild = ScrollUtils.isConsecutiveScrollerChild(getTouchTarget(
-                        ScrollUtils.getRawX(this, ev, actionIndex), ScrollUtils.getRawY(this, ev, actionIndex)));
+//                isConsecutiveScrollerChild = ScrollUtils.isConsecutiveScrollerChild(getTouchTarget(
+//                        ScrollUtils.getRawX(this, ev, actionIndex), ScrollUtils.getRawY(this, ev, actionIndex)));
                 break;
             case MotionEvent.ACTION_MOVE:
                 final int pointerIndex = ev.findPointerIndex(mActivePointerId);
@@ -254,10 +254,10 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScroll
                             return true;
                         }
                     }
-
-                    if (SCROLL_ORIENTATION == SCROLL_HORIZONTAL) {
-                        ev.setLocation(ev.getX(), mFixedEventY);
-                    }
+//
+//                    if (SCROLL_ORIENTATION == SCROLL_HORIZONTAL) {
+//                        ev.setLocation(ev.getX(), mFixedEventY);
+//                    }
                 }
 
                 mScrollOffset = offsetY;
@@ -286,11 +286,11 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScroll
         }
 
         boolean dispatch;
-        if (isConsecutiveScrollerChild && SCROLL_ORIENTATION != SCROLL_HORIZONTAL) {
-            dispatch = adjustScroll(ev);
-        } else {
+//        if (isConsecutiveScrollerChild && SCROLL_ORIENTATION != SCROLL_HORIZONTAL) {
+//            dispatch = adjustScroll(ev);
+//        } else {
             dispatch = super.dispatchTouchEvent(ev);
-        }
+//        }
         return dispatch;
     }
 
@@ -1099,16 +1099,17 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScroll
                 ScrollUtils.getRawY(this, ev, pointerIndex));
 
         if (target != null) {
-            ViewGroup.LayoutParams lp = target.getLayoutParams();
-            if (lp instanceof LayoutParams) {
-                if (!((LayoutParams) lp).isConsecutive) {
-                    return false;
-                }
-            }
-
-            if (ScrollUtils.canScrollVertically(target)) {
-                return true;
-            }
+           return ScrollUtils.isConsecutiveScrollerChild(target);
+//            ViewGroup.LayoutParams lp = target.getLayoutParams();
+//            if (lp instanceof LayoutParams) {
+//                if (!((LayoutParams) lp).isConsecutive) {
+//                    return false;
+//                }
+//            }
+//
+//            if (ScrollUtils.canScrollVertically(target)) {
+//                return true;
+//            }
         }
 
         return false;
