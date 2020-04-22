@@ -70,6 +70,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScroll
     private int mTouchY;
     private int mEventX;
     private int mEventY;
+    private float mFixedY;
 
     /**
      * 是否处于状态
@@ -249,6 +250,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScroll
                 checkTargetsScroll(false, false);
                 mTouching = true;
                 SCROLL_ORIENTATION = SCROLL_NONE;
+                mFixedY = ev.getY();
             case MotionEvent.ACTION_POINTER_DOWN:
                 mActivePointerId = ev.getPointerId(actionIndex);
                 mEventY = (int) ev.getY(actionIndex);
@@ -277,6 +279,11 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScroll
                             return true;
                         }
                     }
+                }
+
+                if (SCROLL_ORIENTATION == SCROLL_HORIZONTAL) {
+                    // 如果是横向滑动，设置ev的y坐标始终为开始的坐标，避免子view自己消费了垂直滑动事件。
+                    ev.setLocation(ev.getX(), mFixedY);
                 }
 
                 mEventY = (int) ev.getY(pointerIndex);
