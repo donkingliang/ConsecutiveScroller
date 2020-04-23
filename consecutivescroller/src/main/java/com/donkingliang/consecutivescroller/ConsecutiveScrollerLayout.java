@@ -51,6 +51,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScroll
      * VelocityTracker
      */
     private VelocityTracker mVelocityTracker;
+    private VelocityTracker mAdjustVelocityTracker;
 
     /**
      * MaximumVelocity
@@ -243,6 +244,11 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScroll
     public boolean dispatchTouchEvent(MotionEvent ev) {
         final int actionIndex = ev.getActionIndex();
 
+        if (SCROLL_ORIENTATION == SCROLL_HORIZONTAL) {
+            // 如果是横向滑动，设置ev的y坐标始终为开始的坐标，避免子view自己消费了垂直滑动事件。
+            ev.setLocation(ev.getX(), mFixedY);
+        }
+
         switch (ev.getActionMasked()) {
             case MotionEvent.ACTION_DOWN:
                 // 停止滑动
@@ -257,6 +263,8 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScroll
                 mEventX = (int) ev.getX(actionIndex);
                 // 改变滑动的手指，重新询问事件拦截
                 requestDisallowInterceptTouchEvent(false);
+                initOrResetAdjustVelocityTracker();
+                mAdjustVelocityTracker.addMovement(ev);
                 break;
             case MotionEvent.ACTION_MOVE:
                 final int pointerIndex = ev.findPointerIndex(mActivePointerId);
@@ -268,6 +276,8 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScroll
                         if (Math.abs(offsetX) > Math.abs(offsetY)) {
                             if (Math.abs(offsetX) >= mTouchSlop) {
                                 SCROLL_ORIENTATION = SCROLL_HORIZONTAL;
+                                // 如果是横向滑动，设置ev的y坐标始终为开始的坐标，避免子view自己消费了垂直滑动事件。
+                                ev.setLocation(ev.getX(), mFixedY);
                             }
                         } else {
                             if (Math.abs(offsetY) >= mTouchSlop) {
@@ -281,13 +291,11 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScroll
                     }
                 }
 
-                if (SCROLL_ORIENTATION == SCROLL_HORIZONTAL) {
-                    // 如果是横向滑动，设置ev的y坐标始终为开始的坐标，避免子view自己消费了垂直滑动事件。
-                    ev.setLocation(ev.getX(), mFixedY);
-                }
-
                 mEventY = (int) ev.getY(pointerIndex);
                 mEventX = (int) ev.getX(pointerIndex);
+
+                initAdjustVelocityTrackerIfNotExists();
+                mAdjustVelocityTracker.addMovement(ev);
                 break;
             case MotionEvent.ACTION_POINTER_UP:
                 if (mActivePointerId == ev.getPointerId(actionIndex)) { // 如果松开的是活动手指, 让还停留在屏幕上的最后一根手指作为活动手指
@@ -299,9 +307,26 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScroll
                     mEventY = (int) ev.getY(newPointerIndex);
                     mEventX = (int) ev.getX(newPointerIndex);
                 }
+                initAdjustVelocityTrackerIfNotExists();
+                mAdjustVelocityTracker.addMovement(ev);
                 break;
             case MotionEvent.ACTION_CANCEL:
             case MotionEvent.ACTION_UP:
+
+                if (mAdjustVelocityTracker != null) {
+                    mAdjustVelocityTracker.addMovement(ev);
+                    mAdjustVelocityTracker.computeCurrentVelocity(1000, mMaximumVelocity);
+                    int yVelocity = (int) mAdjustVelocityTracker.getYVelocity();
+                    recycleAdjustVelocityTracker();
+                   boolean canScrollVerticallyChild = ScrollUtils.canScrollVertically(getTouchTarget(
+                            ScrollUtils.getRawX(this, ev, actionIndex), ScrollUtils.getRawY(this, ev, actionIndex)));
+                    if (SCROLL_ORIENTATION == SCROLL_HORIZONTAL && canScrollVerticallyChild && Math.abs(yVelocity) > mMinimumVelocity){
+                        //如果当前是横向滑动，但是触摸的控件可以垂直滑动，并且产生垂直滑动的fling事件，
+                        // 为了不让这个控件垂直fling，把事件设置为MotionEvent.ACTION_CANCEL。
+                        ev.setAction(MotionEvent.ACTION_CANCEL);
+                    }
+                }
+
                 mEventY = 0;
                 mEventX = 0;
                 mTouching = false;
@@ -884,6 +909,36 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScroll
         if (mVelocityTracker != null) {
             mVelocityTracker.recycle();
             mVelocityTracker = null;
+        }
+    }
+
+    /**
+     * 初始化VelocityTracker
+     */
+    private void initOrResetAdjustVelocityTracker() {
+        if (mAdjustVelocityTracker == null) {
+            mAdjustVelocityTracker = VelocityTracker.obtain();
+        } else {
+            mAdjustVelocityTracker.clear();
+        }
+    }
+
+    /**
+     * 初始化VelocityTracker
+     */
+    private void initAdjustVelocityTrackerIfNotExists() {
+        if (mAdjustVelocityTracker == null) {
+            mAdjustVelocityTracker = VelocityTracker.obtain();
+        }
+    }
+
+    /**
+     * 回收VelocityTracker
+     */
+    private void recycleAdjustVelocityTracker() {
+        if (mAdjustVelocityTracker != null) {
+            mAdjustVelocityTracker.recycle();
+            mAdjustVelocityTracker = null;
         }
     }
 
