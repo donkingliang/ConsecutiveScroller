@@ -215,7 +215,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScroll
         }
 
         // 布局发生变化，检测滑动位置
-        checkLayoutChange(false);
+        checkLayoutChange(changed, false);
     }
 
     private void resetScrollToTopView() {
@@ -318,9 +318,9 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScroll
                     mAdjustVelocityTracker.computeCurrentVelocity(1000, mMaximumVelocity);
                     int yVelocity = (int) mAdjustVelocityTracker.getYVelocity();
                     recycleAdjustVelocityTracker();
-                   boolean canScrollVerticallyChild = ScrollUtils.canScrollVertically(getTouchTarget(
+                    boolean canScrollVerticallyChild = ScrollUtils.canScrollVertically(getTouchTarget(
                             ScrollUtils.getRawX(this, ev, actionIndex), ScrollUtils.getRawY(this, ev, actionIndex)));
-                    if (SCROLL_ORIENTATION == SCROLL_HORIZONTAL && canScrollVerticallyChild && Math.abs(yVelocity) > mMinimumVelocity){
+                    if (SCROLL_ORIENTATION == SCROLL_HORIZONTAL && canScrollVerticallyChild && Math.abs(yVelocity) > mMinimumVelocity) {
                         //如果当前是横向滑动，但是触摸的控件可以垂直滑动，并且产生垂直滑动的fling事件，
                         // 为了不让这个控件垂直fling，把事件设置为MotionEvent.ACTION_CANCEL。
                         ev.setAction(MotionEvent.ACTION_CANCEL);
@@ -731,14 +731,14 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScroll
 
 
     public void checkLayoutChange() {
-        checkLayoutChange(true);
+        checkLayoutChange(false, true);
     }
 
     /**
      * 布局发生变化，重新检查所有子View是否正确显示
      */
-    public void checkLayoutChange(boolean isForce) {
-        if (mScrollToTopView != null) {
+    public void checkLayoutChange(boolean changed, boolean isForce) {
+        if (mScrollToTopView != null && changed) {
             if (indexOfChild(mScrollToTopView) != -1) {
                 scrollSelf(mScrollToTopView.getTop() + mAdjust);
             }
