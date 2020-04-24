@@ -257,16 +257,34 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScroll
                 mTouching = true;
                 SCROLL_ORIENTATION = SCROLL_NONE;
                 mFixedY = ev.getY();
+                mActivePointerId = ev.getPointerId(actionIndex);
+                mEventY = (int) ev.getY(actionIndex);
+                mEventX = (int) ev.getX(actionIndex);
+
+                initOrResetAdjustVelocityTracker();
+                mAdjustVelocityTracker.addMovement(ev);
+
+                initOrResetVelocityTracker();
+                mVelocityTracker.addMovement(ev);
+                break;
             case MotionEvent.ACTION_POINTER_DOWN:
                 mActivePointerId = ev.getPointerId(actionIndex);
                 mEventY = (int) ev.getY(actionIndex);
                 mEventX = (int) ev.getX(actionIndex);
                 // 改变滑动的手指，重新询问事件拦截
                 requestDisallowInterceptTouchEvent(false);
-                initOrResetAdjustVelocityTracker();
+
+                initAdjustVelocityTrackerIfNotExists();
                 mAdjustVelocityTracker.addMovement(ev);
+
+                initVelocityTrackerIfNotExists();
+                mVelocityTracker.addMovement(ev);
                 break;
             case MotionEvent.ACTION_MOVE:
+
+                initVelocityTrackerIfNotExists();
+                mVelocityTracker.addMovement(ev);
+
                 final int pointerIndex = ev.findPointerIndex(mActivePointerId);
                 int offsetY = (int) ev.getY(pointerIndex) - mEventY;
                 int offsetX = (int) ev.getX(pointerIndex) - mEventX;
@@ -309,6 +327,9 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScroll
                 }
                 initAdjustVelocityTrackerIfNotExists();
                 mAdjustVelocityTracker.addMovement(ev);
+
+                initVelocityTrackerIfNotExists();
+                mVelocityTracker.addMovement(ev);
                 break;
             case MotionEvent.ACTION_CANCEL:
             case MotionEvent.ACTION_UP:
@@ -327,6 +348,10 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScroll
                     }
                 }
 
+                if (mVelocityTracker != null) {
+                    mVelocityTracker.addMovement(ev);
+                }
+
                 mEventY = 0;
                 mEventX = 0;
                 mTouching = false;
@@ -334,7 +359,16 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScroll
                 break;
         }
 
-        return super.dispatchTouchEvent(ev);
+        boolean dispatch = super.dispatchTouchEvent(ev);
+
+        switch (ev.getActionMasked()) {
+            case MotionEvent.ACTION_CANCEL:
+            case MotionEvent.ACTION_UP:
+                recycleVelocityTracker();
+                break;
+        }
+
+        return dispatch;
     }
 
     @Override
@@ -356,8 +390,6 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScroll
             case MotionEvent.ACTION_POINTER_DOWN:
             case MotionEvent.ACTION_POINTER_UP:
                 mTouchY = (int) ev.getY(pointerIndex);
-                initOrResetVelocityTracker();
-                mVelocityTracker.addMovement(ev);
                 break;
             case MotionEvent.ACTION_MOVE:
                 if (mTouchY == 0) {
@@ -370,8 +402,6 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScroll
                 int oldY = mOwnScrollY;
                 scrollBy(0, -dy);
                 int deltaY = -dy;
-                initVelocityTrackerIfNotExists();
-                mVelocityTracker.addMovement(ev);
 
                 // 判断是否显示边界阴影
                 final int range = getScrollRange();
@@ -409,11 +439,9 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScroll
                 mTouchY = 0;
 
                 if (mVelocityTracker != null) {
-                    mVelocityTracker.addMovement(ev);
                     mVelocityTracker.computeCurrentVelocity(1000, mMaximumVelocity);
                     int yVelocity = (int) mVelocityTracker.getYVelocity();
                     yVelocity = Math.max(-mMaximumVelocity, Math.min(yVelocity, mMaximumVelocity));
-                    recycleVelocityTracker();
                     fling(-yVelocity);
                 }
                 break;
