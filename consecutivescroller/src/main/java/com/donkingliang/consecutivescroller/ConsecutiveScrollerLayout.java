@@ -1220,7 +1220,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScroll
             if (!ScrollUtils.isConsecutiveScrollerChild(child)) {
                 range += child.getHeight();
             } else {
-                range += Math.max(ScrollUtils.computeVerticalScrollRange(child) + child.getPaddingTop() + child.getPaddingBottom(),
+                range += Math.max(ScrollUtils.computeVerticalScrollRange(child),
                         child.getHeight());
             }
         }
