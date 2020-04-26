@@ -20,12 +20,12 @@ allprojects {
 在Module的build.gradle在添加以下代码
 ```groovy
 // 使用了Androidx
-implementation 'com.github.donkingliang:ConsecutiveScroller:2.4.0'
+implementation 'com.github.donkingliang:ConsecutiveScroller:2.5.0'
 
 // 或者
 
 // 使用Android support包
-implementation 'com.github.donkingliang:ConsecutiveScroller:1.4.0'
+implementation 'com.github.donkingliang:ConsecutiveScroller:1.5.1'
 ```
 由于Androidx和Android support包不兼容，所以ConsecutiveScroller使用两个版本分别支持使用Androidx和使用Android support包的项目。
 大版本号1使用Android support包，大版本号2使用Androidx。
@@ -301,7 +301,9 @@ public class MyFrameLayout extends FrameLayout implements IConsecutiveScroller {
 ```
 这样ConsecutiveScrollerLayout就能正确地处理ScrollView的滑动。这是一个简单的例子，在实际的需求中，我们一般不需要这样做。
 
-**注意：** getCurrentScrollerView()和getScrolledViews()必须正确地返回需要滑动的view，这些view可以是经过多层嵌套的，不一定是直接子view。所以使用者应该按照自己的实际场景去实现者两个方法。
+**注意：**
+1、getCurrentScrollerView()和getScrolledViews()必须正确地返回需要滑动的view，这些view可以是经过多层嵌套的，不一定是直接子view。所以使用者应该按照自己的实际场景去实现者两个方法。
+2、滑动的控件应该跟嵌套它的子view的高度保持一致，也就是说滑动的控件高度应该是match_parent，并且包裹它的子view和它本身都不要设置上下边距(margin和ppadding)。宽度没有这个限制。
 
 #### 对ViewPager的支持
 IConsecutiveScroller的一个常用的场景是对ViewPager的支持。ViewPager是左右滑动的控件，但是我们一般会在ViewPager下嵌套RecyclerView等列表布局。为了能让ConsecutiveScrollerLayout正确地滑动ViewPager下的RecyclerView，使RecyclerView与ConsecutiveScrollerLayout形成一个滑动整体。需要让ViewPager实现IConsecutiveScroller接口，并返回需要滑动的RecyclerView。
