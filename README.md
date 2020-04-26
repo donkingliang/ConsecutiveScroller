@@ -302,7 +302,9 @@ public class MyFrameLayout extends FrameLayout implements IConsecutiveScroller {
 这样ConsecutiveScrollerLayout就能正确地处理ScrollView的滑动。这是一个简单的例子，在实际的需求中，我们一般不需要这样做。
 
 **注意：**
+
 1、getCurrentScrollerView()和getScrolledViews()必须正确地返回需要滑动的view，这些view可以是经过多层嵌套的，不一定是直接子view。所以使用者应该按照自己的实际场景去实现者两个方法。
+
 2、滑动的控件应该跟嵌套它的子view的高度保持一致，也就是说滑动的控件高度应该是match_parent，并且包裹它的子view和它本身都不要设置上下边距(margin和ppadding)。宽度没有这个限制。
 
 #### 对ViewPager的支持
