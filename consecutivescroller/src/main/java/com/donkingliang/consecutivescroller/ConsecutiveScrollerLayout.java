@@ -618,7 +618,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScroll
             // 如果是要滑动到指定的View，判断滑动到目标位置，就停止滑动
             if (mScrollToIndex != -1) {
                 View view = getChildAt(mScrollToIndex);
-                if (getScrollY() + getPaddingTop() >= view.getTop()) {
+                if (getScrollY() + getPaddingTop() >= view.getTop() || isScrollBottom()) {
                     mScrollToIndex = -1;
                     mSmoothScrollOffset = 0;
                     break;
@@ -669,8 +669,8 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScroll
             // 如果是要滑动到指定的View，判断滑动到目标位置，就停止滑动
             if (mScrollToIndex != -1) {
                 View view = getChildAt(mScrollToIndex);
-                if (getScrollY() + getPaddingTop() <= view.getTop()
-                        && ScrollUtils.getScrollTopOffset(view) >= 0) {
+                if ((getScrollY() + getPaddingTop() <= view.getTop()
+                        && ScrollUtils.getScrollTopOffset(view) >= 0) || isScrollTop()) {
                     mScrollToIndex = -1;
                     mSmoothScrollOffset = 0;
                     break;
