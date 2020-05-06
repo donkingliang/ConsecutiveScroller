@@ -231,7 +231,8 @@ public class ScrollUtils {
      * @return
      */
     static boolean isRecyclerLayout(View view) {
-        return view instanceof RecyclerView || view instanceof AbsListView;
+        View scrolledView = getScrolledView(view);
+        return scrolledView instanceof RecyclerView || scrolledView instanceof AbsListView;
     }
 
     /**
