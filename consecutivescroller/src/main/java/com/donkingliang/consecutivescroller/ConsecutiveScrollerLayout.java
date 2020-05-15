@@ -97,7 +97,6 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScroll
     private View mScrollToTopView;
     private int mAdjust;
 
-
     /**
      * 滑动到指定view，目标view的index
      */
@@ -512,7 +511,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScroll
         }
     }
 
-    int getScrollRange() {
+    private int getScrollRange() {
         int scrollRange = 0;
         if (getChildCount() > 0) {
             int childSize = computeVerticalScrollRange();
@@ -572,7 +571,6 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScroll
                 invalidate();
             }
 
-
             if (mScroller.isFinished()) {
                 // 滚动结束，校验子view内容的滚动位置
                 checkTargetsScroll(false, false);
@@ -624,7 +622,6 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScroll
         int remainder = offset;
         int oldScrollY = mOwnScrollY;
         do {
-
             // 如果是要滑动到指定的View，判断滑动到目标位置，就停止滑动
             if (mScrollToIndex != -1) {
                 View view = getChildAt(mScrollToIndex);
@@ -675,7 +672,6 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScroll
         int remainder = offset;
         int oldScrollY = mOwnScrollY;
         do {
-
             // 如果是要滑动到指定的View，判断滑动到目标位置，就停止滑动
             if (mScrollToIndex != -1) {
                 View view = getChildAt(mScrollToIndex);
@@ -766,7 +762,6 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScroll
             scrolledView.scrollBy(0, y);
         }
     }
-
 
     public void checkLayoutChange() {
         checkLayoutChange(false, true);
@@ -1459,5 +1454,21 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScroll
             }
             invalidate();
         }
+    }
+
+    /**
+     * 设置吸顶常驻
+     *
+     * @param isPermanent
+     */
+    public void setPermanent(boolean isPermanent) {
+        if (this.isPermanent != isPermanent) {
+            this.isPermanent = isPermanent;
+            resetSticky();
+        }
+    }
+
+    public boolean isPermanent() {
+        return isPermanent;
     }
 }
