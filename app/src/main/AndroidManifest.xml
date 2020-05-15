@@ -11,10 +11,11 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".ConsecutiveActivity"></activity>
+        <activity android:name=".ConsecutiveActivity"/>
         <activity android:name=".StickyActivity" />
         <activity android:name=".SampleActivity" />
         <activity android:name=".ViewPagerActivity" />
+        <activity android:name=".PermanentStickyActivity" />
         <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

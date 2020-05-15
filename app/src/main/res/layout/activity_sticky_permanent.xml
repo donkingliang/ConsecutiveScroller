@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.donkingliang.consecutivescroller.ConsecutiveScrollerLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/scrollerLayout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    app:layout_isPermanent="true"
+    android:scrollbars="vertical">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@android:color/white"
+        android:padding="10dp"
+        android:text="吸顶View - 1"
+        android:textColor="@android:color/black"
+        android:textSize="18sp"
+        app:layout_isSticky="true" />
+
+    <WebView
+        android:id="@+id/webView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@android:color/white"
+        android:orientation="vertical"
+        app:layout_isSticky="true">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="10dp"
+            android:text="吸顶View - 2 我是个LinearLayout"
+            android:textColor="@android:color/black"
+            android:textSize="18sp" />
+
+    </LinearLayout>
+
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/recyclerView1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@android:color/white"
+        android:padding="10dp"
+        android:text="吸顶View - 3"
+        android:textColor="@android:color/black"
+        android:textSize="18sp"
+        app:layout_isSticky="true" />
+
+    <android.support.v4.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@android:color/holo_blue_bright"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="200dp"
+                android:gravity="center"
+                android:text="NestedScrollView"
+                android:textColor="@android:color/black"
+                android:textSize="24sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="200dp"
+                android:gravity="center"
+                android:text="NestedScrollView"
+                android:textColor="@android:color/black"
+                android:textSize="24sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="200dp"
+                android:gravity="center"
+                android:text="NestedScrollView"
+                android:textColor="@android:color/black"
+                android:textSize="24sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="200dp"
+                android:gravity="center"
+                android:text="NestedScrollView"
+                android:textColor="@android:color/black"
+                android:textSize="24sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="200dp"
+                android:gravity="center"
+                android:text="NestedScrollView"
+                android:textColor="@android:color/black"
+                android:textSize="24sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="200dp"
+                android:gravity="center"
+                android:text="NestedScrollView"
+                android:textColor="@android:color/black"
+                android:textSize="24sp" />
+
+        </LinearLayout>
+    </android.support.v4.widget.NestedScrollView>
+
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@android:color/white"
+        android:padding="10dp"
+        android:text="吸顶View - 4"
+        android:textColor="@android:color/black"
+        android:textSize="18sp"
+        app:layout_isSticky="true" />
+
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/recyclerView2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+</com.donkingliang.consecutivescroller.ConsecutiveScrollerLayout>

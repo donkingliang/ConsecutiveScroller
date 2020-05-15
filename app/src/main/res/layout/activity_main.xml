@@ -30,4 +30,10 @@
         android:text="支持ViewPager"
         android:textAllCaps="false" />
 
+    <Button
+        android:id="@+id/sticky_permanent"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="布局吸顶常驻" />
+
 </LinearLayout>
