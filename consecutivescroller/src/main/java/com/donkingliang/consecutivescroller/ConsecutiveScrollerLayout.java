@@ -163,6 +163,11 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScroll
 
     @Override
     public void addView(View child, int index, ViewGroup.LayoutParams params) {
+
+        if (params instanceof LayoutParams) {
+            invalidTopAndBottomMargin((LayoutParams) params);
+        }
+
         super.addView(child, index, params);
 
         // 去掉子View的滚动条。选择在这里做这个操作，而不是在onFinishInflate方法中完成，是为了兼顾用代码add子View的情况
@@ -195,8 +200,34 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScroll
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         resetScrollToTopView();
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+
         // 测量子view
-        measureChildren(widthMeasureSpec, heightMeasureSpec);
+        List<View> children = getNonGoneChildren();
+        int count = children.size();
+        for (int i = 0; i < count; i++) {
+            View child = children.get(i);
+            measureChildWithMargins(child, widthMeasureSpec, 0, heightMeasureSpec, 0);
+        }
+    }
+
+    @Override
+    protected void measureChildWithMargins(View child, int parentWidthMeasureSpec, int widthUsed, int parentHeightMeasureSpec, int heightUsed) {
+
+        invalidTopAndBottomMargin((LayoutParams) child.getLayoutParams());
+
+        super.measureChildWithMargins(child, parentWidthMeasureSpec, widthUsed, parentHeightMeasureSpec, heightUsed);
+    }
+
+    /**
+     * 使子view的topMargin和bottomMargin属性无效
+     *
+     * @param params
+     */
+    private void invalidTopAndBottomMargin(LayoutParams params) {
+        if (params != null) {
+            params.topMargin = 0;
+            params.bottomMargin = 0;
+        }
     }
 
     @Override
@@ -210,8 +241,9 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScroll
         int count = children.size();
         for (int i = 0; i < count; i++) {
             View child = children.get(i);
+            MarginLayoutParams lp = (MarginLayoutParams) child.getLayoutParams();
             int bottom = childTop + child.getMeasuredHeight();
-            child.layout(left, childTop, left + child.getMeasuredWidth(), bottom);
+            child.layout(left + lp.leftMargin, childTop, left + lp.leftMargin + child.getMeasuredWidth(), bottom);
             childTop = bottom;
             // 联动容器可滚动最大距离
             mScrollRange += child.getHeight();
@@ -1122,6 +1154,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScroll
 
     /**
      * 子View吸顶常驻
+     *
      * @param children
      */
     @SuppressLint("NewApi")
@@ -1303,7 +1336,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScroll
         return false;
     }
 
-    public static class LayoutParams extends ViewGroup.LayoutParams {
+    public static class LayoutParams extends ViewGroup.MarginLayoutParams {
 
         /**
          * 是否与父布局整体滑动，设置为false时，父布局不会拦截它的事件，滑动事件将由子view处理。
@@ -1321,7 +1354,6 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScroll
          * 设置子view吸顶悬浮
          */
         public boolean isSticky = false;
-
 
         public LayoutParams(Context c, AttributeSet attrs) {
             super(c, attrs);
