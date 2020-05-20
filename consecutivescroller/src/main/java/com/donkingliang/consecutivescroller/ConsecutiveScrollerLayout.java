@@ -6,7 +6,6 @@ import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.os.Build;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.VelocityTracker;
 import android.view.View;
@@ -21,9 +20,7 @@ import androidx.annotation.NonNull;
 import androidx.core.view.NestedScrollingParent;
 import androidx.core.view.NestedScrollingParentHelper;
 import androidx.core.view.ViewCompat;
-import androidx.core.view.ViewParentCompat;
 import androidx.core.widget.EdgeEffectCompat;
-import androidx.viewpager.widget.ViewPager;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -792,7 +789,9 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScroll
         View scrolledView = ScrollUtils.getScrolledView(child);
         if (scrolledView instanceof AbsListView) {
             AbsListView listView = (AbsListView) scrolledView;
-            listView.scrollListBy(y);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                listView.scrollListBy(y);
+            }
         } else {
             scrolledView.scrollBy(0, y);
         }
@@ -1117,7 +1116,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScroll
                     // 找到需要吸顶的View
                     for (int i = count - 1; i >= 0; i--) {
                         View child = children.get(i);
-                        if (child.getTop() <= getScrollY() + 40) {
+                        if (child.getTop() <= getScrollY()) {
                             stickyView = child;
                             if (i != count - 1) {
                                 nextStickyView = children.get(i + 1);
@@ -1147,7 +1146,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScroll
      */
     @SuppressLint("NewApi")
     private void stickyChild(View child, int offset) {
-        child.setY(getScrollY()  + 40 - offset);
+        child.setY(getScrollY() - offset);
         child.setTranslationZ(1);
 
         // 把View设置为可点击的，避免吸顶View与其他子View重叠是，触摸事件透过吸顶View传递给下面的View，
@@ -1440,7 +1439,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScroll
                 return true;
             }
         }
-        if (Build.VERSION.SDK_INT >= 21) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             return super.onNestedFling(target, velocityX, velocityY, consumed);
         } else {
             return false;
@@ -1449,7 +1448,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScroll
 
     @Override
     public boolean onNestedPreFling(@NonNull View target, float velocityX, float velocityY) {
-        if (Build.VERSION.SDK_INT >= 21) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             return super.onNestedPreFling(target, velocityX, velocityY);
         } else {
             return false;

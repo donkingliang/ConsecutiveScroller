@@ -1,5 +1,6 @@
 package com.donkingliang.consecutivescroller;
 
+import android.os.Build;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
@@ -104,7 +105,12 @@ public class ScrollUtils {
         View scrolledView = getScrolledView(view);
         if (scrolledView instanceof AbsListView) {
             AbsListView listView = (AbsListView) scrolledView;
-            return listView.canScrollList(direction);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                return listView.canScrollList(direction);
+            } else {
+                // 低版本手机(android 19以下)，AbsListView不支持滑动
+                return false;
+            }
         } else {
             return scrolledView.canScrollVertically(direction);
         }
