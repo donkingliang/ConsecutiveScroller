@@ -32,7 +32,16 @@ import java.util.List;
  */
 public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScrollingParent {
 
+    /**
+     * 吸顶view是否常驻，不被推出屏幕
+     */
     private boolean isPermanent;
+
+    /**
+     * 吸顶view到顶部的偏移量
+     */
+    private int mStickyOffset = 0;
+
     /**
      * 记录布局垂直的偏移量，它是包括了自己的偏移量(mScrollY)和所有子View的偏移量的总和，
      * 取代View原有的mScrollY作为对外提供的偏移量值
@@ -1116,7 +1125,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScroll
                     // 找到需要吸顶的View
                     for (int i = count - 1; i >= 0; i--) {
                         View child = children.get(i);
-                        if (child.getTop() <= getScrollY()) {
+                        if (child.getTop() <= getScrollY() + mStickyOffset) {
                             stickyView = child;
                             if (i != count - 1) {
                                 nextStickyView = children.get(i + 1);
@@ -1128,7 +1137,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScroll
                     if (stickyView != null) {
                         int offset = 0;
                         if (nextStickyView != null) {
-                            offset = Math.max(0, stickyView.getHeight() - (nextStickyView.getTop() - getScrollY()));
+                            offset = Math.max(0, stickyView.getHeight() - (nextStickyView.getTop() - getScrollY() - mStickyOffset));
                         }
                         stickyChild(stickyView, offset);
                     }
@@ -1146,7 +1155,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScroll
      */
     @SuppressLint("NewApi")
     private void stickyChild(View child, int offset) {
-        child.setY(getScrollY() - offset);
+        child.setY(getScrollY() + mStickyOffset - offset);
         child.setTranslationZ(1);
 
         // 把View设置为可点击的，避免吸顶View与其他子View重叠是，触摸事件透过吸顶View传递给下面的View，
@@ -1164,8 +1173,8 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScroll
         for (int i = 0; i < children.size(); i++) {
             View child = children.get(i);
             int permanentHeight = getPermanentHeight(children, i);
-            if (child.getTop() <= getScrollY() + permanentHeight) {
-                child.setY(getScrollY() + permanentHeight);
+            if (child.getTop() <= getScrollY() + permanentHeight + mStickyOffset) {
+                child.setY(getScrollY() + permanentHeight + mStickyOffset);
                 child.setTranslationZ(1);
                 child.setClickable(true);
             }
@@ -1511,5 +1520,21 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScroll
 
     public boolean isPermanent() {
         return isPermanent;
+    }
+
+    /**
+     * 设置吸顶view到顶部的偏移量，允许吸顶view在距离顶部offset偏移量的地方吸顶停留。
+     *
+     * @param offset
+     */
+    public void setStickyOffset(int offset) {
+        if (mStickyOffset != offset) {
+            mStickyOffset = offset;
+            resetSticky();
+        }
+    }
+
+    public int getStickyOffset() {
+        return mStickyOffset;
     }
 }
