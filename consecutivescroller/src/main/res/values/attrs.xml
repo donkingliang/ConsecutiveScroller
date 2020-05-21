@@ -6,6 +6,6 @@
         <attr name="layout_isSticky" format="boolean"/>
     </declare-styleable>
     <declare-styleable name="ConsecutiveScrollerLayout">
-        <attr name="layout_isPermanent" format="boolean"/>
+        <attr name="isPermanent" format="boolean"/>
     </declare-styleable>
 </resources>

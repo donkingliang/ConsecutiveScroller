@@ -17,6 +17,7 @@ import android.widget.EdgeEffect;
 import android.widget.OverScroller;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.core.view.NestedScrollingParent;
 import androidx.core.view.NestedScrollingParentHelper;
 import androidx.core.view.ViewCompat;
@@ -31,16 +32,6 @@ import java.util.List;
  * @Date 2020/3/13
  */
 public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScrollingParent {
-
-    /**
-     * 吸顶view是否常驻，不被推出屏幕
-     */
-    private boolean isPermanent;
-
-    /**
-     * 吸顶view到顶部的偏移量
-     */
-    private int mStickyOffset = 0;
 
     /**
      * 记录布局垂直的偏移量，它是包括了自己的偏移量(mScrollY)和所有子View的偏移量的总和，
@@ -130,6 +121,38 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScroll
      */
     private int mLastScrollerY;
 
+    /**
+     * 吸顶view是否常驻，不被推出屏幕
+     */
+    private boolean isPermanent;
+
+    /**
+     * 吸顶view到顶部的偏移量
+     */
+    private int mStickyOffset = 0;
+
+    /**
+     * 保存当前吸顶的view(普通吸顶模式中，正在吸顶的view只有一个)
+     */
+    private View mCurrentStickyView;
+
+    /**
+     * 保存当前吸顶的view(常驻吸顶模式中，正在吸顶的view可能有多个)
+     */
+    private final List<View> mCurrentStickyViews = new ArrayList<>();
+    // 临时保存吸顶的view，用于判断吸顶view是否改变了
+    private final List<View> mTempStickyViews = new ArrayList<>();
+
+    /**
+     * 普通吸顶模式,监听吸顶变化
+     */
+    private OnStickyChangeListener mOnStickyChangeListener;
+
+    /**
+     * 常驻吸顶模式,监听吸顶变化
+     */
+    private OnPermanentStickyChangeListener mOnPermanentStickyChangeListener;
+
     // 这是RecyclerView的代码，让ConsecutiveScrollerLayout的fling效果更接近于RecyclerView。
     static final Interpolator sQuinticInterpolator = new Interpolator() {
         @Override
@@ -152,7 +175,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScroll
         TypedArray a = null;
         try {
             a = context.obtainStyledAttributes(attrs, R.styleable.ConsecutiveScrollerLayout);
-            isPermanent = a.getBoolean(R.styleable.ConsecutiveScrollerLayout_layout_isPermanent, false);
+            isPermanent = a.getBoolean(R.styleable.ConsecutiveScrollerLayout_isPermanent, false);
         } finally {
             if (a != null)
                 a.recycle();
@@ -703,7 +726,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScroll
         } while (scrollOffset > 0 && remainder > 0);
 
         if (oldScrollY != mOwnScrollY) {
-            onScrollChange(mOwnScrollY, oldScrollY);
+            scrollChange(mOwnScrollY, oldScrollY);
             resetSticky();
         }
     }
@@ -755,7 +778,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScroll
         } while (scrollOffset < 0 && remainder < 0);
 
         if (oldScrollY != mOwnScrollY) {
-            onScrollChange(mOwnScrollY, oldScrollY);
+            scrollChange(mOwnScrollY, oldScrollY);
             resetSticky();
         }
     }
@@ -771,9 +794,21 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScroll
         dispatchScroll(y);
     }
 
-    private void onScrollChange(int scrollY, int oldScrollY) {
+    private void scrollChange(int scrollY, int oldScrollY) {
         if (mOnScrollChangeListener != null) {
             mOnScrollChangeListener.onScrollChange(this, scrollY, oldScrollY);
+        }
+    }
+
+    private void stickyChange(View oldStickyView, View newStickyView) {
+        if (mOnStickyChangeListener != null) {
+            mOnStickyChangeListener.OnStickyChange(oldStickyView, newStickyView);
+        }
+    }
+
+    private void permanentStickyChange(List<View> mCurrentStickyViews) {
+        if (mOnPermanentStickyChangeListener != null) {
+            mOnPermanentStickyChangeListener.OnStickyChange(mCurrentStickyViews);
         }
     }
 
@@ -896,7 +931,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScroll
         computeOwnScrollOffset();
         if (isLayoutChange) {
             if (oldScrollY != mOwnScrollY) {
-                onScrollChange(mOwnScrollY, oldScrollY);
+                scrollChange(mOwnScrollY, oldScrollY);
             }
         }
 
@@ -1115,8 +1150,12 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScroll
                     child.setTranslationZ(0);
                 }
                 if (isPermanent) {//常驻
+                    clearCurrentStickyView();
                     permanentStickyChild(children);
-                } else {//
+                } else {
+
+                    clearCurrentStickyViews();
+
                     // 需要吸顶的View
                     View stickyView = null;
                     // 下一个需要吸顶的View
@@ -1125,7 +1164,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScroll
                     // 找到需要吸顶的View
                     for (int i = count - 1; i >= 0; i--) {
                         View child = children.get(i);
-                        if (child.getTop() <= getScrollY() + mStickyOffset) {
+                        if (getScrollY() > 0 && child.getTop() <= getScrollY() + mStickyOffset) {
                             stickyView = child;
                             if (i != count - 1) {
                                 nextStickyView = children.get(i + 1);
@@ -1134,6 +1173,9 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScroll
                         }
                     }
 
+                    View oldStickyView = mCurrentStickyView;
+                    View newStickyView = stickyView;
+
                     if (stickyView != null) {
                         int offset = 0;
                         if (nextStickyView != null) {
@@ -1141,9 +1183,32 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScroll
                         }
                         stickyChild(stickyView, offset);
                     }
-                }
 
+                    if (oldStickyView != newStickyView) {
+                        mCurrentStickyView = newStickyView;
+                        stickyChange(oldStickyView, newStickyView);
+                    }
+                }
+            } else {
+                // 没有吸顶view
+                clearCurrentStickyView();
+                clearCurrentStickyViews();
             }
+        }
+    }
+
+    private void clearCurrentStickyView() {
+        if (mCurrentStickyView != null) {
+            View oldStickyView = mCurrentStickyView;
+            mCurrentStickyView = null;
+            stickyChange(oldStickyView, null);
+        }
+    }
+
+    private void clearCurrentStickyViews() {
+        if (!mCurrentStickyViews.isEmpty()) {
+            mCurrentStickyViews.clear();
+            permanentStickyChange(mCurrentStickyViews);
         }
     }
 
@@ -1170,14 +1235,23 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScroll
      */
     @SuppressLint("NewApi")
     private void permanentStickyChild(List<View> children) {
+        mTempStickyViews.clear();
         for (int i = 0; i < children.size(); i++) {
             View child = children.get(i);
             int permanentHeight = getPermanentHeight(children, i);
-            if (child.getTop() <= getScrollY() + permanentHeight + mStickyOffset) {
+            if (getScrollY() > 0 && child.getTop() <= getScrollY() + permanentHeight + mStickyOffset) {
                 child.setY(getScrollY() + permanentHeight + mStickyOffset);
                 child.setTranslationZ(1);
                 child.setClickable(true);
+                mTempStickyViews.add(child);
             }
+        }
+
+        if (!isListEqual()){
+            mCurrentStickyViews.clear();
+            mCurrentStickyViews.addAll(mTempStickyViews);
+            mTempStickyViews.clear();
+            permanentStickyChange(mCurrentStickyViews);
         }
     }
 
@@ -1188,6 +1262,19 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScroll
             height += child.getMeasuredHeight();
         }
         return height;
+    }
+
+    private boolean isListEqual() {
+        if (mTempStickyViews.size() == mCurrentStickyViews.size()) {
+            int size = mTempStickyViews.size();
+            for (int i = 0; i < size; i++) {
+                if (mTempStickyViews.get(i) != mCurrentStickyViews.get(i)){
+                    return false;
+                }
+            }
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -1284,6 +1371,10 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScroll
      */
     public void setOnVerticalScrollChangeListener(OnScrollChangeListener l) {
         mOnScrollChangeListener = l;
+    }
+
+    public OnScrollChangeListener setOnVerticalScrollChangeListener() {
+        return mOnScrollChangeListener;
     }
 
     @Override
@@ -1383,11 +1474,6 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScroll
         public LayoutParams(ViewGroup.LayoutParams source) {
             super(source);
         }
-    }
-
-    public interface OnScrollChangeListener {
-
-        void onScrollChange(View v, int scrollY, int oldScrollY);
     }
 
     @Override
@@ -1537,4 +1623,78 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScroll
     public int getStickyOffset() {
         return mStickyOffset;
     }
+
+    /**
+     * 获取正在吸顶的view
+     *
+     * @return
+     */
+    public View getCurrentStickyView() {
+        return mCurrentStickyView;
+    }
+
+    /**
+     * 常驻模式下，获取正在吸顶的view
+     *
+     * @return
+     */
+    public List<View> getCurrentStickyViews() {
+        return mCurrentStickyViews;
+    }
+
+    public OnStickyChangeListener getOnStickyChangeListener() {
+        return mOnStickyChangeListener;
+    }
+
+    /**
+     * 普通吸顶模式,监听吸顶变化
+     *
+     * @param l
+     */
+    public void setOnStickyChangeListener(OnStickyChangeListener l) {
+        this.mOnStickyChangeListener = l;
+    }
+
+    public OnPermanentStickyChangeListener getOnPermanentStickyChangeListener() {
+        return mOnPermanentStickyChangeListener;
+    }
+
+    /**
+     * 常驻吸顶模式,监听吸顶变化
+     *
+     * @param l
+     */
+    public void setOnPermanentStickyChangeListener(OnPermanentStickyChangeListener l) {
+        this.mOnPermanentStickyChangeListener = l;
+    }
+
+    /**
+     * 滑动监听
+     */
+    public interface OnScrollChangeListener {
+        void onScrollChange(View v, int scrollY, int oldScrollY);
+    }
+
+    /**
+     * 监听吸顶变化
+     */
+    public interface OnStickyChangeListener {
+        /**
+         * @param oldStickyView 旧的吸顶view，可能为空
+         * @param newStickyView 新的吸顶view，可能为空
+         */
+        void OnStickyChange(@Nullable View oldStickyView, @Nullable View newStickyView);
+    }
+
+    /**
+     * 监听常驻吸顶变化
+     */
+    public interface OnPermanentStickyChangeListener {
+
+        /**
+         * @param mCurrentStickyViews 正在吸顶的view
+         */
+        void OnStickyChange(@NonNull List<View> mCurrentStickyViews);
+    }
+
 }
