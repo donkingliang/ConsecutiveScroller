@@ -1164,7 +1164,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScroll
                     // 找到需要吸顶的View
                     for (int i = count - 1; i >= 0; i--) {
                         View child = children.get(i);
-                        if (getScrollY() > 0 && child.getTop() <= getScrollY() + mStickyOffset) {
+                        if (getScrollY() > 0 && child.getTop() <= getStickyY()) {
                             stickyView = child;
                             if (i != count - 1) {
                                 nextStickyView = children.get(i + 1);
@@ -1179,7 +1179,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScroll
                     if (stickyView != null) {
                         int offset = 0;
                         if (nextStickyView != null) {
-                            offset = Math.max(0, stickyView.getHeight() - (nextStickyView.getTop() - getScrollY() - mStickyOffset));
+                            offset = Math.max(0, stickyView.getHeight() - (nextStickyView.getTop() - getStickyY()));
                         }
                         stickyChild(stickyView, offset);
                     }
@@ -1220,12 +1220,20 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScroll
      */
     @SuppressLint("NewApi")
     private void stickyChild(View child, int offset) {
-        child.setY(getScrollY() + mStickyOffset - offset);
+        child.setY(getStickyY() - offset);
         child.setTranslationZ(1);
 
         // 把View设置为可点击的，避免吸顶View与其他子View重叠是，触摸事件透过吸顶View传递给下面的View，
         // 导致ConsecutiveScrollerLayout追踪布局的滑动出现偏差
         child.setClickable(true);
+    }
+
+    /**
+     * 获取吸顶的位置。
+     * @return
+     */
+    private int getStickyY(){
+        return getScrollY() + getPaddingTop() +  mStickyOffset;
     }
 
     /**
@@ -1239,8 +1247,8 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScroll
         for (int i = 0; i < children.size(); i++) {
             View child = children.get(i);
             int permanentHeight = getPermanentHeight(children, i);
-            if (getScrollY() > 0 && child.getTop() <= getScrollY() + permanentHeight + mStickyOffset) {
-                child.setY(getScrollY() + permanentHeight + mStickyOffset);
+            if (getScrollY() > 0 && child.getTop() <= getStickyY() + permanentHeight) {
+                child.setY(getStickyY() + permanentHeight);
                 child.setTranslationZ(1);
                 child.setClickable(true);
                 mTempStickyViews.add(child);
