@@ -22,6 +22,7 @@ import androidx.core.view.NestedScrollingChild2;
 import androidx.core.view.NestedScrollingChildHelper;
 import androidx.core.view.NestedScrollingParent2;
 import androidx.core.view.NestedScrollingParentHelper;
+import androidx.core.view.ScrollingView;
 import androidx.core.view.ViewCompat;
 import androidx.core.widget.EdgeEffectCompat;
 
@@ -33,7 +34,7 @@ import java.util.List;
  * @Description
  * @Date 2020/3/13
  */
-public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScrollingParent2, NestedScrollingChild2 {
+public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingView, NestedScrollingParent2, NestedScrollingChild2 {
 
     /**
      * 记录布局垂直的偏移量，它是包括了自己的偏移量(mScrollY)和所有子View的偏移量的总和，
@@ -1435,6 +1436,21 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScroll
 
     public OnScrollChangeListener setOnVerticalScrollChangeListener() {
         return mOnScrollChangeListener;
+    }
+
+    @Override
+    public int computeHorizontalScrollRange() {
+        return super.computeHorizontalScrollRange();
+    }
+
+    @Override
+    public int computeHorizontalScrollOffset() {
+        return super.computeHorizontalScrollOffset();
+    }
+
+    @Override
+    public int computeHorizontalScrollExtent() {
+        return super.computeHorizontalScrollExtent();
     }
 
     @Override
