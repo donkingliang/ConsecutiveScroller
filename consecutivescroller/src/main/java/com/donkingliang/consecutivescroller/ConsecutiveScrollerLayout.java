@@ -197,7 +197,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScroll
     public void addView(View child, int index, ViewGroup.LayoutParams params) {
 
         if (params instanceof LayoutParams) {
-            invalidTopAndBottomMargin((LayoutParams) params);
+            LayoutParamsUtils.invalidTopAndBottomMargin((LayoutParams) params);
         }
 
         super.addView(child, index, params);
@@ -245,21 +245,9 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements NestedScroll
     @Override
     protected void measureChildWithMargins(View child, int parentWidthMeasureSpec, int widthUsed, int parentHeightMeasureSpec, int heightUsed) {
 
-        invalidTopAndBottomMargin((LayoutParams) child.getLayoutParams());
+        LayoutParamsUtils.invalidTopAndBottomMargin((LayoutParams) child.getLayoutParams());
 
         super.measureChildWithMargins(child, parentWidthMeasureSpec, widthUsed, parentHeightMeasureSpec, heightUsed);
-    }
-
-    /**
-     * 使子view的topMargin和bottomMargin属性无效
-     *
-     * @param params
-     */
-    private void invalidTopAndBottomMargin(LayoutParams params) {
-        if (params != null) {
-            params.topMargin = 0;
-            params.bottomMargin = 0;
-        }
     }
 
     @Override
