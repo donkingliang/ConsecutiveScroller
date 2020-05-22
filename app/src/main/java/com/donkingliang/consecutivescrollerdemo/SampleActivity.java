@@ -15,27 +15,27 @@ import com.donkingliang.consecutivescrollerdemo.adapter.RecyclerViewAdapter;
 
 public class SampleActivity extends AppCompatActivity {
 
-    private ConsecutiveScrollerLayout scrollerLayout;
+//    private ConsecutiveScrollerLayout scrollerLayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_sample);
 
-        scrollerLayout = findViewById(R.id.scrollerLayout);
-
-        WebView webView = findViewById(R.id.webView);
-        webView.loadUrl("https://github.com/donkingliang");
-
-        webView.setWebChromeClient(new WebChromeClient() {
-            @Override
-            public void onProgressChanged(WebView view, int newProgress) {
-                super.onProgressChanged(view, newProgress);
-                // 在webView加载的过程中，用户滚动了webView内容，可能会使webView的显示与scrollerLayout断层，
-                // 需要让scrollerLayout重新检查一下所有View的显示位置
-                scrollerLayout.checkLayoutChange();
-            }
-        });
+//        scrollerLayout = findViewById(R.id.scrollerLayout);
+//
+//        WebView webView = findViewById(R.id.webView);
+//        webView.loadUrl("https://github.com/donkingliang");
+//
+//        webView.setWebChromeClient(new WebChromeClient() {
+//            @Override
+//            public void onProgressChanged(WebView view, int newProgress) {
+//                super.onProgressChanged(view, newProgress);
+//                // 在webView加载的过程中，用户滚动了webView内容，可能会使webView的显示与scrollerLayout断层，
+//                // 需要让scrollerLayout重新检查一下所有View的显示位置
+//                scrollerLayout.checkLayoutChange();
+//            }
+//        });
 
 
         RecyclerView recyclerView1 = findViewById(R.id.recyclerView1);

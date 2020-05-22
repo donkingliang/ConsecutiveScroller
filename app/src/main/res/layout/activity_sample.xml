@@ -1,210 +1,232 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.donkingliang.consecutivescroller.ConsecutiveScrollerLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/scrollerLayout"
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:scrollbars="vertical">
+    android:layout_height="match_parent">
 
-    <WebView
-        android:id="@+id/webView"
+    <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
-
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:padding="10dp"
-        android:text="上面的WebView是我的GitHub地址，如果你觉得我的GitHub对你有帮助，请给我点个Star。"
-        android:textColor="@android:color/black"
-        android:textSize="18sp" />
-
-<!--  使用Space设置上下边距   -->
-    <Space
-        android:layout_width="0dp"
-        android:layout_height="20dp"/>
-
-<!--  ConsecutiveScrollerLayout支持左右margin，但是不支持上下margin   -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="200dp"
-        android:background="@android:color/holo_red_dark"
-        android:gravity="center"
-        android:layout_marginLeft="20dp"
-        android:layout_marginRight="20dp"
-        android:orientation="vertical">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="LinearLayout"
-            android:textColor="@android:color/black"
-            android:textSize="18sp" />
-
-    </LinearLayout>
-
-    <!--  使用Space设置上下边距   -->
-    <Space
-        android:layout_width="0dp"
-        android:layout_height="20dp"/>
-
-    <androidx.core.widget.NestedScrollView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent">
-
-        <LinearLayout
+        android:layout_height="wrap_content">
+        <View
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:background="@android:color/holo_blue_bright"
-            android:gravity="center"
-            android:orientation="vertical">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="200dp"
-                android:gravity="center"
-                android:text="NestedScrollView"
-                android:textColor="@android:color/black"
-                android:textSize="24sp" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="200dp"
-                android:gravity="center"
-                android:text="NestedScrollView"
-                android:textColor="@android:color/black"
-                android:textSize="24sp" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="200dp"
-                android:gravity="center"
-                android:text="NestedScrollView"
-                android:textColor="@android:color/black"
-                android:textSize="24sp" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="200dp"
-                android:gravity="center"
-                android:text="NestedScrollView"
-                android:textColor="@android:color/black"
-                android:textSize="24sp" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="200dp"
-                android:gravity="center"
-                android:text="NestedScrollView"
-                android:textColor="@android:color/black"
-                android:textSize="24sp" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="200dp"
-                android:gravity="center"
-                android:text="NestedScrollView"
-                android:textColor="@android:color/black"
-                android:textSize="24sp" />
-
-        </LinearLayout>
-    </androidx.core.widget.NestedScrollView>
-
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recyclerView1"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
-
-    <ImageView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:scaleType="fitXY"
-        android:src="@drawable/temp" />
-
-    <ScrollView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent">
-
-        <LinearLayout
+            android:layout_height="50dp"
+            android:background="#5FF"
+            app:layout_scrollFlags="scroll|enterAlwaysCollapsed" />
+        <View
+            android:background="#FF00FF"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:background="@android:color/holo_blue_bright"
-            android:gravity="center"
-            android:orientation="vertical">
+            android:layout_height="50dp"/>
+    </com.google.android.material.appbar.AppBarLayout>
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="200dp"
-                android:gravity="center"
-                android:text="ScrollView"
-                android:textColor="@android:color/black"
-                android:textSize="24sp" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="200dp"
-                android:gravity="center"
-                android:text="ScrollView"
-                android:textColor="@android:color/black"
-                android:textSize="24sp" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="200dp"
-                android:gravity="center"
-                android:text="ScrollView"
-                android:textColor="@android:color/black"
-                android:textSize="24sp" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="200dp"
-                android:gravity="center"
-                android:text="ScrollView"
-                android:textColor="@android:color/black"
-                android:textSize="24sp" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="200dp"
-                android:gravity="center"
-                android:text="ScrollView"
-                android:textColor="@android:color/black"
-                android:textSize="24sp" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="200dp"
-                android:gravity="center"
-                android:text="ScrollView"
-                android:textColor="@android:color/black"
-                android:textSize="24sp" />
-
-        </LinearLayout>
-    </ScrollView>
-
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recyclerView2"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent" />
-
-    <com.donkingliang.consecutivescroller.ConsecutiveScrollerLayout
+    <com.donkingliang.consecutivescroller.ConsecutiveScrollerLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/scrollerLayout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@color/design_default_color_primary">
+        app:layout_behavior="@string/appbar_scrolling_view_behavior"
+        android:scrollbars="vertical">
+
+<!--        <WebView-->
+<!--            android:id="@+id/webView"-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="match_parent" />-->
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:padding="10dp"
-            android:text="ConsecutiveScrollerLayout下面可以再嵌套ConsecutiveScrollerLayout，这个部分就是一个子级的ConsecutiveScrollerLayout。"
+            android:text="上面的WebView是我的GitHub地址，如果你觉得我的GitHub对你有帮助，请给我点个Star。"
             android:textColor="@android:color/black"
             android:textSize="18sp" />
 
+        <!--  使用Space设置上下边距   -->
+        <Space
+            android:layout_width="0dp"
+            android:layout_height="20dp"/>
+
+        <!--  ConsecutiveScrollerLayout支持左右margin，但是不支持上下margin   -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="200dp"
+            android:background="@android:color/holo_red_dark"
+            android:gravity="center"
+            android:layout_marginLeft="20dp"
+            android:layout_marginRight="20dp"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="LinearLayout"
+                android:textColor="@android:color/black"
+                android:textSize="18sp" />
+
+        </LinearLayout>
+
+        <!--  使用Space设置上下边距   -->
+        <Space
+            android:layout_width="0dp"
+            android:layout_height="20dp"/>
+
+        <androidx.core.widget.NestedScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@android:color/holo_blue_bright"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="200dp"
+                    android:gravity="center"
+                    android:text="NestedScrollView"
+                    android:textColor="@android:color/black"
+                    android:textSize="24sp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="200dp"
+                    android:gravity="center"
+                    android:text="NestedScrollView"
+                    android:textColor="@android:color/black"
+                    android:textSize="24sp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="200dp"
+                    android:gravity="center"
+                    android:text="NestedScrollView"
+                    android:textColor="@android:color/black"
+                    android:textSize="24sp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="200dp"
+                    android:gravity="center"
+                    android:text="NestedScrollView"
+                    android:textColor="@android:color/black"
+                    android:textSize="24sp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="200dp"
+                    android:gravity="center"
+                    android:text="NestedScrollView"
+                    android:textColor="@android:color/black"
+                    android:textSize="24sp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="200dp"
+                    android:gravity="center"
+                    android:text="NestedScrollView"
+                    android:textColor="@android:color/black"
+                    android:textSize="24sp" />
+
+            </LinearLayout>
+        </androidx.core.widget.NestedScrollView>
+
         <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/recyclerView3"
+            android:id="@+id/recyclerView1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+        <ImageView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:scaleType="fitXY"
+            android:src="@drawable/temp" />
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@android:color/holo_blue_bright"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="200dp"
+                    android:gravity="center"
+                    android:text="ScrollView"
+                    android:textColor="@android:color/black"
+                    android:textSize="24sp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="200dp"
+                    android:gravity="center"
+                    android:text="ScrollView"
+                    android:textColor="@android:color/black"
+                    android:textSize="24sp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="200dp"
+                    android:gravity="center"
+                    android:text="ScrollView"
+                    android:textColor="@android:color/black"
+                    android:textSize="24sp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="200dp"
+                    android:gravity="center"
+                    android:text="ScrollView"
+                    android:textColor="@android:color/black"
+                    android:textSize="24sp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="200dp"
+                    android:gravity="center"
+                    android:text="ScrollView"
+                    android:textColor="@android:color/black"
+                    android:textSize="24sp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="200dp"
+                    android:gravity="center"
+                    android:text="ScrollView"
+                    android:textColor="@android:color/black"
+                    android:textSize="24sp" />
+
+            </LinearLayout>
+        </ScrollView>
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerView2"
             android:layout_width="match_parent"
             android:layout_height="match_parent" />
 
-    </com.donkingliang.consecutivescroller.ConsecutiveScrollerLayout>
+        <com.donkingliang.consecutivescroller.ConsecutiveScrollerLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@color/design_default_color_primary">
 
-</com.donkingliang.consecutivescroller.ConsecutiveScrollerLayout>
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="10dp"
+                android:text="ConsecutiveScrollerLayout下面可以再嵌套ConsecutiveScrollerLayout，这个部分就是一个子级的ConsecutiveScrollerLayout。"
+                android:textColor="@android:color/black"
+                android:textSize="18sp" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recyclerView3"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+
+        </com.donkingliang.consecutivescroller.ConsecutiveScrollerLayout>
+
+    </com.donkingliang.consecutivescroller.ConsecutiveScrollerLayout>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>
+
