@@ -6,19 +6,19 @@
     android:orientation="vertical">
 
     <Button
-        android:id="@+id/sample"
+        android:id="@+id/btn_sample"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="基础示例" />
 
     <Button
-        android:id="@+id/sticky"
+        android:id="@+id/btn_sticky"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="布局吸顶" />
 
     <Button
-        android:id="@+id/consecutive"
+        android:id="@+id/btn_consecutive"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="局部滑动" />
@@ -29,10 +29,17 @@
         android:layout_height="wrap_content"
         android:text="支持ViewPager"
         android:textAllCaps="false" />
+
     <Button
-        android:id="@+id/sticky_permanent"
+        android:id="@+id/btn_sticky_permanent"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="布局吸顶常驻" />
 
+    <Button
+        android:id="@+id/btn_fragment"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="包裹Fragment"
+        android:textAllCaps="false"/>
 </LinearLayout>

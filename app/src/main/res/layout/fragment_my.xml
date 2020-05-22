@@ -1,29 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <com.donkingliang.consecutivescroller.ConsecutiveScrollerLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/scrollerLayout"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:scrollbars="vertical">
-
-    <WebView
-        android:id="@+id/webView"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+    android:layout_height="match_parent">
 
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:padding="10dp"
-        android:text="上面的WebView是我的GitHub地址，如果你觉得我的GitHub对你有帮助，请给我点个Star。"
+        android:text="这是个Fragment，根布局为ConsecutiveScrollerLayout，可以把这个Fragment嵌套在ConsecutiveScrollerLayout布局里，或者ConsecutiveViewPager，它的内容就能跟整个布局一起滑动了。"
         android:textColor="@android:color/black"
         android:textSize="18sp" />
 
-<!--  使用Space设置上下边距   -->
+    <!--  使用Space设置上下边距   -->
     <Space
         android:layout_width="0dp"
         android:layout_height="20dp"/>
 
-<!--  ConsecutiveScrollerLayout支持左右margin，但是不支持上下margin   -->
+    <!--  ConsecutiveScrollerLayout支持左右margin，但是不支持上下margin   -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="200dp"
@@ -187,24 +180,5 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
-    <com.donkingliang.consecutivescroller.ConsecutiveScrollerLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="@color/design_default_color_primary">
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:padding="10dp"
-            android:text="ConsecutiveScrollerLayout下面可以再嵌套ConsecutiveScrollerLayout，这个部分就是一个子级的ConsecutiveScrollerLayout。"
-            android:textColor="@android:color/black"
-            android:textSize="18sp" />
-
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/recyclerView3"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent" />
-
-    </com.donkingliang.consecutivescroller.ConsecutiveScrollerLayout>
 
 </com.donkingliang.consecutivescroller.ConsecutiveScrollerLayout>
