@@ -261,15 +261,17 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
 
         mScrollRange = 0;
         int childTop = getPaddingTop();
-        int left = getPaddingLeft();
+        int paddingLeft = getPaddingLeft();
+        int paddingRight = getPaddingRight();
+        int parentWidth = getMeasuredWidth();
 
         List<View> children = getNonGoneChildren();
         int count = children.size();
         for (int i = 0; i < count; i++) {
             View child = children.get(i);
-            MarginLayoutParams lp = (MarginLayoutParams) child.getLayoutParams();
             int bottom = childTop + child.getMeasuredHeight();
-            child.layout(left + lp.leftMargin, childTop, left + lp.leftMargin + child.getMeasuredWidth(), bottom);
+            int left = getChildLeft(child, parentWidth, paddingLeft, paddingRight);
+            child.layout(left, childTop, left + child.getMeasuredWidth(), bottom);
             childTop = bottom;
             // 联动容器可滚动最大距离
             mScrollRange += child.getHeight();
@@ -283,6 +285,25 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
 
         // 布局发生变化，检测滑动位置
         checkLayoutChange(changed, false);
+    }
+
+    /**
+     * 获取子view的left
+     */
+    private int getChildLeft(View child, int parentWidth, int paddingLeft, int paddingRight) {
+        LayoutParams lp = (LayoutParams) child.getLayoutParams();
+        switch (lp.align) {
+
+            case RIGHT:
+                return parentWidth - child.getMeasuredWidth() - paddingRight - lp.rightMargin;
+
+            case CENTER:
+                return paddingLeft + lp.leftMargin + ((parentWidth - child.getMeasuredWidth()
+                        - paddingLeft - lp.leftMargin - paddingRight - lp.rightMargin) / 2);
+            case LEFT:
+            default:
+                return paddingLeft + lp.leftMargin;
+        }
     }
 
     private void resetScrollToTopView() {
@@ -1533,6 +1554,38 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
          */
         public boolean isSticky = false;
 
+        public Align align;
+
+        /**
+         * 子view与父布局的对齐方式
+         */
+        public enum Align {
+            //左对齐。（默认）
+            LEFT(1),
+            //右对齐。
+            RIGHT(2),
+            //中间对齐。
+            CENTER(3);
+
+            int value;
+
+            Align(int value) {
+                this.value = value;
+            }
+
+            static Align get(int value) {
+                switch (value) {
+                    case 1:
+                        return LEFT;
+                    case 2:
+                        return RIGHT;
+                    case 3:
+                        return CENTER;
+                }
+                return LEFT;
+            }
+        }
+
         public LayoutParams(Context c, AttributeSet attrs) {
             super(c, attrs);
             TypedArray a = c.obtainStyledAttributes(attrs, R.styleable.ConsecutiveScrollerLayout_Layout);
@@ -1540,6 +1593,8 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
             isConsecutive = a.getBoolean(R.styleable.ConsecutiveScrollerLayout_Layout_layout_isConsecutive, true);
             isSticky = a.getBoolean(R.styleable.ConsecutiveScrollerLayout_Layout_layout_isSticky, false);
             isNestedScroll = a.getBoolean(R.styleable.ConsecutiveScrollerLayout_Layout_layout_isNestedScroll, true);
+            int type = a.getInt(R.styleable.ConsecutiveScrollerLayout_Layout_layout_align, 1);
+            align = Align.get(type);
             a.recycle();
         }
 
