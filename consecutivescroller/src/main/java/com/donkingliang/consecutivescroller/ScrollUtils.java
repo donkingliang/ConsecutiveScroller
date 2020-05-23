@@ -1,6 +1,7 @@
 package com.donkingliang.consecutivescroller;
 
 import android.os.Build;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
@@ -162,6 +163,7 @@ public class ScrollUtils {
         int top = position[1];
         int right = left + view.getMeasuredWidth();
         int bottom = top + view.getMeasuredHeight();
+
         if (x >= left && x <= right && y >= top && y <= bottom) {
             return true;
         }

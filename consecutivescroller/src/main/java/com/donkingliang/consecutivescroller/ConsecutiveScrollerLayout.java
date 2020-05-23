@@ -77,6 +77,10 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
     private int mEventX;
     private int mEventY;
     private float mFixedY;
+    /**
+     * 记录手指按下时的位置
+     */
+    private final int[] mDownLocation = new int[2];
 
     /**
      * 是否处于状态
@@ -97,6 +101,8 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
 
     private NestedScrollingParentHelper mParentHelper;
     private NestedScrollingChildHelper mChildHelper;
+    private final int[] mScrollOffset = new int[2];
+    private final int[] mScrollConsumed = new int[2];
 
     private View mScrollToTopView;
     private int mAdjust;
@@ -212,26 +218,34 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
         // 去掉子View的滚动条。选择在这里做这个操作，而不是在onFinishInflate方法中完成，是为了兼顾用代码add子View的情况
 
         if (ScrollUtils.isConsecutiveScrollerChild(child)) {
+            disableChildScroll(child);
             if (child instanceof IConsecutiveScroller) {
                 List<View> views = ((IConsecutiveScroller) child).getScrolledViews();
                 if (views != null && !views.isEmpty()) {
                     int size = views.size();
                     for (int i = 0; i < size; i++) {
-                        child.setVerticalScrollBarEnabled(false);
-                        child.setHorizontalScrollBarEnabled(false);
-                        child.setOverScrollMode(OVER_SCROLL_NEVER);
+                        disableChildScroll(views.get(i));
                     }
                 }
-
-            } else {
-                child.setVerticalScrollBarEnabled(false);
-                child.setHorizontalScrollBarEnabled(false);
-                child.setOverScrollMode(OVER_SCROLL_NEVER);
             }
         }
 
         if (child instanceof ViewGroup) {
             ((ViewGroup) child).setClipToPadding(false);
+        }
+    }
+
+    /**
+     * 禁用子view的一下滑动🇭🇰的属性
+     *
+     * @param child
+     */
+    private void disableChildScroll(View child) {
+        child.setVerticalScrollBarEnabled(false);
+        child.setHorizontalScrollBarEnabled(false);
+        child.setOverScrollMode(OVER_SCROLL_NEVER);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            child.setNestedScrollingEnabled(false);
         }
     }
 
@@ -361,6 +375,9 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                     nestedScrollAxis = ViewCompat.SCROLL_AXIS_VERTICAL;
                 }
                 startNestedScroll(nestedScrollAxis, ViewCompat.TYPE_TOUCH);
+
+                mDownLocation[0] = ScrollUtils.getRawX(this, ev, mActivePointerId);
+                mDownLocation[1] = ScrollUtils.getRawY(this, ev, mActivePointerId);
                 break;
             case MotionEvent.ACTION_POINTER_DOWN:
                 mActivePointerId = ev.getPointerId(actionIndex);
@@ -451,6 +468,8 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                 mEventX = 0;
                 mTouching = false;
                 SCROLL_ORIENTATION = SCROLL_NONE;
+                mDownLocation[0] = 0;
+                mDownLocation[1] = 0;
                 break;
         }
 
@@ -470,15 +489,16 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
     public boolean onInterceptTouchEvent(MotionEvent ev) {
         if (ev.getActionMasked() == MotionEvent.ACTION_MOVE) {
             // 需要拦截事件
-            if (isIntercept(ev) && SCROLL_ORIENTATION == SCROLL_VERTICAL) {
+            if (SCROLL_ORIENTATION != SCROLL_HORIZONTAL
+                    && (isIntercept(ev) || isIntercept(mDownLocation[0], mDownLocation[1]))) {
                 return true;
             }
+        } else if (ev.getActionMasked() == MotionEvent.ACTION_UP
+                || ev.getActionMasked() == MotionEvent.ACTION_CANCEL) {
+            stopNestedScroll(ViewCompat.TYPE_TOUCH);
         }
         return super.onInterceptTouchEvent(ev);
     }
-
-    private final int[] mScrollOffset = new int[2];
-    private final int[] mScrollConsumed = new int[2];
 
     @Override
     public boolean onTouchEvent(MotionEvent ev) {
@@ -1135,6 +1155,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
      */
     private void stopScroll() {
         mScroller.abortAnimation();
+        stopNestedScroll(ViewCompat.TYPE_NON_TOUCH);
     }
 
     /**
@@ -1529,9 +1550,17 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
      */
     private boolean isIntercept(MotionEvent ev) {
         final int pointerIndex = ev.findPointerIndex(mActivePointerId);
-        View target = getTouchTarget(ScrollUtils.getRawX(this, ev, pointerIndex),
+        return isIntercept(ScrollUtils.getRawX(this, ev, pointerIndex),
                 ScrollUtils.getRawY(this, ev, pointerIndex));
+    }
 
+    /**
+     * 判断是否需要拦截事件
+     *
+     * @return
+     */
+    private boolean isIntercept(int touchX, int touchY) {
+        View target = getTouchTarget(touchX, touchY);
         if (target != null) {
             return ScrollUtils.isConsecutiveScrollerChild(target);
         }
@@ -1596,7 +1625,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
         public LayoutParams(Context c, AttributeSet attrs) {
             super(c, attrs);
             TypedArray a = null;
-            try{
+            try {
                 a = c.obtainStyledAttributes(attrs, R.styleable.ConsecutiveScrollerLayout_Layout);
 
                 isConsecutive = a.getBoolean(R.styleable.ConsecutiveScrollerLayout_Layout_layout_isConsecutive, true);
@@ -1604,10 +1633,10 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                 isNestedScroll = a.getBoolean(R.styleable.ConsecutiveScrollerLayout_Layout_layout_isNestedScroll, true);
                 int type = a.getInt(R.styleable.ConsecutiveScrollerLayout_Layout_layout_align, 1);
                 align = Align.get(type);
-            } catch (Exception e){
+            } catch (Exception e) {
                 e.printStackTrace();
             } finally {
-                if (a != null){
+                if (a != null) {
                     a.recycle();
                 }
             }
@@ -1800,6 +1829,11 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
     }
 
     @Override
+    public void stopNestedScroll() {
+        stopNestedScroll(ViewCompat.TYPE_TOUCH);
+    }
+
+    @Override
     public boolean hasNestedScrollingParent(int type) {
         return mChildHelper.hasNestedScrollingParent(type);
     }
@@ -1838,47 +1872,35 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
     @Override
     public void onStopNestedScroll(@NonNull View target, int type) {
         mParentHelper.onStopNestedScroll(target, type);
+        stopNestedScroll(type);
     }
 
     @Override
     public void onNestedScroll(@NonNull View target, int dxConsumed, int dyConsumed, int dxUnconsumed, int dyUnconsumed, int type) {
+        onNestedScrollInternal(dyUnconsumed, type);
+    }
+
+    private void onNestedScrollInternal(int dyUnconsumed, int type) {
+        final int oldScrollY = mOwnScrollY;
         scrollBy(0, dyUnconsumed);
+        final int myConsumed = mOwnScrollY - oldScrollY;
+        final int myUnconsumed = dyUnconsumed - myConsumed;
+        mChildHelper.dispatchNestedScroll(0, myConsumed, 0, myUnconsumed, null, type);
     }
 
     @Override
     public void onNestedPreScroll(@NonNull View target, int dx, int dy, @NonNull int[] consumed, int type) {
-
+        dispatchNestedPreScroll(dx, dy, consumed, null, type);
     }
 
     @Override
     public boolean onNestedFling(@NonNull View target, float velocityX, float velocityY, boolean consumed) {
-        if (velocityY > 0) {
-            // 向上滑动
-            if (isScrollBottom()) {
-                return false;
-            }
-
-            if (!target.canScrollVertically(1)) {
-                fling((int) velocityY);
-                return true;
-            }
-
-        } else {
-            // 向下滑动
-            if (isScrollTop()) {
-                return false;
-            }
-
-            if (!target.canScrollVertically(-1)) {
-                fling((int) velocityY);
-                return true;
-            }
+        if (!consumed) {
+            dispatchNestedFling(0, velocityY, true);
+            fling((int) velocityY);
+            return true;
         }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            return super.onNestedFling(target, velocityX, velocityY, consumed);
-        } else {
-            return false;
-        }
+        return false;
     }
 
     @Override
