@@ -5,6 +5,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.donkingliang.consecutivescrollerdemo.R;
 
@@ -39,6 +40,12 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
     @Override
     public void onBindViewHolder(final ViewHolder holder, final int position) {
         holder.textView.setText(text + (position + 1));
+        holder.textView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Toast.makeText(context,holder.textView.getText().toString(),Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
