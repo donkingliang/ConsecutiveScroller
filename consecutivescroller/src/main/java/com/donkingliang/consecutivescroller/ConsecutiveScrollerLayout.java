@@ -181,8 +181,9 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
             a = context.obtainStyledAttributes(attrs, R.styleable.ConsecutiveScrollerLayout);
             isPermanent = a.getBoolean(R.styleable.ConsecutiveScrollerLayout_isPermanent, false);
         } finally {
-            if (a != null)
+            if (a != null) {
                 a.recycle();
+            }
         }
         mScroller = new OverScroller(getContext(), sQuinticInterpolator);
         ViewConfiguration viewConfiguration = ViewConfiguration.get(context);
@@ -551,6 +552,9 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                 }
                 break;
             case MotionEvent.ACTION_CANCEL:
+                endDrag();
+                mTouchY = 0;
+                break;
             case MotionEvent.ACTION_UP:
                 endDrag();
                 mTouchY = 0;
@@ -1554,7 +1558,10 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
          */
         public boolean isSticky = false;
 
-        public Align align;
+        /**
+         * 子view与父布局的对齐方式
+         */
+        public Align align = Align.LEFT;
 
         /**
          * 子view与父布局的对齐方式
@@ -1588,14 +1595,22 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
 
         public LayoutParams(Context c, AttributeSet attrs) {
             super(c, attrs);
-            TypedArray a = c.obtainStyledAttributes(attrs, R.styleable.ConsecutiveScrollerLayout_Layout);
+            TypedArray a = null;
+            try{
+                a = c.obtainStyledAttributes(attrs, R.styleable.ConsecutiveScrollerLayout_Layout);
 
-            isConsecutive = a.getBoolean(R.styleable.ConsecutiveScrollerLayout_Layout_layout_isConsecutive, true);
-            isSticky = a.getBoolean(R.styleable.ConsecutiveScrollerLayout_Layout_layout_isSticky, false);
-            isNestedScroll = a.getBoolean(R.styleable.ConsecutiveScrollerLayout_Layout_layout_isNestedScroll, true);
-            int type = a.getInt(R.styleable.ConsecutiveScrollerLayout_Layout_layout_align, 1);
-            align = Align.get(type);
-            a.recycle();
+                isConsecutive = a.getBoolean(R.styleable.ConsecutiveScrollerLayout_Layout_layout_isConsecutive, true);
+                isSticky = a.getBoolean(R.styleable.ConsecutiveScrollerLayout_Layout_layout_isSticky, false);
+                isNestedScroll = a.getBoolean(R.styleable.ConsecutiveScrollerLayout_Layout_layout_isNestedScroll, true);
+                int type = a.getInt(R.styleable.ConsecutiveScrollerLayout_Layout_layout_align, 1);
+                align = Align.get(type);
+            } catch (Exception e){
+                e.printStackTrace();
+            } finally {
+                if (a != null){
+                    a.recycle();
+                }
+            }
         }
 
         public LayoutParams(int width, int height) {
