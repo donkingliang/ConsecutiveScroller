@@ -376,8 +376,8 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                 }
                 startNestedScroll(nestedScrollAxis, ViewCompat.TYPE_TOUCH);
 
-                mDownLocation[0] = ScrollUtils.getRawX(this, ev, mActivePointerId);
-                mDownLocation[1] = ScrollUtils.getRawY(this, ev, mActivePointerId);
+                mDownLocation[0] = ScrollUtils.getRawX(this, ev, actionIndex);
+                mDownLocation[1] = ScrollUtils.getRawY(this, ev, actionIndex);
                 break;
             case MotionEvent.ACTION_POINTER_DOWN:
                 mActivePointerId = ev.getPointerId(actionIndex);
@@ -385,6 +385,8 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                 mEventX = (int) ev.getX(actionIndex);
                 // 改变滑动的手指，重新询问事件拦截
                 requestDisallowInterceptTouchEvent(false);
+                mDownLocation[0] = ScrollUtils.getRawX(this, ev, actionIndex);
+                mDownLocation[1] = ScrollUtils.getRawY(this, ev, actionIndex);
 
                 initAdjustVelocityTrackerIfNotExists();
                 mAdjustVelocityTracker.addMovement(ev);
@@ -436,6 +438,8 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                     mActivePointerId = ev.getPointerId(newPointerIndex);
                     mEventY = (int) ev.getY(newPointerIndex);
                     mEventX = (int) ev.getX(newPointerIndex);
+                    mDownLocation[0] = ScrollUtils.getRawX(this, ev, newPointerIndex);
+                    mDownLocation[1] = ScrollUtils.getRawY(this, ev, newPointerIndex);
                 }
                 initAdjustVelocityTrackerIfNotExists();
                 mAdjustVelocityTracker.addMovement(ev);
