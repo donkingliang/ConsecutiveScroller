@@ -1,9 +1,12 @@
 package com.donkingliang.consecutivescrollerdemo;
 
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
+import android.view.View;
 import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 
@@ -45,5 +48,16 @@ public class StickyActivity extends AppCompatActivity {
         RecyclerViewAdapter adapter2 = new RecyclerViewAdapter(this,"RecyclerView2-");
         recyclerView2.setAdapter(adapter2);
 
+        // 监听吸顶view
+        scrollerLayout.setOnStickyChangeListener(new ConsecutiveScrollerLayout.OnStickyChangeListener() {
+            @Override
+            public void OnStickyChange(@Nullable View oldStickyView, @Nullable View newStickyView) {
+                Log.e("eee",oldStickyView + " " + newStickyView);
+            }
+        });
+
+
+        // 设置吸顶到顶部的距离
+//        scrollerLayout.setStickyOffset(50);
     }
 }

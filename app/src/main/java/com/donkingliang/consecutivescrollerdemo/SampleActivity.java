@@ -45,5 +45,9 @@ public class SampleActivity extends AppCompatActivity {
         RecyclerViewAdapter adapter2 = new RecyclerViewAdapter(this,"RecyclerView2-");
         recyclerView2.setAdapter(adapter2);
 
+        RecyclerView recyclerView3 = findViewById(R.id.recyclerView3);
+        recyclerView3.setLayoutManager(new LinearLayoutManager(this));
+        RecyclerViewAdapter adapter3 = new RecyclerViewAdapter(this,"RecyclerView3-");
+        recyclerView3.setAdapter(adapter3);
     }
 }

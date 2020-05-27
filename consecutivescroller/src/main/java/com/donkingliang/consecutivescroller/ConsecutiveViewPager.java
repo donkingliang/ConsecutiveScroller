@@ -1,4 +1,4 @@
-package com.donkingliang.consecutivescrollerdemo.widget;
+package com.donkingliang.consecutivescroller;
 
 import android.content.Context;
 import android.support.annotation.NonNull;
@@ -7,28 +7,27 @@ import android.support.v4.view.ViewPager;
 import android.util.AttributeSet;
 import android.view.View;
 
-
-import com.donkingliang.consecutivescroller.IConsecutiveScroller;
-
 import java.util.ArrayList;
 import java.util.List;
+
 /**
- * @Author donkingliang
+ * @Author teach liang
  * @Description
- * @Date 2020/4/18
+ * @Date 2020/5/22
  */
-public class MyViewPager extends ViewPager implements IConsecutiveScroller {
-    public MyViewPager(@NonNull Context context) {
+public class ConsecutiveViewPager extends ViewPager implements IConsecutiveScroller {
+
+    public ConsecutiveViewPager(@NonNull Context context) {
         super(context);
     }
 
-    public MyViewPager(@NonNull Context context, @Nullable AttributeSet attrs) {
+    public ConsecutiveViewPager(@NonNull Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
     }
 
     /**
      * 返回当前需要滑动的view。
-     * 注意：这个view不一定是ViewPager的直接子view，使用者应该根据自己的业务情况返回需要滑动的下级view。
+     *
      * @return
      */
     @Override
@@ -36,7 +35,7 @@ public class MyViewPager extends ViewPager implements IConsecutiveScroller {
         int count = getChildCount();
         for (int i = 0; i < count; i++) {
             View view = getChildAt(i);
-            if (view.getX() == getScrollX()) {
+            if (view.getX() == getScrollX() + getPaddingLeft()) {
                 return view;
             }
         }
@@ -45,6 +44,7 @@ public class MyViewPager extends ViewPager implements IConsecutiveScroller {
 
     /**
      * 返回全部需要滑动的下级view
+     *
      * @return
      */
     @Override

@@ -7,7 +7,6 @@ import android.support.v7.widget.RecyclerView;
 
 import com.donkingliang.consecutivescrollerdemo.adapter.RecyclerViewAdapter;
 
-
 public class ConsecutiveActivity extends AppCompatActivity {
 
     @Override

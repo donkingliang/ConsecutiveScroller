@@ -7,7 +7,6 @@ import android.support.v4.app.FragmentStatePagerAdapter;
 
 import java.util.List;
 
-
 /**
  * Depiction: TabLayout 和 Fragment，viewpager结合使用的viewpager adapter。
  */

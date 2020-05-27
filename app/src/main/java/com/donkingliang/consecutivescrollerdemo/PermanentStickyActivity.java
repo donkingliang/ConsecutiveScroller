@@ -1,14 +1,19 @@
 package com.donkingliang.consecutivescrollerdemo;
 
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
+import android.view.View;
 import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 
 import com.donkingliang.consecutivescroller.ConsecutiveScrollerLayout;
 import com.donkingliang.consecutivescrollerdemo.adapter.RecyclerViewAdapter;
+
+import java.util.List;
 
 public class PermanentStickyActivity extends AppCompatActivity {
 
@@ -44,6 +49,14 @@ public class PermanentStickyActivity extends AppCompatActivity {
         recyclerView2.setLayoutManager(new LinearLayoutManager(this));
         RecyclerViewAdapter adapter2 = new RecyclerViewAdapter(this,"RecyclerView2-");
         recyclerView2.setAdapter(adapter2);
+
+        // 监听吸顶view
+        scrollerLayout.setOnPermanentStickyChangeListener(new ConsecutiveScrollerLayout.OnPermanentStickyChangeListener() {
+            @Override
+            public void OnStickyChange(@NonNull List<View> mCurrentStickyViews) {
+                Log.e("eee",mCurrentStickyViews + "");
+            }
+        });
 
     }
 }

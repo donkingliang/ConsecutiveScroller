@@ -12,7 +12,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        findViewById(R.id.sample).setOnClickListener(new View.OnClickListener() {
+        findViewById(R.id.btn_sample).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(MainActivity.this, SampleActivity.class);
@@ -20,15 +20,15 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        findViewById(R.id.sticky).setOnClickListener(new View.OnClickListener() {
+        findViewById(R.id.btn_sticky).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(MainActivity.this, StickyActivity.class);
+                Intent intent = new Intent(MainActivity.this,StickyActivity.class);
                 startActivity(intent);
             }
         });
 
-        findViewById(R.id.consecutive).setOnClickListener(new View.OnClickListener() {
+        findViewById(R.id.btn_consecutive).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(MainActivity.this, ConsecutiveActivity.class);
@@ -44,10 +44,18 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        findViewById(R.id.sticky_permanent).setOnClickListener(new View.OnClickListener() {
+        findViewById(R.id.btn_sticky_permanent).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(MainActivity.this, PermanentStickyActivity.class);
+                startActivity(intent);
+            }
+        });
+
+        findViewById(R.id.btn_fragment).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(MainActivity.this, FragmentActivity.class);
                 startActivity(intent);
             }
         });

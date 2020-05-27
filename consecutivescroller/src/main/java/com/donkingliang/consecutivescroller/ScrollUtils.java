@@ -1,5 +1,6 @@
 package com.donkingliang.consecutivescroller;
 
+import android.os.Build;
 import android.support.v7.widget.RecyclerView;
 import android.view.MotionEvent;
 import android.view.View;
@@ -103,7 +104,12 @@ public class ScrollUtils {
         View scrolledView = getScrolledView(view);
         if (scrolledView instanceof AbsListView) {
             AbsListView listView = (AbsListView) scrolledView;
-            return listView.canScrollList(direction);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                return listView.canScrollList(direction);
+            } else {
+                // 低版本手机(android 19以下)，AbsListView不支持滑动
+                return false;
+            }
         } else {
             return scrolledView.canScrollVertically(direction);
         }
@@ -155,6 +161,7 @@ public class ScrollUtils {
         int top = position[1];
         int right = left + view.getMeasuredWidth();
         int bottom = top + view.getMeasuredHeight();
+
         if (x >= left && x <= right && y >= top && y <= bottom) {
             return true;
         }
@@ -162,7 +169,7 @@ public class ScrollUtils {
     }
 
     static int getRawX(View rootView, MotionEvent ev, int pointerIndex) {
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             return (int) ev.getRawX(pointerIndex);
         } else {
             int[] position = new int[2];
@@ -173,7 +180,7 @@ public class ScrollUtils {
     }
 
     static int getRawY(View rootView, MotionEvent ev, int pointerIndex) {
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             return (int) ev.getRawY(pointerIndex);
         } else {
             int[] position = new int[2];

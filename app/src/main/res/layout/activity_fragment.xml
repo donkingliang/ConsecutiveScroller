@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.donkingliang.consecutivescroller.ConsecutiveScrollerLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/scrollerLayout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:scrollbars="vertical">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="10dp"
+        android:text="下面是个ConsecutiveScrollerLayout，使用它作为一个Fragment的承载容器，把Fragment添加到里面。\n如果你的fragment不是垂直滑动的，那么你可以不必使用ConsecutiveScrollerLayout作为容器和fragment根布局，使用普通的布局即可。"
+        android:textColor="@android:color/black"
+        android:textSize="18sp" />
+
+    <com.donkingliang.consecutivescroller.ConsecutiveScrollerLayout
+        android:id="@+id/fragment_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="10dp"
+        android:text="下面部分直接包裹一个Fragment,不用容器包裹"
+        android:textColor="@android:color/black"
+        android:textSize="18sp" />
+
+   <fragment
+       android:layout_width="match_parent"
+       android:layout_height="match_parent"
+       android:name="com.donkingliang.consecutivescrollerdemo.MyFragment"/>
+
+</com.donkingliang.consecutivescroller.ConsecutiveScrollerLayout>
