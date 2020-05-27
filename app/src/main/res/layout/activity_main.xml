@@ -18,6 +18,12 @@
         android:text="布局吸顶" />
 
     <Button
+        android:id="@+id/btn_sticky_permanent"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="布局吸顶常驻" />
+
+    <Button
         android:id="@+id/btn_consecutive"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -29,12 +35,6 @@
         android:layout_height="wrap_content"
         android:text="支持ViewPager"
         android:textAllCaps="false" />
-
-    <Button
-        android:id="@+id/btn_sticky_permanent"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="布局吸顶常驻" />
 
     <Button
         android:id="@+id/btn_fragment"
