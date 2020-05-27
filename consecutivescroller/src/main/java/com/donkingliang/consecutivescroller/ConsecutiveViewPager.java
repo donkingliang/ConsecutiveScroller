@@ -31,7 +31,7 @@ public class ConsecutiveViewPager extends ViewPager implements IConsecutiveScrol
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        if (isAdjust() && mAdjustHeight > 0) {
+        if (isConsecutiveParent() && mAdjustHeight > 0) {
             ConsecutiveScrollerLayout layout = (ConsecutiveScrollerLayout) getParent();
             int parentHeight = layout.getMeasuredHeight();
             int height = Math.min(parentHeight - mAdjustHeight, getDefaultSize(0, heightMeasureSpec));
@@ -42,7 +42,7 @@ public class ConsecutiveViewPager extends ViewPager implements IConsecutiveScrol
         }
     }
 
-    private boolean isAdjust() {
+    private boolean isConsecutiveParent() {
         ViewParent parent = getParent();
         if (parent instanceof ConsecutiveScrollerLayout) {
             ConsecutiveScrollerLayout layout = (ConsecutiveScrollerLayout) parent;
