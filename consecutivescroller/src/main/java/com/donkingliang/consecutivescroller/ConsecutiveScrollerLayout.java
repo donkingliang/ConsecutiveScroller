@@ -1,6 +1,5 @@
 package com.donkingliang.consecutivescroller;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Canvas;
@@ -152,6 +151,8 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
     // 临时保存吸顶的view，用于判断吸顶view是否改变了
     private final List<View> mTempStickyViews = new ArrayList<>();
 
+    private final List<View> mViews = new ArrayList<>();
+
     /**
      * 普通吸顶模式,监听吸顶变化
      */
@@ -203,6 +204,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
         mParentHelper = new NestedScrollingParentHelper(this);
         mChildHelper = new NestedScrollingChildHelper(this);
         setNestedScrollingEnabled(true);
+        setChildrenDrawingOrderEnabled(true);
     }
 
     @Override
@@ -235,7 +237,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
     }
 
     /**
-     * 禁用子view的一些滑动相关的属性
+     * 禁用子view的一下滑动相关的属性
      *
      * @param child
      */
@@ -264,9 +266,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
 
     @Override
     protected void measureChildWithMargins(View child, int parentWidthMeasureSpec, int widthUsed, int parentHeightMeasureSpec, int heightUsed) {
-
         LayoutParamsUtils.invalidTopAndBottomMargin((LayoutParams) child.getLayoutParams());
-
         super.measureChildWithMargins(child, parentWidthMeasureSpec, widthUsed, parentHeightMeasureSpec, heightUsed);
     }
 
@@ -299,6 +299,28 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
 
         // 布局发生变化，检测滑动位置
         checkLayoutChange(changed, false);
+
+        sortViews();
+    }
+
+    private void sortViews() {
+        List<View> list = new ArrayList<>();
+        int count = getChildCount();
+        for (int i = 0; i < count; i++) {
+            View child = getChildAt(i);
+            if (!isStickyChild(child)) {
+                list.add(child);
+            }
+        }
+
+        for (int i = 0; i < count; i++) {
+            View child = getChildAt(i);
+            if (isStickyChild(child)) {
+                list.add(child);
+            }
+        }
+        mViews.clear();
+        mViews.addAll(list);
     }
 
     /**
@@ -595,6 +617,14 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
 
     private boolean canScrollVertically() {
         return !isScrollTop() || !isScrollBottom();
+    }
+
+    @Override
+    protected int getChildDrawingOrder(int childCount, int drawingPosition) {
+        if (mViews.size() > drawingPosition) {
+            return indexOfChild(mViews.get(drawingPosition));
+        }
+        return super.getChildDrawingOrder(childCount, drawingPosition);
     }
 
     @Override
@@ -960,10 +990,10 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
         mAdjust = 0;
         checkTargetsScroll(true, isForce);
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            resetChildren();
-            resetSticky();
-        }
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+        resetChildren();
+        resetSticky();
+//        }
     }
 
     /**
@@ -1227,12 +1257,10 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
     /**
      * 布局发生变化，可能是某个吸顶布局的isSticky发生改变，需要重新重置一下所有子View的translationY、translationZ
      */
-    @SuppressLint("NewApi")
     private void resetChildren() {
         List<View> children = getNonGoneChildren();
         for (View child : children) {
             child.setTranslationY(0);
-            child.setTranslationZ(0);
         }
     }
 
@@ -1240,61 +1268,58 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
      * 重置吸顶
      */
     private void resetSticky() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            List<View> children = getStickyChildren();
-            if (!children.isEmpty()) {
-                int count = children.size();
-                // 让所有的View恢复原来的状态
-                for (int i = 0; i < count; i++) {
-                    View child = children.get(i);
-                    child.setTranslationY(0);
-                    child.setTranslationZ(0);
-                }
-                if (isPermanent) {//常驻
-                    clearCurrentStickyView();
-                    permanentStickyChild(children);
-                } else {
-
-                    clearCurrentStickyViews();
-
-                    // 需要吸顶的View
-                    View stickyView = null;
-                    // 下一个需要吸顶的View
-                    View nextStickyView = null;
-
-                    // 找到需要吸顶的View
-                    for (int i = count - 1; i >= 0; i--) {
-                        View child = children.get(i);
-                        if (getScrollY() > 0 && child.getTop() <= getStickyY()) {
-                            stickyView = child;
-                            if (i != count - 1) {
-                                nextStickyView = children.get(i + 1);
-                            }
-                            break;
-                        }
-                    }
-
-                    View oldStickyView = mCurrentStickyView;
-                    View newStickyView = stickyView;
-
-                    if (stickyView != null) {
-                        int offset = 0;
-                        if (nextStickyView != null) {
-                            offset = Math.max(0, stickyView.getHeight() - (nextStickyView.getTop() - getStickyY()));
-                        }
-                        stickyChild(stickyView, offset);
-                    }
-
-                    if (oldStickyView != newStickyView) {
-                        mCurrentStickyView = newStickyView;
-                        stickyChange(oldStickyView, newStickyView);
-                    }
-                }
-            } else {
-                // 没有吸顶view
-                clearCurrentStickyView();
-                clearCurrentStickyViews();
+        List<View> children = getStickyChildren();
+        if (!children.isEmpty()) {
+            int count = children.size();
+            // 让所有的View恢复原来的状态
+            for (int i = 0; i < count; i++) {
+                View child = children.get(i);
+                child.setTranslationY(0);
             }
+            if (isPermanent) {//常驻
+                clearCurrentStickyView();
+                permanentStickyChild(children);
+            } else {
+
+                clearCurrentStickyViews();
+
+                // 需要吸顶的View
+                View stickyView = null;
+                // 下一个需要吸顶的View
+                View nextStickyView = null;
+
+                // 找到需要吸顶的View
+                for (int i = count - 1; i >= 0; i--) {
+                    View child = children.get(i);
+                    if (getScrollY() > 0 && child.getTop() <= getStickyY()) {
+                        stickyView = child;
+                        if (i != count - 1) {
+                            nextStickyView = children.get(i + 1);
+                        }
+                        break;
+                    }
+                }
+
+                View oldStickyView = mCurrentStickyView;
+                View newStickyView = stickyView;
+
+                if (stickyView != null) {
+                    int offset = 0;
+                    if (nextStickyView != null) {
+                        offset = Math.max(0, stickyView.getHeight() - (nextStickyView.getTop() - getStickyY()));
+                    }
+                    stickyChild(stickyView, offset);
+                }
+
+                if (oldStickyView != newStickyView) {
+                    mCurrentStickyView = newStickyView;
+                    stickyChange(oldStickyView, newStickyView);
+                }
+            }
+        } else {
+            // 没有吸顶view
+            clearCurrentStickyView();
+            clearCurrentStickyViews();
         }
     }
 
@@ -1319,13 +1344,11 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
      * @param child
      * @param offset
      */
-    @SuppressLint("NewApi")
     private void stickyChild(View child, int offset) {
         child.setY(getStickyY() - offset);
-        child.setTranslationZ(1);
 
-        // 把View设置为可点击的，避免吸顶View与其他子View重叠是，触摸事件透过吸顶View传递给下面的View，
-        // 导致ConsecutiveScrollerLayout追踪布局的滑动出现偏差
+//        // 把View设置为可点击的，避免吸顶View与其他子View重叠是，触摸事件透过吸顶View传递给下面的View，
+//        // 导致ConsecutiveScrollerLayout追踪布局的滑动出现偏差
         child.setClickable(true);
     }
 
@@ -1343,7 +1366,6 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
      *
      * @param children
      */
-    @SuppressLint("NewApi")
     private void permanentStickyChild(List<View> children) {
         mTempStickyViews.clear();
         for (int i = 0; i < children.size(); i++) {
@@ -1351,7 +1373,6 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
             int permanentHeight = getPermanentHeight(children, i);
             if (getScrollY() > 0 && child.getTop() <= getStickyY() + permanentHeight) {
                 child.setY(getStickyY() + permanentHeight);
-                child.setTranslationZ(1);
                 child.setClickable(true);
                 mTempStickyViews.add(child);
             }
@@ -1571,7 +1592,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
         return false;
     }
 
-    public static class LayoutParams extends MarginLayoutParams {
+    public static class LayoutParams extends ViewGroup.MarginLayoutParams {
 
         /**
          * 是否与父布局整体滑动，设置为false时，父布局不会拦截它的事件，滑动事件将由子view处理。
