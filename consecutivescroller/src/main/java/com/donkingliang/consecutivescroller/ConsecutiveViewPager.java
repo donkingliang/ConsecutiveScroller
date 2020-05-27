@@ -6,6 +6,7 @@ import android.support.annotation.Nullable;
 import android.support.v4.view.ViewPager;
 import android.util.AttributeSet;
 import android.view.View;
+import android.view.ViewParent;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,12 +18,47 @@ import java.util.List;
  */
 public class ConsecutiveViewPager extends ViewPager implements IConsecutiveScroller {
 
+    private int mAdjustHeight;
+
     public ConsecutiveViewPager(@NonNull Context context) {
         super(context);
     }
 
     public ConsecutiveViewPager(@NonNull Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
+    }
+
+    @Override
+    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        if (isConsecutiveParent() && mAdjustHeight > 0) {
+            ConsecutiveScrollerLayout layout = (ConsecutiveScrollerLayout) getParent();
+            int parentHeight = layout.getMeasuredHeight();
+            int height = Math.min(parentHeight - mAdjustHeight, getDefaultSize(0, heightMeasureSpec));
+            super.onMeasure(widthMeasureSpec,
+                    View.MeasureSpec.makeMeasureSpec(height, View.MeasureSpec.getMode(heightMeasureSpec)));
+        } else {
+            super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+        }
+    }
+
+    private boolean isConsecutiveParent() {
+        ViewParent parent = getParent();
+        if (parent instanceof ConsecutiveScrollerLayout) {
+            ConsecutiveScrollerLayout layout = (ConsecutiveScrollerLayout) parent;
+            return layout.indexOfChild(this) == layout.getChildCount() - 1;
+        }
+        return false;
+    }
+
+    public int getAdjustHeight() {
+        return mAdjustHeight;
+    }
+
+    public void setAdjustHeight(int adjustHeight) {
+        if (mAdjustHeight != adjustHeight) {
+            mAdjustHeight = adjustHeight;
+            requestLayout();
+        }
     }
 
     /**
@@ -55,8 +91,6 @@ public class ConsecutiveViewPager extends ViewPager implements IConsecutiveScrol
             for (int i = 0; i < count; i++) {
                 views.add(getChildAt(i));
             }
-        } else {
-            views.add(this);
         }
         return views;
     }

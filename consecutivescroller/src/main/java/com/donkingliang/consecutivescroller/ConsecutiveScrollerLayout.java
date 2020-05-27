@@ -827,9 +827,15 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
             }
 
             scrollOffset = 0;
+
             if (!isScrollBottom()) {
                 // 找到当前显示的第一个View
-                View firstVisibleView = findFirstVisibleView();
+                View firstVisibleView = null;
+                if (getScrollY() < mScrollRange) {
+                    firstVisibleView = findFirstVisibleView();
+                } else {
+                    firstVisibleView = getBottomView();
+                }
                 if (firstVisibleView != null) {
                     awakenScrollBars();
                     int bottomOffset = ScrollUtils.getScrollBottomOffset(firstVisibleView);
@@ -990,10 +996,8 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
         mAdjust = 0;
         checkTargetsScroll(true, isForce);
 
-//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
         resetChildren();
         resetSticky();
-//        }
     }
 
     /**
@@ -1043,6 +1047,9 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
         for (int i = index + 1; i < getChildCount(); i++) {
             final View child = getChildAt(i);
             if (ScrollUtils.isConsecutiveScrollerChild(child)) {
+                if (i == getChildCount() - 1 && child instanceof ConsecutiveViewPager && getScrollY() >= mScrollRange) {
+                    continue;
+                }
                 if (child instanceof IConsecutiveScroller) {
                     List<View> views = ((IConsecutiveScroller) child).getScrolledViews();
                     if (views != null && !views.isEmpty()) {
@@ -1051,7 +1058,6 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                             scrollChildContentToTop(views.get(c));
                         }
                     }
-
                 } else {
                     scrollChildContentToTop(child);
                 }
@@ -1189,6 +1195,13 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
     private void stopScroll() {
         mScroller.abortAnimation();
         stopNestedScroll(ViewCompat.TYPE_NON_TOUCH);
+    }
+
+    private View getBottomView() {
+        if (getChildCount() > 0) {
+            return getChildAt(getChildCount() - 1);
+        }
+        return null;
     }
 
     /**

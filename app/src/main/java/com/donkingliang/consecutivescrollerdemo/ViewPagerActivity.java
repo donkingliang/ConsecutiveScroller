@@ -3,16 +3,20 @@ package com.donkingliang.consecutivescrollerdemo;
 import android.os.Bundle;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
-import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.widget.TextView;
 
+import com.donkingliang.consecutivescroller.ConsecutiveViewPager;
 import com.donkingliang.consecutivescrollerdemo.adapter.TabPagerAdapter;
 
 import java.util.ArrayList;
 import java.util.List;
 
+
 public class ViewPagerActivity extends AppCompatActivity {
+
+    private ConsecutiveViewPager viewPager;
+    private TabLayout tabLayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -24,10 +28,17 @@ public class ViewPagerActivity extends AppCompatActivity {
                 "下面的例子中，通过自定义ViewPager，实现IConsecutiveScroller接口，ConsecutiveScrollerLayout能正确的处理ViewPager里" +
                 "的子布局。如果ViewPager的内容是可以垂直滑动的，请使用ConsecutiveScrollerLayout或者RecyclerView等可滑动布局作为它内容的根布局。\n" +
                 "下面的列子中使用ViewPager承载多个Fragment，Fragment的根布局为ConsecutiveScrollerLayout。");
-        ViewPager viewPager = findViewById(R.id.viewPager);
-        TabLayout tabLayout = findViewById(R.id.tabLayout);
+        viewPager = findViewById(R.id.viewPager);
+        tabLayout = findViewById(R.id.tabLayout);
         viewPager.setAdapter(new TabPagerAdapter(getSupportFragmentManager(), getTabs(), getFragments()));
         tabLayout.setupWithViewPager(viewPager);
+
+        tabLayout.post(new Runnable() {
+            @Override
+            public void run() {
+                viewPager.setAdjustHeight(tabLayout.getHeight());
+            }
+        });
     }
 
     private List<String> getTabs() {
