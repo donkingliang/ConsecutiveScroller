@@ -389,9 +389,6 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                 initOrResetAdjustVelocityTracker();
                 mAdjustVelocityTracker.addMovement(ev);
 
-                initOrResetVelocityTracker();
-                mVelocityTracker.addMovement(ev);
-
                 int nestedScrollAxis = ViewCompat.SCROLL_AXIS_NONE;
                 if (canScrollVertically()) {
                     nestedScrollAxis = ViewCompat.SCROLL_AXIS_VERTICAL;
@@ -410,16 +407,19 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                 mDownLocation[0] = ScrollUtils.getRawX(this, ev, actionIndex);
                 mDownLocation[1] = ScrollUtils.getRawY(this, ev, actionIndex);
 
+                if (mAdjustVelocityTracker != null) {
+                    mAdjustVelocityTracker.clear();
+                }
+
+                if (mAdjustVelocityTracker != null) {
+                    mVelocityTracker.clear();
+                }
+
                 initAdjustVelocityTrackerIfNotExists();
                 mAdjustVelocityTracker.addMovement(ev);
 
-                initVelocityTrackerIfNotExists();
-                mVelocityTracker.addMovement(ev);
                 break;
             case MotionEvent.ACTION_MOVE:
-
-                initVelocityTrackerIfNotExists();
-                mVelocityTracker.addMovement(ev);
 
                 final int pointerIndex = ev.findPointerIndex(mActivePointerId);
                 int offsetY = (int) ev.getY(pointerIndex) - mEventY;
@@ -462,12 +462,18 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                     mEventX = (int) ev.getX(newPointerIndex);
                     mDownLocation[0] = ScrollUtils.getRawX(this, ev, newPointerIndex);
                     mDownLocation[1] = ScrollUtils.getRawY(this, ev, newPointerIndex);
+
+                    if (mAdjustVelocityTracker != null) {
+                        mAdjustVelocityTracker.clear();
+                    }
+
+                    if (mAdjustVelocityTracker != null) {
+                        mVelocityTracker.clear();
+                    }
                 }
                 initAdjustVelocityTrackerIfNotExists();
                 mAdjustVelocityTracker.addMovement(ev);
 
-                initVelocityTrackerIfNotExists();
-                mVelocityTracker.addMovement(ev);
                 break;
             case MotionEvent.ACTION_CANCEL:
             case MotionEvent.ACTION_UP:
@@ -479,15 +485,11 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                     recycleAdjustVelocityTracker();
                     boolean canScrollVerticallyChild = ScrollUtils.canScrollVertically(getTouchTarget(
                             ScrollUtils.getRawX(this, ev, actionIndex), ScrollUtils.getRawY(this, ev, actionIndex)));
-                    if (SCROLL_ORIENTATION == SCROLL_HORIZONTAL && canScrollVerticallyChild && Math.abs(yVelocity) > mMinimumVelocity) {
+                    if (SCROLL_ORIENTATION != SCROLL_VERTICAL && canScrollVerticallyChild && Math.abs(yVelocity) > mMinimumVelocity) {
                         //如果当前是横向滑动，但是触摸的控件可以垂直滑动，并且产生垂直滑动的fling事件，
                         // 为了不让这个控件垂直fling，把事件设置为MotionEvent.ACTION_CANCEL。
                         ev.setAction(MotionEvent.ACTION_CANCEL);
                     }
-                }
-
-                if (mVelocityTracker != null) {
-                    mVelocityTracker.addMovement(ev);
                 }
 
                 mEventY = 0;
@@ -513,21 +515,41 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
 
     @Override
     public boolean onInterceptTouchEvent(MotionEvent ev) {
-        if (ev.getActionMasked() == MotionEvent.ACTION_MOVE) {
-            // 需要拦截事件
-            if (SCROLL_ORIENTATION != SCROLL_HORIZONTAL
-                    && (isIntercept(ev) || isIntercept(mDownLocation[0], mDownLocation[1]))) {
-                return true;
-            }
-        } else if (ev.getActionMasked() == MotionEvent.ACTION_UP
-                || ev.getActionMasked() == MotionEvent.ACTION_CANCEL) {
-            stopNestedScroll(ViewCompat.TYPE_TOUCH);
+        switch (ev.getActionMasked()) {
+            case MotionEvent.ACTION_DOWN:
+                initOrResetVelocityTracker();
+                mVelocityTracker.addMovement(ev);
+                break;
+
+            case MotionEvent.ACTION_MOVE:
+                // 需要拦截事件
+                if (SCROLL_ORIENTATION != SCROLL_HORIZONTAL
+                        && (isIntercept(ev) || isIntercept(mDownLocation[0], mDownLocation[1]))) {
+                    return true;
+                }
+                break;
+            case MotionEvent.ACTION_CANCEL:
+            case MotionEvent.ACTION_UP:
+                stopNestedScroll(ViewCompat.TYPE_TOUCH);
+                break;
         }
         return super.onInterceptTouchEvent(ev);
     }
 
+    boolean preScroll = false;
+    boolean up = false;
+    int mNestedYOffset = 0;
+
     @Override
     public boolean onTouchEvent(MotionEvent ev) {
+
+        MotionEvent vtev = MotionEvent.obtain(ev);
+
+        if (vtev.getActionMasked() == MotionEvent.ACTION_DOWN) {
+            mNestedYOffset = 0;
+        }
+        vtev.offsetLocation(0, mNestedYOffset);
+
         final int pointerIndex = ev.findPointerIndex(mActivePointerId);
         switch (ev.getActionMasked()) {
             case MotionEvent.ACTION_DOWN:
@@ -542,17 +564,24 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                 mTouchY = (int) ev.getY(pointerIndex);
                 break;
             case MotionEvent.ACTION_MOVE:
+
                 if (mTouchY == 0) {
                     mTouchY = (int) ev.getY(pointerIndex);
                     return true;
                 }
+
 
                 mScrollConsumed[1] = 0;
                 int y = (int) ev.getY(pointerIndex);
                 int deltaY = mTouchY - y;
                 if (dispatchNestedPreScroll(0, deltaY, mScrollConsumed, mScrollOffset, ViewCompat.TYPE_TOUCH)) {
                     deltaY -= mScrollConsumed[1];
-                    ev.offsetLocation(mScrollOffset[0], mScrollOffset[1]);
+                    ev.offsetLocation(0, mScrollOffset[1]);
+                    preScroll = true;
+                    up = mScrollConsumed[1] > 0;
+                    mNestedYOffset += mScrollOffset[1];
+                } else {
+                    preScroll = false;
                 }
 
                 mTouchY = y - mScrollOffset[1];
@@ -561,11 +590,13 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
 
                 final int scrolledDeltaY = mOwnScrollY - oldScrollY;
                 deltaY = deltaY - scrolledDeltaY;
-
-                dispatchNestedScroll(0, scrolledDeltaY, 0, deltaY, mScrollOffset,
-                        ViewCompat.TYPE_TOUCH);
-                deltaY += mScrollOffset[1];
-                mTouchY -= mScrollOffset[1];
+                if (dispatchNestedScroll(0, scrolledDeltaY, 0, deltaY, mScrollOffset,
+                        ViewCompat.TYPE_TOUCH)) {
+                    deltaY += mScrollOffset[1];
+                    mTouchY -= mScrollOffset[1];
+                    mNestedYOffset += mScrollOffset[1];
+                    ev.offsetLocation(0, mScrollOffset[1]);
+                }
 
                 // 判断是否显示边界阴影
                 final int range = getScrollRange();
@@ -606,6 +637,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                 mTouchY = 0;
 
                 if (mVelocityTracker != null) {
+                    mVelocityTracker.addMovement(vtev);
                     mVelocityTracker.computeCurrentVelocity(1000, mMaximumVelocity);
                     int yVelocity = (int) mVelocityTracker.getYVelocity();
                     yVelocity = Math.max(-mMaximumVelocity, Math.min(yVelocity, mMaximumVelocity));
@@ -613,6 +645,10 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                 }
                 break;
         }
+        if (mVelocityTracker != null) {
+            mVelocityTracker.addMovement(vtev);
+        }
+        vtev.recycle();
         return true;
     }
 
@@ -726,11 +762,10 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                 dispatchNestedPreScroll(0, unconsumed, mScrollConsumed, null,
                         ViewCompat.TYPE_NON_TOUCH);
                 unconsumed -= mScrollConsumed[1];
-                y -= mScrollConsumed[1];
 
                 final int oldScrollY = mOwnScrollY;
 
-                dispatchScroll(y);
+                scrollBy(0, unconsumed);
 
                 final int scrolledByMe = mOwnScrollY - oldScrollY;
                 unconsumed -= scrolledByMe;
