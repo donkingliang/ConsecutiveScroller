@@ -20,12 +20,12 @@ allprojects {
 在Module的build.gradle在添加以下代码
 ```groovy
 // 使用了Androidx
-implementation 'com.github.donkingliang:ConsecutiveScroller:2.5.1'
+implementation 'com.github.donkingliang:ConsecutiveScroller:2.6.0'
 
 // 或者
 
 // 使用Android support包
-implementation 'com.github.donkingliang:ConsecutiveScroller:3.5.1'
+implementation 'com.github.donkingliang:ConsecutiveScroller:3.6.0'
 ```
 由于Androidx和Android support包不兼容，所以ConsecutiveScroller使用两个版本分别支持使用Androidx和使用Android support包的项目。
 大版本号3使用Android support包，大版本号2使用Androidx。
@@ -172,13 +172,6 @@ ConsecutiveScrollerLayout的使用非常简单，把需要滑动的布局作为C
 </com.donkingliang.consecutivescroller.ConsecutiveScrollerLayout>
 ```
 
-**注意：**
-
-1、吸顶功能使用了Android 5.0之后才有的API:setTranslationZ()，所有吸顶功能不支持5.0以前的手机。
-
-2、由于吸顶功能需要通过设置View的z来时吸顶View显示在所有View的上面，所以使用者不要给View设置z或者elevation。
-
-3、对于一些View,如果它显示在吸顶View的前面，把吸顶View重叠覆盖了，是因为它的z比吸顶View的z大，你可以把它的elevation设置为0，或者给吸顶的View设置一个大点的elevation值。
 
 ### 局部滑动
 
@@ -308,46 +301,7 @@ public class MyFrameLayout extends FrameLayout implements IConsecutiveScroller {
 2、滑动的控件应该跟嵌套它的子view的高度保持一致，也就是说滑动的控件高度应该是match_parent，并且包裹它的子view和它本身都不要设置上下边距(margin和ppadding)。宽度没有这个限制。
 
 #### 对ViewPager的支持
-IConsecutiveScroller的一个常用的场景是对ViewPager的支持。ViewPager是左右滑动的控件，但是我们一般会在ViewPager下嵌套RecyclerView等列表布局。为了能让ConsecutiveScrollerLayout正确地滑动ViewPager下的RecyclerView，使RecyclerView与ConsecutiveScrollerLayout形成一个滑动整体。需要让ViewPager实现IConsecutiveScroller接口，并返回需要滑动的RecyclerView。
-```java
-	public class MyViewPager extends ViewPager implements IConsecutiveScroller {
-
-    /**
-     * 返回当前需要滑动的view。
-     */
-    @Override
-    public View getCurrentScrollerView() {
-        int count = getChildCount();
-        for (int i = 0; i < count; i++) {
-            View view = getChildAt(i);
-            if (view.getX() == getScrollX()) {
-                return view;
-            }
-        }
-        return this;
-    }
-
-    /**
-     * 返回全部需要滑动的下级view
-     */
-    @Override
-    public List<View> getScrolledViews() {
-        List<View> views = new ArrayList<>();
-        int count = getChildCount();
-        if (count > 0) {
-            for (int i = 0; i < count; i++) {
-                views.add(getChildAt(i));
-            }
-        } else {
-            views.add(this);
-        }
-        return views;
-    }
-}
-```
-我在demo中提供了ViewPager实现IConsecutiveScroller的例子和效果，有兴趣的朋友可以去体验一下。
-
-**重要：** 再提醒一次，我在这里提供的例子并不是通用的，使用者应该按照自己的实际场景去实现者两个方法。
+如果你的ViewPager承载的子布局(或Fragment)不是可以垂直滑动的，那么使用普通的ViewPager即可。如果是可以垂直滑动的，那么你的ViewPager需要实现IConsecutiveScroller接口，并返回需要滑动的view对象。框架里提供了一个实现了IConsecutiveScroller接口自定义控件：**ConsecutiveViewPager**。使用这个控件，然后你的ConsecutiveViewPager的子view(或Fragment的根布局)是可垂直滑动的view，如：RecyclerView、NestedScrollView、ConsecutiveScrollerLayout即可。这样你的ViewPager就能正确地跟ConsecutiveScrollerLayout一起滑动了。
 
 ### 使用腾讯x5的WebView
 由于腾讯x5的VebView是一个FrameLayout嵌套WebView的布局，而不是一个WebView的子类，所以要在ConsecutiveScrollerLayout里使用它，需要把它的滑动交给它里面的WebView。自定义MyWebView继承腾讯的WebView,重写它的scrollBy()方法即可。
