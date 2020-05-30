@@ -487,7 +487,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                     recycleAdjustVelocityTracker();
                     boolean canScrollVerticallyChild = ScrollUtils.canScrollVertically(getTouchTarget(
                             ScrollUtils.getRawX(this, ev, actionIndex), ScrollUtils.getRawY(this, ev, actionIndex)));
-                    if (SCROLL_ORIENTATION != SCROLL_VERTICAL && canScrollVerticallyChild && Math.abs(yVelocity) > mMinimumVelocity) {
+                    if (SCROLL_ORIENTATION != SCROLL_VERTICAL && canScrollVerticallyChild && Math.abs(yVelocity) >= mMinimumVelocity) {
                         //如果当前是横向滑动，但是触摸的控件可以垂直滑动，并且产生垂直滑动的fling事件，
                         // 为了不让这个控件垂直fling，把事件设置为MotionEvent.ACTION_CANCEL。
                         ev.setAction(MotionEvent.ACTION_CANCEL);
