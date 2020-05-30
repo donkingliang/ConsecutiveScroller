@@ -76,6 +76,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
     private int mEventX;
     private int mEventY;
     private float mFixedY;
+
     /**
      * 记录手指按下时的位置
      */
@@ -153,6 +154,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
     private final List<View> mTempStickyViews = new ArrayList<>();
 
     private final List<View> mViews = new ArrayList<>();
+    private int mNestedYOffset = 0;
 
     /**
      * 普通吸顶模式,监听吸顶变化
@@ -536,10 +538,6 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
         return super.onInterceptTouchEvent(ev);
     }
 
-    boolean preScroll = false;
-    boolean up = false;
-    int mNestedYOffset = 0;
-
     @Override
     public boolean onTouchEvent(MotionEvent ev) {
 
@@ -577,11 +575,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                 if (dispatchNestedPreScroll(0, deltaY, mScrollConsumed, mScrollOffset, ViewCompat.TYPE_TOUCH)) {
                     deltaY -= mScrollConsumed[1];
                     ev.offsetLocation(0, mScrollOffset[1]);
-                    preScroll = true;
-                    up = mScrollConsumed[1] > 0;
                     mNestedYOffset += mScrollOffset[1];
-                } else {
-                    preScroll = false;
                 }
 
                 mTouchY = y - mScrollOffset[1];
