@@ -425,7 +425,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                 final int pointerIndex = ev.findPointerIndex(mActivePointerId);
                 int offsetY = (int) ev.getY(pointerIndex) - mEventY;
                 int offsetX = (int) ev.getX(pointerIndex) - mEventX;
-                if (isIntercept(ev)) {
+                if (isIntercept(ev) || isIntercept(mDownLocation[0], mDownLocation[1])) {
 
                     if (SCROLL_ORIENTATION == SCROLL_NONE) {
                         if (Math.abs(offsetX) > Math.abs(offsetY)) {
