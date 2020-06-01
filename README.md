@@ -564,7 +564,7 @@ webView.setWebChromeClient(new WebChromeClient() {
 <uses-sdk tools:overrideLibrary="com.donkingliang.consecutivescroller"/>
 ```
 
-但是不要在minSdkVersion小于16的项目使用AbsListView的子类，因为ConsecutiveScrollerLayout使用了只有19以上才有的AbsListView API。
+但是不要在minSdkVersion小于19的项目使用AbsListView的子类，因为ConsecutiveScrollerLayout使用了只有19以上才有的AbsListView API。
 
 5、使用ConsecutiveScrollerLayout提供的setOnVerticalScrollChangeListener()方法监听布局的滑动事件。View所提供的setOnScrollChangeListener()方法已无效。
 
