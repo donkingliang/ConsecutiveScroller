@@ -1240,11 +1240,13 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
     }
 
     private View getBottomView() {
-        if (getChildCount() > 0) {
-            return getChildAt(getChildCount() - 1);
+        List<View> views = getEffectiveChildren();
+        if (!views.isEmpty()) {
+            return views.get(views.size() - 1);
         }
         return null;
     }
+
 
     /**
      * 返回所有的非GONE子View
