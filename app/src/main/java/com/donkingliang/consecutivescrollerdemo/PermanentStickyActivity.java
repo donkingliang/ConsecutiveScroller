@@ -54,7 +54,7 @@ public class PermanentStickyActivity extends AppCompatActivity {
         // 监听吸顶view
         scrollerLayout.setOnPermanentStickyChangeListener(new ConsecutiveScrollerLayout.OnPermanentStickyChangeListener() {
             @Override
-            public void OnStickyChange(@NonNull List<View> mCurrentStickyViews) {
+            public void onStickyChange(@NonNull List<View> mCurrentStickyViews) {
                 Log.e("eee",mCurrentStickyViews + "");
             }
         });
