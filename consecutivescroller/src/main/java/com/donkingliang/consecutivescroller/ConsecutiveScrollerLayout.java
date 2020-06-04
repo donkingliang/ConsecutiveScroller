@@ -541,6 +541,8 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
 
         boolean dispatch = super.dispatchTouchEvent(ev);
 
+        vtev.recycle();
+
         switch (ev.getActionMasked()) {
             case MotionEvent.ACTION_CANCEL:
             case MotionEvent.ACTION_UP:
