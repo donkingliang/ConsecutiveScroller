@@ -540,6 +540,8 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                 break;
         }
 
+        vtev.recycle();
+
         boolean dispatch = super.dispatchTouchEvent(ev);
 
         switch (ev.getActionMasked()) {
