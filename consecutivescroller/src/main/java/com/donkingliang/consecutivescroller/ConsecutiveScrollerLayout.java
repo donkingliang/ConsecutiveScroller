@@ -247,9 +247,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
         child.setVerticalScrollBarEnabled(false);
         child.setHorizontalScrollBarEnabled(false);
         child.setOverScrollMode(OVER_SCROLL_NEVER);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            child.setNestedScrollingEnabled(false);
-        }
+        ViewCompat.setNestedScrollingEnabled(child, false);
     }
 
     @Override
