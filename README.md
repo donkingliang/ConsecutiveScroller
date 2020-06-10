@@ -514,7 +514,7 @@ public class MyWebView extends com.tencent.smtt.sdk.WebView {
 通过实现IConsecutiveScroller接口同样可以实现对x5的WebView支持。
 
 ```java
-public class MyWebView extends com.tencent.smtt.sdk.WebView {
+public class MyWebView extends com.tencent.smtt.sdk.WebView implements IConsecutiveScroller {
 
     @Override
     public View getCurrentScrollerView() {
