@@ -20,15 +20,17 @@ allprojects {
 在Module的build.gradle在添加以下代码
 ```groovy
 // 使用了Androidx
-implementation 'com.github.donkingliang:ConsecutiveScroller:2.6.0'
+implementation 'com.github.donkingliang:ConsecutiveScroller:2.6.2'
 
 // 或者
 
 // 使用Android support包
-implementation 'com.github.donkingliang:ConsecutiveScroller:3.6.0'
+implementation 'com.github.donkingliang:ConsecutiveScroller:3.6.2'
 ```
 由于Androidx和Android support包不兼容，所以ConsecutiveScroller使用两个版本分别支持使用Androidx和使用Android support包的项目。
 大版本号3使用Android support包，大版本号2使用Androidx。
+
+**注意：** 如果你准备使用这个库，请务必认真阅读下面的文档。它能让你了解ConsecutiveScrollerLayout可以实现的功能，以及避免不必要的错误。
 
 ### 基本使用
 
@@ -79,10 +81,123 @@ ConsecutiveScrollerLayout的使用非常简单，把需要滑动的布局作为C
 
     </ScrollView>
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recyclerView2"
+  <!--  可以嵌套ConsecutiveScrollerLayout  -->
+  <com.donkingliang.consecutivescroller.ConsecutiveScrollerLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="match_parent"
+        android:background="@color/design_default_color_primary">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="10dp"
+            android:text=""
+            android:textColor="@android:color/black"
+            android:textSize="18sp" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerView3"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+    </com.donkingliang.consecutivescroller.ConsecutiveScrollerLayout>
+</com.donkingliang.consecutivescroller.ConsecutiveScrollerLayout>
+```
+
+#### 关于margin
+
+ConsecutiveScrollerLayout支持左右margin，但是不支持上下margin，子View间的间距可以通过Space设置。
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<com.donkingliang.consecutivescroller.ConsecutiveScrollerLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/scrollerLayout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:scrollbars="vertical">
+
+    <!--  使用Space设置上下边距   -->
+    <Space
+        android:layout_width="0dp"
+        android:layout_height="20dp" />
+
+    <!--  ConsecutiveScrollerLayout支持左右margin，但是不支持上下margin   -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
+        android:layout_marginLeft="20dp"
+        android:layout_marginRight="20dp"
+        android:background="@android:color/holo_red_dark"
+        android:gravity="center"
+        android:orientation="vertical">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="LinearLayout"
+            android:textColor="@android:color/black"
+            android:textSize="18sp" />
+
+    </LinearLayout>
+
+    <!--  使用Space设置上下边距   -->
+    <Space
+        android:layout_width="0dp"
+        android:layout_height="20dp" />
+
+</com.donkingliang.consecutivescroller.ConsecutiveScrollerLayout>
+
+```
+
+#### 布局对齐方式
+
+ConsecutiveScrollerLayout的布局方式类似于垂直的LinearLayout，但是它没有gravity和子view layout_gravity属性。ConsecutiveScrollerLayout为它的子view提供了layout_align属性，用于设置子view和父布局的对齐方式。layout_align有三个值：**左对齐(LEFT)** 、**右对齐(RIGHT)** 和**中间对齐(CENTER)**。
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<com.donkingliang.consecutivescroller.ConsecutiveScrollerLayout xmlns:android="http://schemas.android.com/apk/res/android"                                                                    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/scrollerLayout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:scrollbars="vertical">
+  
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@android:color/white"
+        android:padding="10dp"
+        android:text="吸顶View - 1"
+        android:textColor="@android:color/black"
+        android:textSize="18sp"
+        app:layout_isSticky="true"
+        app:layout_align="LEFT"/> // 对齐方式
+  
+</com.donkingliang.consecutivescroller.ConsecutiveScrollerLayout>
+```
+
+#### 嵌套Fragment
+
+要想把一个Fragment嵌套在ConsecutiveScrollerLayout里。通常我们需要一个布局容器来承载我们的Fragment，或者直接把Fragment写在activity的布局里。如果Fragment是垂直滑动的，那么承载Fragment的容器需要是ConsecutiveScrollerLayout，以及Fragment的根布局也需要是垂直滑动的。我们推荐使用ConsecutiveScrollerLayout或者其他可垂直滑动的控件(比如：RecyclerView、NestedScrollView)作为Fragment的根布局。如果你的Fragment不是垂直滑动的，则可以忽略这个限制。
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<com.donkingliang.consecutivescroller.ConsecutiveScrollerLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/scrollerLayout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:scrollbars="vertical">
+
+    <!--  承载Fragment的容器  -->
+    <com.donkingliang.consecutivescroller.ConsecutiveScrollerLayout
+        android:id="@+id/fragment_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"/>
+  
+<!--  MyFragment的根布局是垂直滑动控件  -->
+   <fragment
+       android:layout_width="match_parent"
+       android:layout_height="match_parent"
+       android:name="com.donkingliang.consecutivescrollerdemo.MyFragment"/>
 
 </com.donkingliang.consecutivescroller.ConsecutiveScrollerLayout>
 ```
@@ -172,6 +287,38 @@ ConsecutiveScrollerLayout的使用非常简单，把需要滑动的布局作为C
 </com.donkingliang.consecutivescroller.ConsecutiveScrollerLayout>
 ```
 
+#### 常驻吸顶
+
+如果你不希望吸顶的view被后面的吸顶view顶出屏幕，而且多个吸顶view排列吸附在顶部，你可以设置常驻吸顶模式：**app:isPermanent="true"**。
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<com.donkingliang.consecutivescroller.ConsecutiveScrollerLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/scrollerLayout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    app:isPermanent="true"  // 常驻吸顶
+    android:scrollbars="vertical">
+
+</com.donkingliang.consecutivescroller.ConsecutiveScrollerLayout>
+```
+
+#### 关于吸顶功能的其他方法
+
+```java
+// 设置吸顶到顶部的距离，在距离顶部一定距离时开始悬停吸顶
+scrollerLayout.setStickyOffset(50);
+
+// 监听吸顶变化(普通模式)
+scrollerLayout.setOnStickyChangeListener(OnStickyChangeListener);
+// 监听吸顶变化(常驻模式)
+scrollerLayout.setOnPermanentStickyChangeListener(OnPermanentStickyChangeListener);
+// 获取当前吸顶view(普通模式)
+scrollerLayout.getCurrentStickyView(); 
+// 获取当前吸顶view(常驻模式)
+scrollerLayout.getCurrentStickyViews();
+```
 
 ### 局部滑动
 
@@ -238,6 +385,7 @@ ConsecutiveScrollerLayout支持NestedScrolling机制，如果你的局部滑动�
 ### 滑动子view的下级view
 
 ConsecutiveScrollerLayout默认情况下只会处理它的直接子view的滑动，但有时候需要滑动的布局可能不是ConsecutiveScrollerLayout的直接子view，而是子view所嵌套的下级view。比如ConsecutiveScrollerLayout嵌套FrameLayout,FrameLayout嵌套ScrollView，我们希望ConsecutiveScrollerLayout也能正常处理ScrollView的滑动。为了支持这种需求，ConsecutiveScroller提供了一个接口：IConsecutiveScroller。子view实现IConsecutiveScroller接口，并通过实现接口方法告诉ConsecutiveScrollerLayout需要滑动的下级view,ConsecutiveScrollerLayout就能正确地处理它的滑动事件。IConsecutiveScroller需要实现两个方法：
+
 ```java
     /**
      * 返回当前需要滑动的下级view。在一个时间点里只能有一个view可以滑动。
@@ -249,7 +397,9 @@ ConsecutiveScrollerLayout默认情况下只会处理它的直接子view的滑动
      */
     List<View> getScrolledViews();
 ```
+
 在前面提到的例子中，我们可以这样实现：
+
 ```java
 public class MyFrameLayout extends FrameLayout implements IConsecutiveScroller {
 
@@ -268,6 +418,7 @@ public class MyFrameLayout extends FrameLayout implements IConsecutiveScroller {
     }
 }
 ```
+
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
 <com.donkingliang.consecutivescroller.ConsecutiveScrollerLayout xmlns:android="http://schemas.android.com/apk/res/android"
@@ -292,6 +443,7 @@ public class MyFrameLayout extends FrameLayout implements IConsecutiveScroller {
     </com.donkingliang.consecutivescrollerdemo.widget.MyFrameLayout>
 </com.donkingliang.consecutivescroller.ConsecutiveScrollerLayout>
 ```
+
 这样ConsecutiveScrollerLayout就能正确地处理ScrollView的滑动。这是一个简单的例子，在实际的需求中，我们一般不需要这样做。
 
 **注意：**
@@ -301,10 +453,53 @@ public class MyFrameLayout extends FrameLayout implements IConsecutiveScroller {
 2、滑动的控件应该跟嵌套它的子view的高度保持一致，也就是说滑动的控件高度应该是match_parent，并且包裹它的子view和它本身都不要设置上下边距(margin和ppadding)。宽度没有这个限制。
 
 #### 对ViewPager的支持
+
 如果你的ViewPager承载的子布局(或Fragment)不是可以垂直滑动的，那么使用普通的ViewPager即可。如果是可以垂直滑动的，那么你的ViewPager需要实现IConsecutiveScroller接口，并返回需要滑动的view对象。框架里提供了一个实现了IConsecutiveScroller接口自定义控件：**ConsecutiveViewPager**。使用这个控件，然后你的ConsecutiveViewPager的子view(或Fragment的根布局)是可垂直滑动的view，如：RecyclerView、NestedScrollView、ConsecutiveScrollerLayout即可。这样你的ViewPager就能正确地跟ConsecutiveScrollerLayout一起滑动了。
 
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<com.donkingliang.consecutivescroller.ConsecutiveScrollerLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/scrollerLayout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:scrollbars="vertical">
+
+    <com.google.android.material.tabs.TabLayout
+        android:id="@+id/tabLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@android:color/white"
+        app:tabGravity="fill"
+        app:tabIndicatorColor="@color/colorPrimary"
+        app:tabIndicatorHeight="3dp"
+        app:tabMode="scrollable"
+        app:tabSelectedTextColor="@color/colorPrimary" />
+
+    <com.donkingliang.consecutivescroller.ConsecutiveViewPager
+        android:id="@+id/viewPager"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+</com.donkingliang.consecutivescroller.ConsecutiveScrollerLayout>
+```
+
+布局吸顶时会覆盖在下面的布局的上面，有时候我们希望TabLayout吸顶悬浮在顶部，但是不希望它覆盖遮挡ViewPager的内容。ConsecutiveViewPager提供了setAdjustHeight调整自己的布局高度，让自己不被TabLayout覆盖。注意：只有ConsecutiveScrollerLayout是ConsecutiveScrollerLayout的最低部时才能这样做。
+
+```java
+// 保证能获取到tabLayout的高度
+tabLayout.post(new Runnable() {
+    @Override
+    public void run() {
+        viewPager.setAdjustHeight(tabLayout.getHeight());
+    }
+});
+```
+
 ### 使用腾讯x5的WebView
+
 由于腾讯x5的VebView是一个FrameLayout嵌套WebView的布局，而不是一个WebView的子类，所以要在ConsecutiveScrollerLayout里使用它，需要把它的滑动交给它里面的WebView。自定义MyWebView继承腾讯的WebView,重写它的scrollBy()方法即可。
+
 ```java
 public class MyWebView extends com.tencent.smtt.sdk.WebView {
 
@@ -315,9 +510,11 @@ public class MyWebView extends com.tencent.smtt.sdk.WebView {
     }
 }
 ```
+
 通过实现IConsecutiveScroller接口同样可以实现对x5的WebView支持。
+
 ```java
-public class MyWebView extends com.tencent.smtt.sdk.WebView {
+public class MyWebView extends com.tencent.smtt.sdk.WebView implements IConsecutiveScroller {
 
     @Override
     public View getCurrentScrollerView() {
@@ -333,7 +530,9 @@ public class MyWebView extends com.tencent.smtt.sdk.WebView {
    
 }
 ```
+
 另外需要隐藏它的子view的滚动条
+
 ```java
 View view = webView.getView();
 view.setVerticalScrollBarEnabled(false);
@@ -355,10 +554,18 @@ webView.setWebChromeClient(new WebChromeClient() {
         });
 ```
 
-2、继承AbsListView的布局(ListView、GridView等)，在滑动上可能会与用户的手指滑动不同步，推荐使用RecyclerView代替。
+2、SmartRefreshLayout和SwipeRefreshLayout等刷新控件可以嵌套ConsecutiveScrollerLayout实现下拉刷新功能，但是ConsecutiveScrollerLayout内部嵌套它们来刷新子view，因为子view时ConsecutiveScrollerLayout滑动内容等一部分。除非你给SmartRefreshLayout或者SwipeRefreshLayout设置app:layout_isConsecutive="false"。
 
-3、ConsecutiveScrollerLayout的子View不支持margin，子View间的间距可以通过Space设置。
+3、继承AbsListView的布局(ListView、GridView等)，在滑动上可能会与用户的手指滑动不同步，推荐使用RecyclerView代替。
 
-4、使用ConsecutiveScrollerLayout提供的setOnVerticalScrollChangeListener()方法监听布局的滑动事件。View所提供的setOnScrollChangeListener()方法已无效。
+4、ConsecutiveScroller的minSdkVersion是19，如果你的项目支持19以下，可以设置：
 
-5、通过getOwnScrollY()方法获取ConsecutiveScrollerLayout的垂直滑动距离，View的getScrollY()方法获取的不是ConsecutiveScrollerLayout的整体滑动距离。
+```xml
+<uses-sdk tools:overrideLibrary="com.donkingliang.consecutivescroller"/>
+```
+
+但是不要在minSdkVersion小于19的项目使用AbsListView的子类，因为ConsecutiveScrollerLayout使用了只有19以上才有的AbsListView API。
+
+5、使用ConsecutiveScrollerLayout提供的setOnVerticalScrollChangeListener()方法监听布局的滑动事件。View所提供的setOnScrollChangeListener()方法已无效。
+
+6、通过getOwnScrollY()方法获取ConsecutiveScrollerLayout的垂直滑动距离，View的getScrollY()方法获取的不是ConsecutiveScrollerLayout的整体滑动距离。
