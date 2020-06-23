@@ -1566,7 +1566,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
         mOnScrollChangeListener = l;
     }
 
-    public OnScrollChangeListener setOnVerticalScrollChangeListener() {
+    public OnScrollChangeListener getOnVerticalScrollChangeListener() {
         return mOnScrollChangeListener;
     }
 
