@@ -1,12 +1,12 @@
 package com.donkingliang.consecutivescroller;
 
 import android.os.Build;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AbsListView;
 
+import androidx.core.view.ScrollingView;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.lang.reflect.Method;
@@ -22,6 +22,11 @@ public class ScrollUtils {
 
     static int computeVerticalScrollOffset(View view) {
         View scrolledView = getScrolledView(view);
+
+        if (scrolledView instanceof ScrollingView) {
+            return ((ScrollingView) scrolledView).computeVerticalScrollOffset();
+        }
+
         try {
             Method method = View.class.getDeclaredMethod("computeVerticalScrollOffset");
             method.setAccessible(true);
@@ -34,6 +39,11 @@ public class ScrollUtils {
 
     static int computeVerticalScrollRange(View view) {
         View scrolledView = getScrolledView(view);
+
+        if (scrolledView instanceof ScrollingView) {
+            return ((ScrollingView) scrolledView).computeVerticalScrollRange();
+        }
+
         try {
             Method method = View.class.getDeclaredMethod("computeVerticalScrollRange");
             method.setAccessible(true);
@@ -46,6 +56,11 @@ public class ScrollUtils {
 
     static int computeVerticalScrollExtent(View view) {
         View scrolledView = getScrolledView(view);
+
+        if (scrolledView instanceof ScrollingView) {
+            return ((ScrollingView) scrolledView).computeVerticalScrollExtent();
+        }
+
         try {
             Method method = View.class.getDeclaredMethod("computeVerticalScrollExtent");
             method.setAccessible(true);
@@ -235,17 +250,8 @@ public class ScrollUtils {
     }
 
     /**
-     * 判断是否是item复用的view(RecyclerView、AbsListView)
-     * @param view
-     * @return
-     */
-    static boolean isRecyclerLayout(View view) {
-        View scrolledView = getScrolledView(view);
-        return scrolledView instanceof RecyclerView || scrolledView instanceof AbsListView;
-    }
-
-    /**
      * 返回需要滑动的view，如果没有，就返回本身。
+     *
      * @param view
      * @return
      */
@@ -257,6 +263,16 @@ public class ScrollUtils {
             }
         }
         return view;
+    }
+
+    static void setLayoutStep(RecyclerView view) {
+        try {
+            Method method = RecyclerView.class.getDeclaredMethod("dispatchLayoutStep2");
+            method.setAccessible(true);
+            method.invoke(view);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
 }

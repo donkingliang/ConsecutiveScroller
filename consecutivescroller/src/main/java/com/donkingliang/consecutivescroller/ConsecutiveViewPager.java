@@ -3,6 +3,7 @@ package com.donkingliang.consecutivescroller;
 import android.content.Context;
 import android.util.AttributeSet;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.ViewParent;
 
 import java.util.ArrayList;
@@ -10,6 +11,7 @@ import java.util.List;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.view.ViewCompat;
 import androidx.viewpager.widget.ViewPager;
 
 /**
@@ -40,6 +42,33 @@ public class ConsecutiveViewPager extends ViewPager implements IConsecutiveScrol
         } else {
             super.onMeasure(widthMeasureSpec, heightMeasureSpec);
         }
+    }
+
+    @Override
+    public void addView(View child, int index, ViewGroup.LayoutParams params) {
+        super.addView(child, index, params);
+
+        // 去掉子View的滚动条。选择在这里做这个操作，而不是在onFinishInflate方法中完成，是为了兼顾用代码add子View的情况
+
+        if (ScrollUtils.isConsecutiveScrollerChild(this)) {
+            disableChildScroll(child);
+
+            if (child instanceof ViewGroup) {
+                ((ViewGroup) child).setClipToPadding(false);
+            }
+        }
+    }
+
+    /**
+     * 禁用子view的一下滑动相关的属性
+     *
+     * @param child
+     */
+    private void disableChildScroll(View child) {
+        child.setVerticalScrollBarEnabled(false);
+        child.setHorizontalScrollBarEnabled(false);
+        child.setOverScrollMode(OVER_SCROLL_NEVER);
+        ViewCompat.setNestedScrollingEnabled(child, false);
     }
 
     private boolean isConsecutiveParent() {

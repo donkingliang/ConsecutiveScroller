@@ -24,6 +24,7 @@ import androidx.core.view.NestedScrollingParentHelper;
 import androidx.core.view.ScrollingView;
 import androidx.core.view.ViewCompat;
 import androidx.core.widget.EdgeEffectCompat;
+import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -248,7 +249,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
         child.setVerticalScrollBarEnabled(false);
         child.setHorizontalScrollBarEnabled(false);
         child.setOverScrollMode(OVER_SCROLL_NEVER);
-        ViewCompat.setNestedScrollingEnabled(child,false);
+        ViewCompat.setNestedScrollingEnabled(child, false);
     }
 
     @Override
@@ -612,7 +613,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
 
                 mTouchY = y - mScrollOffset[1];
                 int oldScrollY = mOwnScrollY;
-                scrollBy(0, deltaY);
+                dispatchScroll(deltaY);
 
                 final int scrolledDeltaY = mOwnScrollY - oldScrollY;
                 deltaY = deltaY - scrolledDeltaY;
@@ -767,7 +768,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
     public void computeScroll() {
         if (mScrollToIndex != -1 && mSmoothScrollOffset != 0) {
             // 正在平滑滑动到某个子view
-            scrollBy(0, mSmoothScrollOffset);
+            dispatchScroll(mSmoothScrollOffset);
             invalidate();
         } else {
 
@@ -785,7 +786,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
 
                 final int oldScrollY = mOwnScrollY;
 
-                scrollBy(0, unconsumed);
+                dispatchScroll(unconsumed);
 
                 final int scrolledByMe = mOwnScrollY - oldScrollY;
                 unconsumed -= scrolledByMe;
@@ -851,16 +852,16 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
     /**
      * 分发处理滑动
      *
-     * @param y
+     * @param offset
      */
-    private void dispatchScroll(int y) {
-        int offset = y - mOwnScrollY;
-        if (mOwnScrollY < y) {
+    private void dispatchScroll(int offset) {
+        if (offset > 0) {
             scrollUp(offset);
-        } else if (mOwnScrollY > y) {
+        } else if (offset < 0) {
             scrollDown(offset);
         }
     }
+
 
     /**
      * 向上滑动
@@ -969,7 +970,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
     @Override
     public void scrollTo(int x, int y) {
         //所有的scroll操作都交由dispatchScroll()来分发处理
-        dispatchScroll(y);
+        dispatchScroll(y - mOwnScrollY);
     }
 
     private void scrollChange(int scrollY, int oldScrollY) {
@@ -1005,6 +1006,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
             scrollY = mScrollRange;
         }
         super.scrollTo(0, scrollY);
+        new Exception().printStackTrace();
     }
 
     private void scrollChild(View child, int y) {
@@ -1015,6 +1017,9 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                 listView.scrollListBy(y);
             }
         } else {
+            if (scrolledView instanceof RecyclerView) {
+                ScrollUtils.setLayoutStep((RecyclerView) scrolledView);
+            }
             scrolledView.scrollBy(0, y);
         }
     }
@@ -1591,8 +1596,12 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
             if (!ScrollUtils.isConsecutiveScrollerChild(child)) {
                 range += child.getHeight();
             } else {
-                range += Math.max(ScrollUtils.computeVerticalScrollRange(child),
-                        child.getHeight());
+                if (ScrollUtils.canScrollVertically(child)) {
+                    View view = ScrollUtils.getScrolledView(child);
+                    range += ScrollUtils.computeVerticalScrollRange(view) + view.getPaddingTop() + view.getPaddingBottom();
+                } else {
+                    range += child.getHeight();
+                }
             }
         }
 
@@ -1745,9 +1754,9 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
             stopScroll();
             do {
                 if (getScrollY() + getPaddingTop() >= view.getTop()) {
-                    scrollBy(0, -200);
+                    dispatchScroll(-200);
                 } else {
-                    scrollBy(0, 200);
+                    dispatchScroll(200);
                 }
 
             } while (mScrollToIndex != -1);
@@ -1975,7 +1984,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
 
     private void onNestedScrollInternal(int dyUnconsumed, int type) {
         final int oldScrollY = mOwnScrollY;
-        scrollBy(0, dyUnconsumed);
+        dispatchScroll(dyUnconsumed);
         final int myConsumed = mOwnScrollY - oldScrollY;
         final int myUnconsumed = dyUnconsumed - myConsumed;
         mChildHelper.dispatchNestedScroll(0, myConsumed, 0, myUnconsumed, null, type);
