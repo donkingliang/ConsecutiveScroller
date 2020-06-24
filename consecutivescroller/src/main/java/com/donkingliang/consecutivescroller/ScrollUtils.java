@@ -265,13 +265,27 @@ public class ScrollUtils {
         return view;
     }
 
-    static void setLayoutStep(RecyclerView view) {
-        try {
-            Method method = RecyclerView.class.getDeclaredMethod("dispatchLayoutStep2");
-            method.setAccessible(true);
-            method.invoke(view);
-        } catch (Exception e) {
-            e.printStackTrace();
+    static boolean startInterceptRequestLayout(RecyclerView view) {
+        if ("InterceptRequestLayout".equals(view.getTag())){
+            try {
+                Method method = RecyclerView.class.getDeclaredMethod("startInterceptRequestLayout");
+                method.setAccessible(true);
+                method.invoke(view);
+                return true;
+            } catch (Exception e) {
+            }
+        }
+        return false;
+    }
+
+    static void stopInterceptRequestLayout(RecyclerView view) {
+        if ("InterceptRequestLayout".equals(view.getTag())){
+            try {
+                Method method = RecyclerView.class.getDeclaredMethod("stopInterceptRequestLayout", boolean.class);
+                method.setAccessible(true);
+                method.invoke(view, false);
+            } catch (Exception e) {
+            }
         }
     }
 
