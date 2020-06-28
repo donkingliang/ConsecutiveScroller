@@ -1,6 +1,7 @@
 package com.donkingliang.consecutivescroller;
 
 import android.os.Build;
+import android.support.v4.view.ScrollingView;
 import android.support.v7.widget.RecyclerView;
 import android.view.MotionEvent;
 import android.view.View;
@@ -20,6 +21,11 @@ public class ScrollUtils {
 
     static int computeVerticalScrollOffset(View view) {
         View scrolledView = getScrolledView(view);
+
+        if (scrolledView instanceof ScrollingView) {
+            return ((ScrollingView) scrolledView).computeVerticalScrollOffset();
+        }
+
         try {
             Method method = View.class.getDeclaredMethod("computeVerticalScrollOffset");
             method.setAccessible(true);
@@ -32,6 +38,11 @@ public class ScrollUtils {
 
     static int computeVerticalScrollRange(View view) {
         View scrolledView = getScrolledView(view);
+
+        if (scrolledView instanceof ScrollingView) {
+            return ((ScrollingView) scrolledView).computeVerticalScrollRange();
+        }
+
         try {
             Method method = View.class.getDeclaredMethod("computeVerticalScrollRange");
             method.setAccessible(true);
@@ -44,6 +55,11 @@ public class ScrollUtils {
 
     static int computeVerticalScrollExtent(View view) {
         View scrolledView = getScrolledView(view);
+
+        if (scrolledView instanceof ScrollingView) {
+            return ((ScrollingView) scrolledView).computeVerticalScrollExtent();
+        }
+
         try {
             Method method = View.class.getDeclaredMethod("computeVerticalScrollExtent");
             method.setAccessible(true);
@@ -169,7 +185,7 @@ public class ScrollUtils {
     }
 
     static int getRawX(View rootView, MotionEvent ev, int pointerIndex) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
             return (int) ev.getRawX(pointerIndex);
         } else {
             int[] position = new int[2];
@@ -180,7 +196,7 @@ public class ScrollUtils {
     }
 
     static int getRawY(View rootView, MotionEvent ev, int pointerIndex) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
             return (int) ev.getRawY(pointerIndex);
         } else {
             int[] position = new int[2];
@@ -233,17 +249,8 @@ public class ScrollUtils {
     }
 
     /**
-     * 判断是否是item复用的view(RecyclerView、AbsListView)
-     * @param view
-     * @return
-     */
-    static boolean isRecyclerLayout(View view) {
-        View scrolledView = getScrolledView(view);
-        return scrolledView instanceof RecyclerView || scrolledView instanceof AbsListView;
-    }
-
-    /**
      * 返回需要滑动的view，如果没有，就返回本身。
+     *
      * @param view
      * @return
      */
@@ -255,6 +262,30 @@ public class ScrollUtils {
             }
         }
         return view;
+    }
+
+    static boolean startInterceptRequestLayout(RecyclerView view) {
+        if ("InterceptRequestLayout".equals(view.getTag())){
+            try {
+                Method method = RecyclerView.class.getDeclaredMethod("startInterceptRequestLayout");
+                method.setAccessible(true);
+                method.invoke(view);
+                return true;
+            } catch (Exception e) {
+            }
+        }
+        return false;
+    }
+
+    static void stopInterceptRequestLayout(RecyclerView view) {
+        if ("InterceptRequestLayout".equals(view.getTag())){
+            try {
+                Method method = RecyclerView.class.getDeclaredMethod("stopInterceptRequestLayout", boolean.class);
+                method.setAccessible(true);
+                method.invoke(view, false);
+            } catch (Exception e) {
+            }
+        }
     }
 
 }
