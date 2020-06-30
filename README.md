@@ -553,7 +553,7 @@ refreshLayout.setOnMultiPurposeListener(new SimpleMultiPurposeListener() {
     @Override
     public void onFooterMoving(RefreshFooter footer, boolean isDragging, float percent, int offset, int footerHeight, int maxDragHeight) {
         // 上拉加载时，保证吸顶头部不被推出屏幕。
-        // r如果你本身就设置了吸顶偏移量，那么这里的offset计算你的偏移量加offset
+        // 如果你本身就设置了吸顶偏移量，那么这里的offset计算你的偏移量加offset
         scrollerLayout.setStickyOffset(offset);
     }
 });
