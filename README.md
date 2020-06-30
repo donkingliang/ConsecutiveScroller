@@ -544,6 +544,21 @@ view.setOverScrollMode(OVER_SCROLL_NEVER);
 
 SmartRefreshLayout和SwipeRefreshLayout等刷新控件可以嵌套ConsecutiveScrollerLayout实现下拉刷新功能，但是ConsecutiveScrollerLayout内部嵌套它们来刷新子view，因为子view是ConsecutiveScrollerLayout滑动内容等一部分。除非你给SmartRefreshLayout或者SwipeRefreshLayout设置app:layout_isConsecutive="false"。
 
+如果你在页面ConsecutiveScrollerLayout嵌套Fragment，你的Fragment里不能使用SmartRefreshLayout，只能在外面的ConsecutiveScrollerLayout外嵌套SmartRefreshLayout，因为这里的Fragment是ConsecutiveScrollerLayout的一部分，不能在ConsecutiveScrollerLayout内部使用SmartRefreshLayout。这时如果你想在Fragment里使用上拉加载功能，可以将外部的SmartRefreshLayout的上拉加载回调通知给Fragment。我在demo中的ViewPagerActivity有提供一个示例，你也可以根据自己的具体业务实现。
+
+如果你使用了吸顶功能，SmartRefreshLayout上拉布局时也会把吸顶View推上去。可以使用下面的方式，让布局上拉时，吸顶view也能固定在顶部。
+
+```java
+refreshLayout.setOnMultiPurposeListener(new SimpleMultiPurposeListener() {
+    @Override
+    public void onFooterMoving(RefreshFooter footer, boolean isDragging, float percent, int offset, int footerHeight, int maxDragHeight) {
+        // 上拉加载时，保证吸顶头部不被推出屏幕。
+        // r如果你本身就设置了吸顶偏移量，那么这里的offset计算你的偏移量加offset
+        scrollerLayout.setStickyOffset(offset);
+    }
+});
+```
+
 ### 其他注意事项
 
 1、WebView在加载的过程中如果滑动的布局，可能会导致WebView与其他View在显示上断层，使用下面的方法一定程度上可以避免这个问题。
