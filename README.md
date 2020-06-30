@@ -20,12 +20,12 @@ allprojects {
 在Module的build.gradle在添加以下代码
 ```groovy
 // 使用了Androidx
-implementation 'com.github.donkingliang:ConsecutiveScroller:2.6.2'
+implementation 'com.github.donkingliang:ConsecutiveScroller:2.7.0'
 
 // 或者
 
 // 使用Android support包
-implementation 'com.github.donkingliang:ConsecutiveScroller:3.6.2'
+implementation 'com.github.donkingliang:ConsecutiveScroller:3.7.0'
 ```
 由于Androidx和Android support包不兼容，所以ConsecutiveScroller使用两个版本分别支持使用Androidx和使用Android support包的项目。
 大版本号3使用Android support包，大版本号2使用Androidx。
@@ -540,6 +540,10 @@ view.setHorizontalScrollBarEnabled(false);
 view.setOverScrollMode(OVER_SCROLL_NEVER);
 ```
 
+### 使用SmartRefreshLayout
+
+SmartRefreshLayout和SwipeRefreshLayout等刷新控件可以嵌套ConsecutiveScrollerLayout实现下拉刷新功能，但是ConsecutiveScrollerLayout内部嵌套它们来刷新子view，因为子view是ConsecutiveScrollerLayout滑动内容等一部分。除非你给SmartRefreshLayout或者SwipeRefreshLayout设置app:layout_isConsecutive="false"。
+
 ### 其他注意事项
 
 1、WebView在加载的过程中如果滑动的布局，可能会导致WebView与其他View在显示上断层，使用下面的方法一定程度上可以避免这个问题。
@@ -554,7 +558,7 @@ webView.setWebChromeClient(new WebChromeClient() {
         });
 ```
 
-2、SmartRefreshLayout和SwipeRefreshLayout等刷新控件可以嵌套ConsecutiveScrollerLayout实现下拉刷新功能，但是ConsecutiveScrollerLayout内部嵌套它们来刷新子view，因为子view时ConsecutiveScrollerLayout滑动内容等一部分。除非你给SmartRefreshLayout或者SwipeRefreshLayout设置app:layout_isConsecutive="false"。
+2、如果你的RecyclerView Item大小不是固定，而是在滑动时动态变化的，可能会引起滑动时页面跳动，你可以给RecyclerView设置tag: android:tag="InterceptRequestLayout"，ConsecutiveScrollerLayout内部会对具有这个tag的RecyclerView做一些处理。如果你的RecyclerView不存在这种问题，不要加这个tag，因为它会影响性能。
 
 3、继承AbsListView的布局(ListView、GridView等)，在滑动上可能会与用户的手指滑动不同步，推荐使用RecyclerView代替。
 
