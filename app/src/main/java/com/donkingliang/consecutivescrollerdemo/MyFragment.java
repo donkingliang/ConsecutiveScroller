@@ -14,6 +14,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.donkingliang.consecutivescrollerdemo.adapter.RecyclerViewAdapter;
+import com.scwang.smartrefresh.layout.SmartRefreshLayout;
 
 /**
  * @Author donkingliang
@@ -39,5 +40,16 @@ public class MyFragment extends Fragment {
         recyclerView2.setAdapter(adapter2);
         return view;
 
+    }
+
+    public void onLoadMore(final SmartRefreshLayout layout){
+        // 模拟加载5秒钟
+        layout.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                // 加载完成
+                layout.finishLoadMore();
+            }
+        },5000);
     }
 }
