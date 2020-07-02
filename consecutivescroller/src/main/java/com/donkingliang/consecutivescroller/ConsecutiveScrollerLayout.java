@@ -551,6 +551,10 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                         // 为了不让这个控件垂直fling，把事件设置为MotionEvent.ACTION_CANCEL。
                         ev.setAction(MotionEvent.ACTION_CANCEL);
                     }
+
+                    if (SCROLL_ORIENTATION == SCROLL_NONE && isIntercept(ev) && Math.abs(yVelocity) >= mMinimumVelocity){
+                        fling(-yVelocity);
+                    }
                 }
 
                 mEventY = 0;
@@ -794,14 +798,20 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
 
     private void fling(int velocityY) {
         if (Math.abs(velocityY) > mMinimumVelocity) {
-            mScroller.fling(0, mOwnScrollY,
-                    1, velocityY,
-                    Integer.MIN_VALUE, Integer.MIN_VALUE,
-                    Integer.MIN_VALUE, Integer.MAX_VALUE);
-            startNestedScroll(ViewCompat.SCROLL_AXIS_VERTICAL, ViewCompat.TYPE_NON_TOUCH);
-            setScrollState(SCROLL_STATE_SETTLING);
-            mLastScrollerY = mOwnScrollY;
-            invalidate();
+            if (!dispatchNestedPreFling(0, (float) velocityY)) {
+                boolean canScroll = (velocityY < 0 && !isScrollTop()) || (velocityY > 0 && !isScrollBottom());
+                this.dispatchNestedFling(0, (float) velocityY, canScroll);
+                if (canScroll) {
+                    mScroller.fling(0, mOwnScrollY,
+                            1, velocityY,
+                            Integer.MIN_VALUE, Integer.MIN_VALUE,
+                            Integer.MIN_VALUE, Integer.MAX_VALUE);
+                    startNestedScroll(ViewCompat.SCROLL_AXIS_VERTICAL, ViewCompat.TYPE_NON_TOUCH);
+                    setScrollState(SCROLL_STATE_SETTLING);
+                    mLastScrollerY = mOwnScrollY;
+                    invalidate();
+                }
+            }
         }
     }
 

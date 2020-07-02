@@ -83,17 +83,6 @@ public class ViewPagerActivity extends AppCompatActivity {
                 scrollerLayout.setStickyOffset(offset);
             }
         });
-
-        // 滑动到底部，自动触发上拉加载
-        scrollerLayout.setOnVerticalScrollChangeListener(new ConsecutiveScrollerLayout.OnScrollChangeListener() {
-            @Override
-            public void onScrollChange(View v, int scrollY, int oldScrollY, int scrollState) {
-                if (scrollState == ConsecutiveScrollerLayout.SCROLL_STATE_IDLE && scrollerLayout.isScrollBottom()){
-                    Log.e("eee","自动触发上拉加载");
-                    refreshLayout.autoLoadMore();
-                }
-            }
-        });
     }
 
     // 提供给Fragment获取使用。
