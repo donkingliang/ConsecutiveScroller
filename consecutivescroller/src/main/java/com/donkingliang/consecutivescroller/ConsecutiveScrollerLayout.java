@@ -117,6 +117,8 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
      */
     private int mSmoothScrollOffset = 0;
 
+    private int mScrollToIndexWithOffset = 0;
+
     /**
      * 上边界阴影
      */
@@ -552,7 +554,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                         ev.setAction(MotionEvent.ACTION_CANCEL);
                     }
 
-                    if (SCROLL_ORIENTATION == SCROLL_NONE && isIntercept(ev) && Math.abs(yVelocity) >= mMinimumVelocity){
+                    if (SCROLL_ORIENTATION == SCROLL_NONE && isIntercept(ev) && Math.abs(yVelocity) >= mMinimumVelocity) {
                         fling(-yVelocity);
                     }
                 }
@@ -925,12 +927,20 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
         int remainder = offset;
         int oldScrollY = mOwnScrollY;
         do {
+
+            int scrollAnchor = 0;
+            int viewScrollOffset = 0;
             // 如果是要滑动到指定的View，判断滑动到目标位置，就停止滑动
             if (mScrollToIndex != -1) {
                 View view = getChildAt(mScrollToIndex);
-                if (getScrollY() + getPaddingTop() >= view.getTop() || isScrollBottom()) {
+                scrollAnchor = view.getTop() - mScrollToIndexWithOffset;
+                if (mScrollToIndexWithOffset < 0) {
+                    viewScrollOffset = getViewsScrollOffset(mScrollToIndex);
+                }
+                if (getScrollY() + getPaddingTop() + viewScrollOffset >= scrollAnchor || isScrollBottom()) {
                     mScrollToIndex = -1;
                     mSmoothScrollOffset = 0;
+                    mScrollToIndexWithOffset = 0;
                     setScrollState(SCROLL_STATE_IDLE);
                     break;
                 }
@@ -951,10 +961,19 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                     int bottomOffset = ScrollUtils.getScrollBottomOffset(firstVisibleView);
                     if (bottomOffset > 0) {
                         scrollOffset = Math.min(remainder, bottomOffset);
+
+                        if (mScrollToIndex != -1) {
+                            scrollOffset = Math.min(scrollOffset, scrollAnchor - (getScrollY() + getPaddingTop() + viewScrollOffset));
+                        }
+
                         scrollChild(firstVisibleView, scrollOffset);
+
                     } else {
                         scrollOffset = Math.min(remainder,
                                 firstVisibleView.getBottom() - getPaddingTop() - getScrollY());
+                        if (mScrollToIndex != -1) {
+                            scrollOffset = Math.min(scrollOffset, scrollAnchor - (getScrollY() + getPaddingTop() + viewScrollOffset));
+                        }
                         scrollSelf(getScrollY() + scrollOffset);
                     }
                     mOwnScrollY += scrollOffset;
@@ -975,13 +994,17 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
         int remainder = offset;
         int oldScrollY = mOwnScrollY;
         do {
+            int scrollAnchor = 0;
+            int viewScrollOffset = 0;
             // 如果是要滑动到指定的View，判断滑动到目标位置，就停止滑动
             if (mScrollToIndex != -1) {
                 View view = getChildAt(mScrollToIndex);
-                if ((getScrollY() + getPaddingTop() <= view.getTop()
-                        && ScrollUtils.getScrollTopOffset(view) >= 0) || isScrollTop()) {
+                scrollAnchor = view.getTop() - mScrollToIndexWithOffset;
+                viewScrollOffset = getViewsScrollOffset(mScrollToIndex);
+                if (getScrollY() + getPaddingTop() + viewScrollOffset <= scrollAnchor || isScrollTop()) {
                     mScrollToIndex = -1;
                     mSmoothScrollOffset = 0;
+                    mScrollToIndexWithOffset = 0;
                     setScrollState(SCROLL_STATE_IDLE);
                     break;
                 }
@@ -996,11 +1019,17 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                     int childScrollOffset = ScrollUtils.getScrollTopOffset(lastVisibleView);
                     if (childScrollOffset < 0) {
                         scrollOffset = Math.max(remainder, childScrollOffset);
+                        if (mScrollToIndex != -1) {
+                            scrollOffset = Math.max(scrollOffset, scrollAnchor - (getScrollY() + getPaddingTop() + viewScrollOffset));
+                        }
                         scrollChild(lastVisibleView, scrollOffset);
                     } else {
                         int scrollY = getScrollY();
                         scrollOffset = Math.max(remainder,
                                 lastVisibleView.getTop() + getPaddingBottom() - scrollY - getHeight());
+                        if (mScrollToIndex != -1) {
+                            scrollOffset = Math.max(scrollOffset, scrollAnchor - (getScrollY() + getPaddingTop() + viewScrollOffset));
+                        }
                         scrollSelf(scrollY + scrollOffset);
                     }
                     mOwnScrollY += scrollOffset;
@@ -1833,20 +1862,47 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
      * @param view
      */
     public void scrollToChild(View view) {
+        scrollToChildWithOffset(view,0);
+    }
+
+    public void scrollToChildWithOffset(View view, int offset) {
         int scrollToIndex = indexOfChild(view);
         if (scrollToIndex != -1) {
-            mScrollToIndex = scrollToIndex;
-            // 停止fling
-            stopScroll();
-            setScrollState(SCROLL_STATE_SETTLING);
-            do {
-                if (getScrollY() + getPaddingTop() >= view.getTop()) {
-                    dispatchScroll(-200);
-                } else {
-                    dispatchScroll(200);
-                }
 
-            } while (mScrollToIndex != -1);
+            int scrollAnchor = view.getTop() - offset;
+
+            // 滑动方向。
+            int scrollOrientation = 0;
+
+            if (offset >= 0) {
+                if (getScrollY() + getPaddingTop() > scrollAnchor) {
+                    scrollOrientation = -1;
+                } else if (getScrollY() + getPaddingTop() < scrollAnchor) {
+                    scrollOrientation = 1;
+                }
+            } else {
+                int viewScrollOffset = getViewsScrollOffset(scrollToIndex);
+                if (getScrollY() + getPaddingTop() + viewScrollOffset > scrollAnchor) {
+                    scrollOrientation = -1;
+                } else if (getScrollY() + getPaddingTop() + viewScrollOffset < scrollAnchor) {
+                    scrollOrientation = 1;
+                }
+            }
+
+            if (scrollOrientation != 0) {
+                mScrollToIndex = scrollToIndex;
+                // 停止fling
+                stopScroll();
+                mScrollToIndexWithOffset = offset;
+                setScrollState(SCROLL_STATE_SETTLING);
+                do {
+                    if (scrollOrientation < 0) {
+                        dispatchScroll(-200);
+                    } else {
+                        dispatchScroll(200);
+                    }
+                } while (mScrollToIndex != -1);
+            }
         }
     }
 
@@ -1856,19 +1912,65 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
      * @param view
      */
     public void smoothScrollToChild(View view) {
+        smoothScrollToChildWithOffset(view,0);
+    }
+
+    public void smoothScrollToChildWithOffset(View view, int offset) {
         int scrollToIndex = indexOfChild(view);
         if (scrollToIndex != -1) {
-            mScrollToIndex = scrollToIndex;
-            // 停止fling
-            stopScroll();
-            setScrollState(SCROLL_STATE_SETTLING);
-            if (getScrollY() + getPaddingTop() >= view.getTop()) {
-                mSmoothScrollOffset = -200;
+
+            int scrollAnchor = view.getTop() - offset;
+
+            // 滑动方向。
+            int scrollOrientation = 0;
+
+            if (offset >= 0) {
+                if (getScrollY() + getPaddingTop() > scrollAnchor) {
+                    scrollOrientation = -1;
+                } else if (getScrollY() + getPaddingTop() < scrollAnchor) {
+                    scrollOrientation = 1;
+                }
             } else {
-                mSmoothScrollOffset = 200;
+                int viewScrollOffset = getViewsScrollOffset(scrollToIndex);
+                if (getScrollY() + getPaddingTop() + viewScrollOffset > scrollAnchor) {
+                    scrollOrientation = -1;
+                } else if (getScrollY() + getPaddingTop() + viewScrollOffset < scrollAnchor) {
+                    scrollOrientation = 1;
+                }
             }
-            invalidate();
+
+            if (scrollOrientation != 0) {
+                mScrollToIndex = scrollToIndex;
+                // 停止fling
+                stopScroll();
+                mScrollToIndexWithOffset = offset;
+                setScrollState(SCROLL_STATE_SETTLING);
+                if (scrollOrientation < 0) {
+                    mSmoothScrollOffset = -200;
+                } else {
+                    mSmoothScrollOffset = 200;
+                }
+                invalidate();
+            }
         }
+    }
+
+    /**
+     * 获取从index到最后view，所有view的滑动offset总量
+     *
+     * @param index
+     */
+    private int getViewsScrollOffset(int index) {
+        int offset = 0;
+        List<View> children = getNonGoneChildren();
+        int count = children.size();
+        for (int i = index; i < count; i++) {
+            View child = children.get(i);
+            if (child.getVisibility() != GONE && ScrollUtils.isConsecutiveScrollerChild(child)) {
+                offset += ScrollUtils.computeVerticalScrollOffset(child);
+            }
+        }
+        return offset;
     }
 
     /**
