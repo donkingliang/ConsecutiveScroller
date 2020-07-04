@@ -403,7 +403,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
     }
 
     private void resetScrollToTopView() {
-        mScrollToTopView = findFirstVisibleView();
+        mScrollToTopView = findScrollToTopView();
         if (mScrollToTopView != null) {
             mAdjust = getScrollY() - mScrollToTopView.getTop();
         }
@@ -1592,6 +1592,19 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
      */
     public int getOwnScrollY() {
         return mOwnScrollY;
+    }
+
+    private View findScrollToTopView() {
+        int offset = getScrollY() + getPaddingTop();
+        List<View> children = getNonGoneChildren();
+        int count = children.size();
+        for (int i = 0; i < count; i++) {
+            View child = children.get(i);
+            if (child.getTop() <= offset && child.getBottom() >= offset) {
+                return child;
+            }
+        }
+        return null;
     }
 
     /**
