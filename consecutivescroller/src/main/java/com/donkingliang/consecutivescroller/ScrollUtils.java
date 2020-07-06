@@ -266,7 +266,7 @@ public class ScrollUtils {
     }
 
     static boolean startInterceptRequestLayout(RecyclerView view) {
-        if ("InterceptRequestLayout".equals(view.getTag())){
+        if ("InterceptRequestLayout".equals(view.getTag())) {
             try {
                 Method method = RecyclerView.class.getDeclaredMethod("startInterceptRequestLayout");
                 method.setAccessible(true);
@@ -279,7 +279,7 @@ public class ScrollUtils {
     }
 
     static void stopInterceptRequestLayout(RecyclerView view) {
-        if ("InterceptRequestLayout".equals(view.getTag())){
+        if ("InterceptRequestLayout".equals(view.getTag())) {
             try {
                 Method method = RecyclerView.class.getDeclaredMethod("stopInterceptRequestLayout", boolean.class);
                 method.setAccessible(true);
@@ -288,5 +288,41 @@ public class ScrollUtils {
             }
         }
     }
+
+    /**
+     * 判断父级容器是否是isConsecutive：true.判断到最近的ConsecutiveScrollerLayout容器
+     * @param view
+     * @return
+     */
+    static boolean isConsecutiveScrollParent(View view) {
+        View child = view;
+        while (child.getParent() instanceof ViewGroup && !(child.getParent() instanceof ConsecutiveScrollerLayout)) {
+            child = (View) child.getParent();
+        }
+
+        if (child.getParent() instanceof ConsecutiveScrollerLayout) {
+            return isConsecutiveScrollerChild(child);
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * 判断当前触摸点下是否有view可以水平滑动
+     * @param rootView
+     * @param touchX
+     * @param touchY
+     * @return
+     */
+    static boolean isHorizontalScroll(View rootView, int touchX, int touchY) {
+        List<View> views = getTouchViews(rootView, touchX, touchY);
+        for (View view : views) {
+            if (view.canScrollHorizontally(1) || view.canScrollHorizontally(-1)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
 
 }

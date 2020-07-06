@@ -547,15 +547,19 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                     mAdjustVelocityTracker.computeCurrentVelocity(1000, mMaximumVelocity);
                     int yVelocity = (int) mAdjustVelocityTracker.getYVelocity();
                     recycleAdjustVelocityTracker();
-                    boolean canScrollVerticallyChild = ScrollUtils.canScrollVertically(getTouchTarget(
-                            ScrollUtils.getRawX(this, ev, actionIndex), ScrollUtils.getRawY(this, ev, actionIndex)));
-                    if (SCROLL_ORIENTATION != SCROLL_VERTICAL && canScrollVerticallyChild && Math.abs(yVelocity) >= mMinimumVelocity) {
+                    int touchX = ScrollUtils.getRawX(this, ev, actionIndex);
+                    int touchY= ScrollUtils.getRawY(this, ev, actionIndex);
+                    boolean canScrollVerticallyChild = ScrollUtils.canScrollVertically(getTouchTarget(touchX, touchY));
+                    if (SCROLL_ORIENTATION != SCROLL_VERTICAL && canScrollVerticallyChild
+                            && Math.abs(yVelocity) >= mMinimumVelocity
+                            && !ScrollUtils.isHorizontalScroll(this,touchX,touchY)) {
                         //如果当前是横向滑动，但是触摸的控件可以垂直滑动，并且产生垂直滑动的fling事件，
                         // 为了不让这个控件垂直fling，把事件设置为MotionEvent.ACTION_CANCEL。
                         ev.setAction(MotionEvent.ACTION_CANCEL);
                     }
 
-                    if (SCROLL_ORIENTATION == SCROLL_NONE && isIntercept(ev) && Math.abs(yVelocity) >= mMinimumVelocity) {
+                    if (SCROLL_ORIENTATION == SCROLL_NONE && !ScrollUtils.isConsecutiveScrollParent(this)
+                            && isIntercept(ev) && Math.abs(yVelocity) >= mMinimumVelocity) {
                         fling(-yVelocity);
                     }
                 }
@@ -613,6 +617,10 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
 
     @Override
     public boolean onTouchEvent(MotionEvent ev) {
+
+        if (ScrollUtils.isConsecutiveScrollParent(this)){
+            return false;
+        }
 
         MotionEvent vtev = MotionEvent.obtain(ev);
 
