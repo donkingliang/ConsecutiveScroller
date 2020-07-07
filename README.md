@@ -20,15 +20,13 @@ allprojects {
 在Module的build.gradle在添加以下代码
 ```groovy
 // 使用了Androidx
-implementation 'com.github.donkingliang:ConsecutiveScroller:2.7.0'
+implementation 'com.github.donkingliang:ConsecutiveScroller:4.0.0'
 
 // 或者
 
 // 使用Android support包
-implementation 'com.github.donkingliang:ConsecutiveScroller:3.7.0'
+implementation 'com.github.donkingliang:ConsecutiveScroller:4.0.0-support'
 ```
-由于Androidx和Android support包不兼容，所以ConsecutiveScroller使用两个版本分别支持使用Androidx和使用Android support包的项目。
-大版本号3使用Android support包，大版本号2使用Androidx。
 
 **注意：** 如果你准备使用这个库，请务必认真阅读下面的文档。它能让你了解ConsecutiveScrollerLayout可以实现的功能，以及避免不必要的错误。
 
