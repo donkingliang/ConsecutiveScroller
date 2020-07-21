@@ -548,11 +548,11 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                     int yVelocity = (int) mAdjustVelocityTracker.getYVelocity();
                     recycleAdjustVelocityTracker();
                     int touchX = ScrollUtils.getRawX(this, ev, actionIndex);
-                    int touchY= ScrollUtils.getRawY(this, ev, actionIndex);
+                    int touchY = ScrollUtils.getRawY(this, ev, actionIndex);
                     boolean canScrollVerticallyChild = ScrollUtils.canScrollVertically(getTouchTarget(touchX, touchY));
                     if (SCROLL_ORIENTATION != SCROLL_VERTICAL && canScrollVerticallyChild
                             && Math.abs(yVelocity) >= mMinimumVelocity
-                            && !ScrollUtils.isHorizontalScroll(this,touchX,touchY)) {
+                            && !ScrollUtils.isHorizontalScroll(this, touchX, touchY)) {
                         //如果当前是横向滑动，但是触摸的控件可以垂直滑动，并且产生垂直滑动的fling事件，
                         // 为了不让这个控件垂直fling，把事件设置为MotionEvent.ACTION_CANCEL。
                         ev.setAction(MotionEvent.ACTION_CANCEL);
@@ -618,7 +618,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
     @Override
     public boolean onTouchEvent(MotionEvent ev) {
 
-        if (ScrollUtils.isConsecutiveScrollParent(this)){
+        if (ScrollUtils.isConsecutiveScrollParent(this)) {
             return false;
         }
 
@@ -812,16 +812,16 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
             if (!dispatchNestedPreFling(0, (float) velocityY)) {
                 boolean canScroll = (velocityY < 0 && !isScrollTop()) || (velocityY > 0 && !isScrollBottom());
                 this.dispatchNestedFling(0, (float) velocityY, canScroll);
-                if (canScroll) {
-                    mScroller.fling(0, mOwnScrollY,
-                            1, velocityY,
-                            Integer.MIN_VALUE, Integer.MIN_VALUE,
-                            Integer.MIN_VALUE, Integer.MAX_VALUE);
-                    startNestedScroll(ViewCompat.SCROLL_AXIS_VERTICAL, ViewCompat.TYPE_NON_TOUCH);
-                    setScrollState(SCROLL_STATE_SETTLING);
-                    mLastScrollerY = mOwnScrollY;
-                    invalidate();
-                }
+//                if (canScroll) {
+                mScroller.fling(0, mOwnScrollY,
+                        1, velocityY,
+                        Integer.MIN_VALUE, Integer.MIN_VALUE,
+                        Integer.MIN_VALUE, Integer.MAX_VALUE);
+                startNestedScroll(ViewCompat.SCROLL_AXIS_VERTICAL, ViewCompat.TYPE_NON_TOUCH);
+                setScrollState(SCROLL_STATE_SETTLING);
+                mLastScrollerY = mOwnScrollY;
+                invalidate();
+//                }
             }
         }
     }
@@ -1036,6 +1036,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                         int scrollY = getScrollY();
                         scrollOffset = Math.max(remainder,
                                 lastVisibleView.getTop() + getPaddingBottom() - scrollY - getHeight());
+                        scrollOffset = Math.max(scrollOffset,-scrollY);
                         if (mScrollToIndex != -1) {
                             scrollOffset = Math.max(scrollOffset, scrollAnchor - (getScrollY() + getPaddingTop() + viewScrollOffset));
                         }
@@ -1884,7 +1885,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
      * @param view
      */
     public void scrollToChild(View view) {
-        scrollToChildWithOffset(view,0);
+        scrollToChildWithOffset(view, 0);
     }
 
     public void scrollToChildWithOffset(View view, int offset) {
@@ -1934,7 +1935,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
      * @param view
      */
     public void smoothScrollToChild(View view) {
-        smoothScrollToChildWithOffset(view,0);
+        smoothScrollToChildWithOffset(view, 0);
     }
 
     public void smoothScrollToChildWithOffset(View view, int offset) {
