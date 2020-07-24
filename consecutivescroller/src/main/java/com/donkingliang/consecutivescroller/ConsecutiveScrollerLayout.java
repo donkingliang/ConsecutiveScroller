@@ -155,6 +155,8 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
     // 临时保存吸顶的view，用于判断吸顶view是否改变了
     private final List<View> mTempStickyViews = new ArrayList<>();
 
+    private int mOldScrollY = 0;
+
     private final List<View> mViews = new ArrayList<>();
     private int mNestedYOffset = 0;
 
@@ -746,6 +748,10 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
     @Override
     public void draw(Canvas canvas) {
         super.draw(canvas);
+        if (mOldScrollY != getScrollY()){
+            mOldScrollY = getScrollY();
+            resetSticky();
+        }
 
         // 绘制边界阴影
         if (mEdgeGlowTop != null) {
@@ -993,7 +999,6 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
 
         if (oldScrollY != mOwnScrollY) {
             scrollChange(mOwnScrollY, oldScrollY);
-            resetSticky();
         }
     }
 
@@ -1050,7 +1055,6 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
 
         if (oldScrollY != mOwnScrollY) {
             scrollChange(mOwnScrollY, oldScrollY);
-            resetSticky();
         }
     }
 
