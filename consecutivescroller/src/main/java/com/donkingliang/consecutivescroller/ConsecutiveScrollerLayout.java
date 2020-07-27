@@ -1271,17 +1271,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
      * @return
      */
     private void computeOwnScrollOffset() {
-        int scrollY = getScrollY();
-        List<View> children = getNonGoneChildren();
-        int count = children.size();
-        for (int i = 0; i < count; i++) {
-            View child = children.get(i);
-            if (ScrollUtils.isConsecutiveScrollerChild(child)) {
-                scrollY += ScrollUtils.computeVerticalScrollOffset(child);
-            }
-        }
-
-        mOwnScrollY = scrollY;
+        mOwnScrollY = computeVerticalScrollOffset();
     }
 
     /**
@@ -1752,7 +1742,17 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
 
     @Override
     public int computeVerticalScrollOffset() {
-        return mOwnScrollY;
+        int scrollOffset = getScrollY();
+        List<View> children = getNonGoneChildren();
+        int count = children.size();
+        for (int i = 0; i < count; i++) {
+            View child = children.get(i);
+            if (ScrollUtils.isConsecutiveScrollerChild(child)) {
+                scrollOffset += ScrollUtils.computeVerticalScrollOffset(child);
+            }
+        }
+
+        return scrollOffset;
     }
 
     @Override
