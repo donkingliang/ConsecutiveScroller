@@ -79,7 +79,7 @@ public class ScrollUtils {
      */
     static int getScrollTopOffset(View view) {
         if (isConsecutiveScrollerChild(view) && canScrollVertically(view, -1)) {
-            return -computeVerticalScrollOffset(view);
+            return Math.min(-computeVerticalScrollOffset(view), -1);
         } else {
             return 0;
         }
@@ -93,8 +93,8 @@ public class ScrollUtils {
      */
     static int getScrollBottomOffset(View view) {
         if (isConsecutiveScrollerChild(view) && canScrollVertically(view, 1)) {
-            return computeVerticalScrollRange(view) - computeVerticalScrollOffset(view)
-                    - computeVerticalScrollExtent(view);
+            return Math.max(computeVerticalScrollRange(view) - computeVerticalScrollOffset(view)
+                    - computeVerticalScrollExtent(view), 1);
         } else {
             return 0;
         }
@@ -128,6 +128,41 @@ public class ScrollUtils {
                 return false;
             }
         } else {
+            // RecyclerView通过canScrollVertically方法判断滑动到边界不准确，需要单独处理
+            if (scrolledView instanceof RecyclerView) {
+                RecyclerView recyclerView = (RecyclerView) scrolledView;
+                RecyclerView.LayoutManager layoutManager = recyclerView.getLayoutManager();
+                RecyclerView.Adapter adapter = recyclerView.getAdapter();
+
+                if (layoutManager != null && adapter != null && adapter.getItemCount() > 0) {
+                    View itemView = layoutManager.findViewByPosition(direction > 0 ? adapter.getItemCount() - 1 : 0);
+                    if (itemView == null) {
+                        return true;
+                    }
+                } else {
+                    return false;
+                }
+
+                int count = recyclerView.getChildCount();
+                if (direction > 0) {
+                    for (int i = count - 1; i >= 0; i--) {
+                        View child = recyclerView.getChildAt(i);
+                        if (child.getY() + child.getHeight() > recyclerView.getHeight() - recyclerView.getPaddingBottom()) {
+                            return true;
+                        }
+                    }
+                    return false;
+                } else {
+                    for (int i = 0; i < count; i++) {
+                        View child = recyclerView.getChildAt(i);
+                        if (child.getY() < recyclerView.getPaddingTop()) {
+                            return true;
+                        }
+                    }
+                    return false;
+                }
+            }
+
             return scrolledView.canScrollVertically(direction);
         }
     }
@@ -291,6 +326,7 @@ public class ScrollUtils {
 
     /**
      * 判断父级容器是否是isConsecutive：true.判断到最近的ConsecutiveScrollerLayout容器
+     *
      * @param view
      * @return
      */
@@ -309,6 +345,7 @@ public class ScrollUtils {
 
     /**
      * 判断当前触摸点下是否有view可以水平滑动
+     *
      * @param rootView
      * @param touchX
      * @param touchY
