@@ -3,7 +3,7 @@ package com.donkingliang.consecutivescroller;
 import android.view.ViewGroup;
 
 /**
- * @Author teach liang
+ * @Author donkingliang
  * @Description
  * @Date 2020/5/22
  */

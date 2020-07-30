@@ -1655,8 +1655,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
         List<View> children = getEffectiveChildren();
         if (children.size() > 0) {
             View child = children.get(0);
-            View scrolledView = ScrollUtils.getScrolledView(child);
-            return getScrollY() <= 0 && !scrolledView.canScrollVertically(-1);
+            return getScrollY() <= 0 && !ScrollUtils.canScrollVertically(child,-1);
         }
         return true;
     }
@@ -1670,10 +1669,18 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
         List<View> children = getEffectiveChildren();
         if (children.size() > 0) {
             View child = children.get(children.size() - 1);
-            View scrolledView = ScrollUtils.getScrolledView(child);
-            return getScrollY() >= mScrollRange && !scrolledView.canScrollVertically(1);
+            return getScrollY() >= mScrollRange && !ScrollUtils.canScrollVertically(child,1);
         }
         return true;
+    }
+
+    @Override
+    public boolean canScrollVertically(int direction) {
+        if (direction > 0){
+            return !isScrollBottom();
+        } else {
+            return !isScrollTop();
+        }
     }
 
     /**
