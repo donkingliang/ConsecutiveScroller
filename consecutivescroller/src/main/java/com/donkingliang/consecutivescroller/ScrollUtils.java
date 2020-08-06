@@ -291,13 +291,20 @@ public class ScrollUtils {
      * @return
      */
     static View getScrolledView(View view) {
-        if (view instanceof IConsecutiveScroller) {
-            View scrolledView = ((IConsecutiveScroller) view).getCurrentScrollerView();
-            if (scrolledView != null) {
-                return scrolledView;
+
+        View consecutiveView = null;
+        View scrolledView = view;
+
+        while (scrolledView instanceof IConsecutiveScroller) {
+            consecutiveView = scrolledView;
+            scrolledView = ((IConsecutiveScroller) scrolledView).getCurrentScrollerView();
+
+            if (consecutiveView == scrolledView) {
+                break;
             }
         }
-        return view;
+
+        return scrolledView;
     }
 
     static boolean startInterceptRequestLayout(RecyclerView view) {
