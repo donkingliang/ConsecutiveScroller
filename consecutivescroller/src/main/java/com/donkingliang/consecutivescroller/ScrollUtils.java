@@ -1,5 +1,6 @@
 package com.donkingliang.consecutivescroller;
 
+import android.graphics.Rect;
 import android.os.Build;
 import android.support.v4.view.ScrollingView;
 import android.support.v7.widget.RecyclerView;
@@ -109,6 +110,8 @@ public class ScrollUtils {
         return isConsecutiveScrollerChild(view) && (canScrollVertically(view, 1) || canScrollVertically(view, -1));
     }
 
+    private static final Rect mBounds = new Rect();
+
     /**
      * 判断是否可以滑动
      *
@@ -146,7 +149,8 @@ public class ScrollUtils {
                 if (direction > 0) {
                     for (int i = count - 1; i >= 0; i--) {
                         View child = recyclerView.getChildAt(i);
-                        if (child.getY() + child.getHeight() > recyclerView.getHeight() - recyclerView.getPaddingBottom()) {
+                        recyclerView.getDecoratedBoundsWithMargins(child, mBounds);
+                        if (mBounds.bottom > recyclerView.getHeight() - recyclerView.getPaddingBottom()) {
                             return true;
                         }
                     }
@@ -154,7 +158,8 @@ public class ScrollUtils {
                 } else {
                     for (int i = 0; i < count; i++) {
                         View child = recyclerView.getChildAt(i);
-                        if (child.getY() < recyclerView.getPaddingTop()) {
+                        recyclerView.getDecoratedBoundsWithMargins(child, mBounds);
+                        if (mBounds.top < recyclerView.getPaddingTop()) {
                             return true;
                         }
                     }
