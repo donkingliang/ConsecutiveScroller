@@ -1027,7 +1027,12 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
             scrollOffset = 0;
             if (!isScrollTop()) {
                 // 找到当前显示的最后一个View
-                View lastVisibleView = findLastVisibleView();
+                View lastVisibleView = null;
+                if(getScrollY() < mScrollRange) {
+                    lastVisibleView = findLastVisibleView();
+                } else {
+                    lastVisibleView = getBottomView();
+                }
                 if (lastVisibleView != null) {
                     awakenScrollBars();
                     int childScrollOffset = ScrollUtils.getScrollTopOffset(lastVisibleView);
@@ -1202,7 +1207,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
         for (int i = index + 1; i < getChildCount(); i++) {
             final View child = getChildAt(i);
             if (ScrollUtils.isConsecutiveScrollerChild(child)) {
-                if (i == getChildCount() - 1 && child instanceof ConsecutiveViewPager && getScrollY() >= mScrollRange) {
+                if (i == getChildCount() - 1 && child.getHeight() < this.getHeight() && getScrollY() >= mScrollRange) {
                     continue;
                 }
                 if (child instanceof IConsecutiveScroller) {
