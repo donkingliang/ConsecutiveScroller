@@ -485,10 +485,14 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                 break;
             case MotionEvent.ACTION_MOVE:
 
+                final int pointerIndex = ev.findPointerIndex(mActivePointerId);
+                if (pointerIndex < 0 || pointerIndex >= ev.getPointerCount()) {
+                    return false;
+                }
+
                 initAdjustVelocityTrackerIfNotExists();
                 mAdjustVelocityTracker.addMovement(vtev);
 
-                final int pointerIndex = ev.findPointerIndex(mActivePointerId);
                 int offsetY = (int) ev.getY(pointerIndex) - mEventY;
                 int offsetX = (int) ev.getX(pointerIndex) - mEventX;
                 if (isIntercept(ev) || isIntercept(mDownLocation[0], mDownLocation[1])) {
@@ -631,6 +635,9 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
         vtev.offsetLocation(0, mNestedYOffset);
 
         final int pointerIndex = ev.findPointerIndex(mActivePointerId);
+        if (pointerIndex < 0 || pointerIndex >= ev.getPointerCount()) {
+            return false;
+        }
         switch (ev.getActionMasked()) {
             case MotionEvent.ACTION_DOWN:
                 startNestedScroll(ViewCompat.SCROLL_AXIS_VERTICAL, ViewCompat.TYPE_TOUCH);
@@ -1810,6 +1817,10 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
      */
     private boolean isIntercept(MotionEvent ev) {
         final int pointerIndex = ev.findPointerIndex(mActivePointerId);
+        if (pointerIndex < 0 || pointerIndex >= ev.getPointerCount()) {
+            // 无效的触摸，不要往下传递
+            return true;
+        }
         return isIntercept(ScrollUtils.getRawX(this, ev, pointerIndex),
                 ScrollUtils.getRawY(this, ev, pointerIndex));
     }
