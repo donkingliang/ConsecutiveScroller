@@ -1466,7 +1466,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                 // 找到需要吸顶的View
                 for (int i = count - 1; i >= 0; i--) {
                     View child = children.get(i);
-                    if (getScrollY() > 0 && child.getTop() <= getStickyY()) {
+                    if (child.getTop() <= getStickyY()) {
                         stickyView = child;
                         if (i != count - 1) {
                             nextStickyView = children.get(i + 1);
@@ -1546,7 +1546,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
         for (int i = 0; i < children.size(); i++) {
             View child = children.get(i);
             int permanentHeight = getPermanentHeight(children, i);
-            if (getScrollY() > 0 && child.getTop() <= getStickyY() + permanentHeight) {
+            if (child.getTop() <= getStickyY() + permanentHeight) {
                 child.setY(getStickyY() + permanentHeight);
                 child.setClickable(true);
                 mTempStickyViews.add(child);
