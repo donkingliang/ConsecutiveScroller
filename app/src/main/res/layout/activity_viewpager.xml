@@ -42,8 +42,7 @@
         <com.donkingliang.consecutivescroller.ConsecutiveViewPager
             android:id="@+id/viewPager"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:visibility="gone"/>
+            android:layout_height="match_parent"/>
 
     </com.donkingliang.consecutivescroller.ConsecutiveScrollerLayout>
 
