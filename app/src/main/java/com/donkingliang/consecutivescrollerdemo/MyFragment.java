@@ -1,11 +1,10 @@
 package com.donkingliang.consecutivescrollerdemo;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.webkit.WebChromeClient;
-import android.webkit.WebView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -14,7 +13,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.donkingliang.consecutivescrollerdemo.adapter.RecyclerViewAdapter;
-import com.scwang.smartrefresh.layout.SmartRefreshLayout;
+import com.scwang.smart.refresh.layout.SmartRefreshLayout;
 
 /**
  * @Author donkingliang
@@ -44,12 +43,6 @@ public class MyFragment extends Fragment {
 
     public void onLoadMore(final SmartRefreshLayout layout){
         // 模拟加载5秒钟
-        layout.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                // 加载完成
-                layout.finishLoadMore();
-            }
-        },5000);
+        layout.finishLoadMore(5000);
     }
 }

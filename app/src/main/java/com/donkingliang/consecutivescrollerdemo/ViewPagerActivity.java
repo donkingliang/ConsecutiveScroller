@@ -2,18 +2,17 @@ package com.donkingliang.consecutivescrollerdemo;
 
 import android.os.Bundle;
 import android.util.Log;
-import android.view.View;
 import android.widget.TextView;
 
 import com.donkingliang.consecutivescroller.ConsecutiveScrollerLayout;
 import com.donkingliang.consecutivescroller.ConsecutiveViewPager;
 import com.donkingliang.consecutivescrollerdemo.adapter.TabPagerAdapter;
 import com.google.android.material.tabs.TabLayout;
-import com.scwang.smartrefresh.layout.SmartRefreshLayout;
-import com.scwang.smartrefresh.layout.api.RefreshFooter;
-import com.scwang.smartrefresh.layout.api.RefreshLayout;
-import com.scwang.smartrefresh.layout.listener.OnRefreshLoadMoreListener;
-import com.scwang.smartrefresh.layout.listener.SimpleMultiPurposeListener;
+import com.scwang.smart.refresh.layout.SmartRefreshLayout;
+import com.scwang.smart.refresh.layout.api.RefreshFooter;
+import com.scwang.smart.refresh.layout.api.RefreshLayout;
+import com.scwang.smart.refresh.layout.listener.OnRefreshLoadMoreListener;
+import com.scwang.smart.refresh.layout.simple.SimpleMultiListener;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -67,24 +66,18 @@ public class ViewPagerActivity extends AppCompatActivity {
 
             @Override
             public void onRefresh(@NonNull RefreshLayout r) {
-                refreshLayout.postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        refreshLayout.finishRefresh();
-                    }
-                }, 5000);
+                refreshLayout.finishRefresh(5000);
             }
         });
 
-
-        refreshLayout.setOnMultiPurposeListener(new SimpleMultiPurposeListener() {
+        refreshLayout.setOnMultiListener(new SimpleMultiListener() {
             @Override
             public void onFooterMoving(RefreshFooter footer, boolean isDragging, float percent, int offset, int footerHeight, int maxDragHeight) {
                 // 上拉加载时，保证吸顶头部不被推出屏幕。
+                Log.e("eee","****" + offset);
                 scrollerLayout.setStickyOffset(offset);
             }
         });
-
     }
 
     // 提供给Fragment获取使用。

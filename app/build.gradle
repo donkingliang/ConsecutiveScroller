@@ -32,5 +32,7 @@ dependencies {
     implementation project(':consecutivescroller')
 
     // 刷新框架
-    implementation 'com.scwang.smartrefresh:SmartRefreshLayout:1.1.0'
+    implementation  'com.scwang.smart:refresh-layout-kernel:2.0.1'      //核心必须依赖
+    implementation  'com.scwang.smart:refresh-header-classics:2.0.1'    //经典刷新头
+    implementation  'com.scwang.smart:refresh-footer-classics:2.0.1'    //经典加载
 }

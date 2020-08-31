@@ -1,9 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.scwang.smartrefresh.layout.SmartRefreshLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.scwang.smart.refresh.layout.SmartRefreshLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/refreshLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
+
+    <com.scwang.smart.refresh.header.ClassicsHeader
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
 
     <com.donkingliang.consecutivescroller.ConsecutiveScrollerLayout
         android:id="@+id/scrollerLayout"
@@ -11,14 +15,7 @@
         android:layout_height="match_parent"
         android:scrollbars="vertical">
 
-        <TextView
-            android:id="@+id/text"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@android:color/white"
-            android:padding="10dp"
-            android:textColor="@android:color/black"
-            android:textSize="18sp" />
+
 
         <com.google.android.material.tabs.TabLayout
             android:id="@+id/tabLayout"
@@ -32,10 +29,25 @@
             app:tabMode="scrollable"
             app:tabSelectedTextColor="@color/colorPrimary" />
 
+        <TextView
+            android:id="@+id/text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@android:color/white"
+            android:padding="10dp"
+            android:textColor="@android:color/black"
+            android:textSize="18sp" />
+
+
         <com.donkingliang.consecutivescroller.ConsecutiveViewPager
             android:id="@+id/viewPager"
             android:layout_width="match_parent"
-            android:layout_height="match_parent" />
+            android:layout_height="match_parent"
+            android:visibility="gone"/>
 
     </com.donkingliang.consecutivescroller.ConsecutiveScrollerLayout>
-</com.scwang.smartrefresh.layout.SmartRefreshLayout>
+
+    <com.scwang.smart.refresh.footer.ClassicsFooter
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
+</com.scwang.smart.refresh.layout.SmartRefreshLayout>
