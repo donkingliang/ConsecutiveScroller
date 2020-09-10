@@ -204,6 +204,12 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
         }
     };
 
+    /**
+     * 是否触摸吸顶view并且不能触发布局滑动
+     * 注意：它不仅会判断自己的吸顶view，也会判断下级ConsecutiveScrollerLayout的吸顶view
+     */
+    private boolean isTouchNotTriggerScrollStick = false;
+
     public ConsecutiveScrollerLayout(Context context) {
         this(context, null);
     }
@@ -249,7 +255,6 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
         super.addView(child, index, params);
 
         // 去掉子View的滚动条。选择在这里做这个操作，而不是在onFinishInflate方法中完成，是为了兼顾用代码add子View的情况
-
         if (ScrollUtils.isConsecutiveScrollerChild(child)) {
             disableChildScroll(child);
             if (child instanceof IConsecutiveScroller) {
@@ -462,6 +467,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
 
                 mDownLocation[0] = ScrollUtils.getRawX(this, ev, actionIndex);
                 mDownLocation[1] = ScrollUtils.getRawY(this, ev, actionIndex);
+                isTouchNotTriggerScrollStick = ScrollUtils.isTouchNotTriggerScrollStick(this, mDownLocation[0], mDownLocation[1]);
                 break;
             case MotionEvent.ACTION_POINTER_DOWN:
                 mActivePointerId = ev.getPointerId(actionIndex);
@@ -471,6 +477,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                 requestDisallowInterceptTouchEvent(false);
                 mDownLocation[0] = ScrollUtils.getRawX(this, ev, actionIndex);
                 mDownLocation[1] = ScrollUtils.getRawY(this, ev, actionIndex);
+                isTouchNotTriggerScrollStick = ScrollUtils.isTouchNotTriggerScrollStick(this, mDownLocation[0], mDownLocation[1]);
 
                 if (mAdjustVelocityTracker != null) {
                     mAdjustVelocityTracker.clear();
@@ -496,24 +503,22 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
 
                 int offsetY = (int) ev.getY(pointerIndex) - mEventY;
                 int offsetX = (int) ev.getX(pointerIndex) - mEventX;
-                if (isIntercept(ev) || isIntercept(mDownLocation[0], mDownLocation[1])) {
+                if (SCROLL_ORIENTATION == SCROLL_NONE
+                        && (isIntercept(ev) || isIntercept(mDownLocation[0], mDownLocation[1]))) {
+                    if (Math.abs(offsetX) > Math.abs(offsetY)) {
+                        if (Math.abs(offsetX) >= mTouchSlop) {
+                            SCROLL_ORIENTATION = SCROLL_HORIZONTAL;
+                            // 如果是横向滑动，设置ev的y坐标始终为开始的坐标，避免子view自己消费了垂直滑动事件。
+                            ev.setLocation(ev.getX(), mFixedY);
+                        }
+                    } else {
+                        if (Math.abs(offsetY) >= mTouchSlop) {
+                            SCROLL_ORIENTATION = SCROLL_VERTICAL;
+                        }
+                    }
 
                     if (SCROLL_ORIENTATION == SCROLL_NONE) {
-                        if (Math.abs(offsetX) > Math.abs(offsetY)) {
-                            if (Math.abs(offsetX) >= mTouchSlop) {
-                                SCROLL_ORIENTATION = SCROLL_HORIZONTAL;
-                                // 如果是横向滑动，设置ev的y坐标始终为开始的坐标，避免子view自己消费了垂直滑动事件。
-                                ev.setLocation(ev.getX(), mFixedY);
-                            }
-                        } else {
-                            if (Math.abs(offsetY) >= mTouchSlop) {
-                                SCROLL_ORIENTATION = SCROLL_VERTICAL;
-                            }
-                        }
-
-                        if (SCROLL_ORIENTATION == SCROLL_NONE) {
-                            return true;
-                        }
+                        return true;
                     }
                 }
 
@@ -532,6 +537,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                     mEventX = (int) ev.getX(newPointerIndex);
                     mDownLocation[0] = ScrollUtils.getRawX(this, ev, newPointerIndex);
                     mDownLocation[1] = ScrollUtils.getRawY(this, ev, newPointerIndex);
+                    isTouchNotTriggerScrollStick = ScrollUtils.isTouchNotTriggerScrollStick(this, mDownLocation[0], mDownLocation[1]);
 
                     if (mAdjustVelocityTracker != null) {
                         mAdjustVelocityTracker.clear();
@@ -576,6 +582,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                 SCROLL_ORIENTATION = SCROLL_NONE;
                 mDownLocation[0] = 0;
                 mDownLocation[1] = 0;
+                isTouchNotTriggerScrollStick = false;
                 break;
         }
 
@@ -624,8 +631,9 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
     @Override
     public boolean onTouchEvent(MotionEvent ev) {
 
-        if (ScrollUtils.isConsecutiveScrollParent(this)) {
-            return false;
+        if (ScrollUtils.isConsecutiveScrollParent(this) // 如果父级容器设置isConsecutive：true，则自己不消费滑动
+                || isTouchNotTriggerScrollStick) { // 触摸正在吸顶的view，不消费滑动
+            return super.onTouchEvent(ev);
         }
 
         MotionEvent vtev = MotionEvent.obtain(ev);
@@ -1035,7 +1043,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
             if (!isScrollTop()) {
                 // 找到当前显示的最后一个View
                 View lastVisibleView = null;
-                if(getScrollY() < mScrollRange) {
+                if (getScrollY() < mScrollRange) {
                     lastVisibleView = findLastVisibleView();
                 } else {
                     lastVisibleView = getBottomView();
@@ -1860,6 +1868,12 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
         public boolean isSticky = false;
 
         /**
+         * 在View吸顶的状态下，是否可以触摸view来滑动ConsecutiveScrollerLayout布局。
+         * 默认为false，则View吸顶的状态下，不能触摸它来滑动布局
+         */
+        public boolean isTriggerScroll = false;
+
+        /**
          * 子view与父布局的对齐方式
          */
         public Align align = Align.LEFT;
@@ -1901,8 +1915,9 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                 a = c.obtainStyledAttributes(attrs, R.styleable.ConsecutiveScrollerLayout_Layout);
 
                 isConsecutive = a.getBoolean(R.styleable.ConsecutiveScrollerLayout_Layout_layout_isConsecutive, true);
-                isSticky = a.getBoolean(R.styleable.ConsecutiveScrollerLayout_Layout_layout_isSticky, false);
                 isNestedScroll = a.getBoolean(R.styleable.ConsecutiveScrollerLayout_Layout_layout_isNestedScroll, true);
+                isSticky = a.getBoolean(R.styleable.ConsecutiveScrollerLayout_Layout_layout_isSticky, false);
+                isTriggerScroll = a.getBoolean(R.styleable.ConsecutiveScrollerLayout_Layout_layout_isTriggerScroll, false);
                 int type = a.getInt(R.styleable.ConsecutiveScrollerLayout_Layout_layout_align, 1);
                 align = Align.get(type);
             } catch (Exception e) {
@@ -2088,6 +2103,17 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
      */
     public List<View> getCurrentStickyViews() {
         return mCurrentStickyViews;
+    }
+
+    /**
+     * 判断子view是否是吸顶状态
+     *
+     * @param child
+     * @return
+     */
+    public boolean theChildIsStick(View child) {
+        return (!isPermanent && mCurrentStickyView == child)
+                || (isPermanent && mCurrentStickyViews.contains(child));
     }
 
     public OnStickyChangeListener getOnStickyChangeListener() {

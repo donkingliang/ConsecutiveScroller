@@ -187,15 +187,16 @@ public class ScrollUtils {
     }
 
     private static void addTouchViews(List<View> views, View view, int touchX, int touchY) {
-        if (isTouchPointInView(view, touchX, touchY)) {
+        // 如果view设置了isConsecutive：false，不会添加到触摸列表
+        if (isConsecutiveScrollerChild(view) && isTouchPointInView(view, touchX, touchY)) {
             views.add(view);
-        }
 
-        if (view instanceof ViewGroup) {
-            ViewGroup viewGroup = (ViewGroup) view;
-            int count = viewGroup.getChildCount();
-            for (int i = 0; i < count; i++) {
-                addTouchViews(views, viewGroup.getChildAt(i), touchX, touchY);
+            if (view instanceof ViewGroup) {
+                ViewGroup viewGroup = (ViewGroup) view;
+                int count = viewGroup.getChildCount();
+                for (int i = 0; i < count; i++) {
+                    addTouchViews(views, viewGroup.getChildAt(i), touchX, touchY);
+                }
             }
         }
     }
@@ -373,5 +374,23 @@ public class ScrollUtils {
         return false;
     }
 
+    /**
+     * 是否触摸吸顶view并且不能触发布局滑动
+     *
+     * @return
+     */
+    static boolean isTouchNotTriggerScrollStick(View rootView, int touchX, int touchY) {
+        List<View> views = getTouchViews(rootView, touchX, touchY);
+        for (View view : views) {
+            if (view.getParent() instanceof ConsecutiveScrollerLayout) {
+                ConsecutiveScrollerLayout parent = (ConsecutiveScrollerLayout)view.getParent();
+                ConsecutiveScrollerLayout.LayoutParams lp = (ConsecutiveScrollerLayout.LayoutParams)view.getLayoutParams();
+                if (parent.theChildIsStick(view) && !lp.isTriggerScroll){
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
 
 }
