@@ -1,6 +1,5 @@
 package com.donkingliang.consecutivescrollerdemo;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -14,8 +13,6 @@ import android.webkit.WebView;
 
 import com.donkingliang.consecutivescroller.ConsecutiveScrollerLayout;
 import com.donkingliang.consecutivescrollerdemo.adapter.RecyclerViewAdapter;
-
-import java.util.List;
 
 public class StickyActivity extends AppCompatActivity {
 

@@ -376,14 +376,14 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
         int count = getChildCount();
         for (int i = 0; i < count; i++) {
             View child = getChildAt(i);
-            if (!isStickyChild(child)) {
+            if (!isStickyView(child) || isSink(child)) {
                 list.add(child);
             }
         }
 
         for (int i = 0; i < count; i++) {
             View child = getChildAt(i);
-            if (isStickyChild(child)) {
+            if (isStickyView(child) && !isSink(child)) {
                 list.add(child);
             }
         }
@@ -759,6 +759,10 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
             return indexOfChild(mViews.get(drawingPosition));
         }
         return super.getChildDrawingOrder(childCount, drawingPosition);
+    }
+
+    int getDrawingPosition(View child){
+        return mViews.indexOf(child);
     }
 
     @Override
@@ -1416,7 +1420,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
         int count = getChildCount();
         for (int i = 0; i < count; i++) {
             View child = getChildAt(i);
-            if (child.getVisibility() != GONE && isStickyChild(child)) {
+            if (child.getVisibility() != GONE && isStickyView(child)) {
                 children.add(child);
             }
         }
@@ -1429,10 +1433,23 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
      * @param child
      * @return
      */
-    private boolean isStickyChild(View child) {
+    public boolean isStickyView(View child) {
         ViewGroup.LayoutParams lp = child.getLayoutParams();
         if (lp instanceof LayoutParams) {
             return ((LayoutParams) lp).isSticky;
+        }
+        return false;
+    }
+
+    /**
+     * 吸顶view是否是下沉模式
+     * @param stickyView
+     * @return
+     */
+    public boolean isSink(View stickyView){
+        ViewGroup.LayoutParams lp = stickyView.getLayoutParams();
+        if (lp instanceof LayoutParams) {
+            return ((LayoutParams) lp).isSink;
         }
         return false;
     }
@@ -1488,7 +1505,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
 
                 if (stickyView != null) {
                     int offset = 0;
-                    if (nextStickyView != null) {
+                    if (nextStickyView != null && !isSink(stickyView)) {
                         offset = Math.max(0, stickyView.getHeight() - (nextStickyView.getTop() - getStickyY()));
                     }
                     stickyChild(stickyView, offset);
@@ -1573,7 +1590,9 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
         int height = 0;
         for (int i = 0; i < currentPosition; i++) {
             View child = children.get(i);
-            height += child.getMeasuredHeight();
+            if (!isSink(child)) {
+                height += child.getMeasuredHeight();
+            }
         }
         return height;
     }
@@ -1874,6 +1893,13 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
         public boolean isTriggerScroll = false;
 
         /**
+         * 吸顶下沉模式
+         * 默认情况下，吸顶view在吸顶状态下，会显示在布局上层，覆盖其他布局。
+         * 如果设置了下沉模式，则会相反，view在吸顶时会显示在下层，被其他布局覆盖，隐藏在下面。
+         */
+        public boolean isSink = false;
+
+        /**
          * 子view与父布局的对齐方式
          */
         public Align align = Align.LEFT;
@@ -1918,6 +1944,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                 isNestedScroll = a.getBoolean(R.styleable.ConsecutiveScrollerLayout_Layout_layout_isNestedScroll, true);
                 isSticky = a.getBoolean(R.styleable.ConsecutiveScrollerLayout_Layout_layout_isSticky, false);
                 isTriggerScroll = a.getBoolean(R.styleable.ConsecutiveScrollerLayout_Layout_layout_isTriggerScroll, false);
+                isSink = a.getBoolean(R.styleable.ConsecutiveScrollerLayout_Layout_layout_isSink, false);
                 int type = a.getInt(R.styleable.ConsecutiveScrollerLayout_Layout_layout_align, 1);
                 align = Align.get(type);
             } catch (Exception e) {
