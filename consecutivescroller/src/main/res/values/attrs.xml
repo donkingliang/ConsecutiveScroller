@@ -4,6 +4,8 @@
         <attr name="layout_isConsecutive" format="boolean"/>
         <attr name="layout_isNestedScroll" format="boolean"/>
         <attr name="layout_isSticky" format="boolean"/>
+        <attr name="layout_isTriggerScroll" format="boolean"/>
+        <attr name="layout_isSink" format="boolean"/>
         <attr name="layout_align" format="enum">
             <enum name="LEFT" value="1" />
             <enum name="RIGHT" value="2" />

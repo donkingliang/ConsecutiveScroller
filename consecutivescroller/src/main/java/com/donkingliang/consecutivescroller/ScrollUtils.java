@@ -3,6 +3,7 @@ package com.donkingliang.consecutivescroller;
 import android.graphics.Rect;
 import android.os.Build;
 import android.support.v4.view.ScrollingView;
+import android.support.v4.view.ViewCompat;
 import android.support.v7.widget.RecyclerView;
 import android.view.MotionEvent;
 import android.view.View;
@@ -186,15 +187,15 @@ public class ScrollUtils {
     }
 
     private static void addTouchViews(List<View> views, View view, int touchX, int touchY) {
-        if (isTouchPointInView(view, touchX, touchY)) {
+        if (isConsecutiveScrollerChild(view) && isTouchPointInView(view, touchX, touchY)) {
             views.add(view);
-        }
 
-        if (view instanceof ViewGroup) {
-            ViewGroup viewGroup = (ViewGroup) view;
-            int count = viewGroup.getChildCount();
-            for (int i = 0; i < count; i++) {
-                addTouchViews(views, viewGroup.getChildAt(i), touchX, touchY);
+            if (view instanceof ViewGroup) {
+                ViewGroup viewGroup = (ViewGroup) view;
+                int count = viewGroup.getChildCount();
+                for (int i = 0; i < count; i++) {
+                    addTouchViews(views, viewGroup.getChildAt(i), touchX, touchY);
+                }
             }
         }
     }
@@ -372,5 +373,65 @@ public class ScrollUtils {
         return false;
     }
 
+    /**
+     * 是否触摸吸顶view并且不能触发布局滑动
+     *
+     * @return
+     */
+    static boolean isTouchNotTriggerScrollStick(View rootView, int touchX, int touchY) {
+        List<ConsecutiveScrollerLayout> csLayouts = getInTouchCSLayout(rootView, touchX, touchY);
+        int size = csLayouts.size();
+        for (int i = size - 1; i >= 0; i--) {
+            ConsecutiveScrollerLayout csl = csLayouts.get(i);
+            View topView = getTopViewInTouch(csl, touchX, touchY);
+            if (topView != null && csl.isStickyView(topView) && csl.theChildIsStick(topView)) {
+                ConsecutiveScrollerLayout.LayoutParams lp = (ConsecutiveScrollerLayout.LayoutParams) topView.getLayoutParams();
+                if (!lp.isTriggerScroll) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
 
+    /**
+     * 获取触摸点下的所有ConsecutiveScrollerLayout
+     *
+     * @param rootView
+     * @param touchX
+     * @param touchY
+     * @return
+     */
+    static List<ConsecutiveScrollerLayout> getInTouchCSLayout(View rootView, int touchX, int touchY) {
+        List<ConsecutiveScrollerLayout> csLayouts = new ArrayList<>();
+        List<View> views = getTouchViews(rootView, touchX, touchY);
+        for (View view : views) {
+            if (view instanceof ConsecutiveScrollerLayout) {
+                csLayouts.add((ConsecutiveScrollerLayout) view);
+            }
+        }
+        return csLayouts;
+    }
+
+    static View getTopViewInTouch(ConsecutiveScrollerLayout csl, int touchX, int touchY) {
+        int count = csl.getChildCount();
+        View topTouchView = null;
+
+        for (int i = 0; i < count; i++) {
+            View child = csl.getChildAt(i);
+            if (child.getVisibility() == View.VISIBLE && isTouchPointInView(child, touchX, touchY)) {
+                if (topTouchView == null) {
+                    topTouchView = child;
+                    continue;
+                }
+
+                if (ViewCompat.getZ(child) > ViewCompat.getZ(topTouchView) // 判断View的Z高度
+                        || csl.getDrawingPosition(child) > csl.getDrawingPosition(topTouchView)) { // 判断绘制顺序
+                    topTouchView = child;
+                }
+            }
+        }
+
+        return topTouchView;
+    }
 }

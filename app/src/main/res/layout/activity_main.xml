@@ -24,6 +24,12 @@
         android:text="布局吸顶常驻" />
 
     <Button
+        android:id="@+id/btn_sink_sticky"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="吸顶下沉模式" />
+
+    <Button
         android:id="@+id/btn_consecutive"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
