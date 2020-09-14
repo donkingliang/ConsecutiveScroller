@@ -20,12 +20,12 @@ allprojects {
 在Module的build.gradle在添加以下代码
 ```groovy
 // 使用了Androidx
-implementation 'com.github.donkingliang:ConsecutiveScroller:4.2.1'
+implementation 'com.github.donkingliang:ConsecutiveScroller:4.3.0'
 
 // 或者
 
 // 使用Android support包
-implementation 'com.github.donkingliang:ConsecutiveScroller:4.2.1-support'
+implementation 'com.github.donkingliang:ConsecutiveScroller:4.3.0-support'
 ```
 
 **注意：** 如果你准备使用这个库，请务必认真阅读下面的文档。它能让你了解ConsecutiveScrollerLayout可以实现的功能，以及避免不必要的错误。
@@ -316,6 +316,21 @@ scrollerLayout.setOnPermanentStickyChangeListener(OnPermanentStickyChangeListene
 scrollerLayout.getCurrentStickyView(); 
 // 获取当前吸顶view(常驻模式)
 scrollerLayout.getCurrentStickyViews();
+
+/**
+ * 在View吸顶的状态下，是否可以触摸view来滑动ConsecutiveScrollerLayout布局。
+ * 默认为false，则View吸顶的状态下，不能触摸它来滑动布局
+ */
+app:layout_isTriggerScroll="true"
+
+/**
+ * 吸顶下沉模式
+ * 默认情况下，吸顶view在吸顶状态下，会显示在布局上层，覆盖其他布局。
+ * 如果设置了下沉模式，则会相反，view在吸顶时会显示在下层，被其他布局覆盖，隐藏在下面。
+ * 实现的效果可参考demo中的例子
+ */
+app:layout_isSticky="true";
+
 ```
 
 ### 局部滑动
