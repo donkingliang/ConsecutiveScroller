@@ -15,6 +15,9 @@ import android.widget.AbsListView;
 import android.widget.EdgeEffect;
 import android.widget.OverScroller;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.view.NestedScrollingChild2;
@@ -25,9 +28,6 @@ import androidx.core.view.ScrollingView;
 import androidx.core.view.ViewCompat;
 import androidx.core.widget.EdgeEffectCompat;
 import androidx.recyclerview.widget.RecyclerView;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * @Author donkingliang QQ:1043214265 github:https://github.com/donkingliang
@@ -2226,7 +2226,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
 
     @Override
     public void stopNestedScroll(int type) {
-        mChildHelper.stopNestedScroll();
+        mChildHelper.stopNestedScroll(type);
     }
 
     @Override
