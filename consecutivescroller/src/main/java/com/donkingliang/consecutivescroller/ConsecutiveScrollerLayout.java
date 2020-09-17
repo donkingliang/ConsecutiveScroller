@@ -728,6 +728,11 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                 }
                 break;
             case MotionEvent.ACTION_CANCEL:
+                endDrag();
+                mTouchY = 0;
+                recycleVelocityTracker();
+                setScrollState(SCROLL_STATE_IDLE);
+                break;
             case MotionEvent.ACTION_UP:
                 endDrag();
                 mTouchY = 0;
@@ -761,7 +766,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
         return super.getChildDrawingOrder(childCount, drawingPosition);
     }
 
-    int getDrawingPosition(View child){
+    int getDrawingPosition(View child) {
         return mViews.indexOf(child);
     }
 
@@ -1443,10 +1448,11 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
 
     /**
      * 吸顶view是否是下沉模式
+     *
      * @param stickyView
      * @return
      */
-    public boolean isSink(View stickyView){
+    public boolean isSink(View stickyView) {
         ViewGroup.LayoutParams lp = stickyView.getLayoutParams();
         if (lp instanceof LayoutParams) {
             return ((LayoutParams) lp).isSink;
