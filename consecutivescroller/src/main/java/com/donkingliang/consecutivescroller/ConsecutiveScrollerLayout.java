@@ -727,6 +727,11 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                 }
                 break;
             case MotionEvent.ACTION_CANCEL:
+                endDrag();
+                mTouchY = 0;
+                recycleVelocityTracker();
+                setScrollState(SCROLL_STATE_IDLE);
+                break;
             case MotionEvent.ACTION_UP:
                 endDrag();
                 mTouchY = 0;
@@ -2225,7 +2230,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
 
     @Override
     public void stopNestedScroll(int type) {
-        mChildHelper.stopNestedScroll();
+        mChildHelper.stopNestedScroll(type);
     }
 
     @Override
