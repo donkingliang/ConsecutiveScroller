@@ -38,9 +38,9 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
 
     /**
      * 记录布局垂直的偏移量，它是包括了自己的偏移量(mScrollY)和所有子View的偏移量的总和，
-     * 取代View原有的mScrollY作为对外提供的偏移量值
+     * 这个值不是真实的布局滑动偏移量，只是用于在滑动是记录和计算每次的滑动距离。
      */
-    private int mOwnScrollY;
+    private int mSecondScrollY;
 
     /**
      * 联动容器可滚动的范围
@@ -671,7 +671,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                 }
 
                 mTouchY = y - mScrollOffset[1];
-                int oldScrollY = mOwnScrollY;
+                int oldScrollY = mSecondScrollY;
 
                 if (mScrollState != SCROLL_STATE_DRAGGING) {
                     boolean startScroll = false;
@@ -687,7 +687,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                     dispatchScroll(deltaY);
                 }
 
-                final int scrolledDeltaY = mOwnScrollY - oldScrollY;
+                final int scrolledDeltaY = mSecondScrollY - oldScrollY;
                 deltaY = deltaY - scrolledDeltaY;
                 if (dispatchNestedScroll(0, scrolledDeltaY, 0, deltaY, mScrollOffset,
                         ViewCompat.TYPE_TOUCH)) {
@@ -843,13 +843,13 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                 boolean canScroll = (velocityY < 0 && !isScrollTop()) || (velocityY > 0 && !isScrollBottom());
                 this.dispatchNestedFling(0, (float) velocityY, canScroll);
 //                if (canScroll) {
-                mScroller.fling(0, mOwnScrollY,
+                mScroller.fling(0, mSecondScrollY,
                         1, velocityY,
                         Integer.MIN_VALUE, Integer.MIN_VALUE,
                         Integer.MIN_VALUE, Integer.MAX_VALUE);
                 startNestedScroll(ViewCompat.SCROLL_AXIS_VERTICAL, ViewCompat.TYPE_NON_TOUCH);
                 setScrollState(SCROLL_STATE_SETTLING);
-                mLastScrollerY = mOwnScrollY;
+                mLastScrollerY = mSecondScrollY;
                 invalidate();
 //                }
             }
@@ -876,11 +876,11 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                         ViewCompat.TYPE_NON_TOUCH);
                 unconsumed -= mScrollConsumed[1];
 
-                final int oldScrollY = mOwnScrollY;
+                final int oldScrollY = mSecondScrollY;
 
                 dispatchScroll(unconsumed);
 
-                final int scrolledByMe = mOwnScrollY - oldScrollY;
+                final int scrolledByMe = mSecondScrollY - oldScrollY;
                 unconsumed -= scrolledByMe;
 
                 if ((unconsumed < 0 && isScrollTop()) || (unconsumed > 0 && isScrollBottom())) {
@@ -964,7 +964,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
     private void scrollUp(int offset) {
         int scrollOffset = 0;
         int remainder = offset;
-        int oldScrollY = mOwnScrollY;
+        int oldScrollY = computeVerticalScrollOffset();
         do {
 
             int scrollAnchor = 0;
@@ -1015,22 +1015,23 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                         }
                         scrollSelf(getScrollY() + scrollOffset);
                     }
-                    mOwnScrollY += scrollOffset;
+                    mSecondScrollY += scrollOffset;
                     remainder = remainder - scrollOffset;
                 }
             }
 
         } while (scrollOffset > 0 && remainder > 0);
 
-        if (oldScrollY != mOwnScrollY) {
-            scrollChange(mOwnScrollY, oldScrollY);
+        int newScrollY = computeVerticalScrollOffset();
+        if (oldScrollY != newScrollY) {
+            scrollChange(newScrollY, oldScrollY);
         }
     }
 
     private void scrollDown(int offset) {
         int scrollOffset = 0;
         int remainder = offset;
-        int oldScrollY = mOwnScrollY;
+        int oldScrollY = computeVerticalScrollOffset();
         do {
             int scrollAnchor = 0;
             int viewScrollOffset = 0;
@@ -1076,27 +1077,28 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                         }
                         scrollSelf(scrollY + scrollOffset);
                     }
-                    mOwnScrollY += scrollOffset;
+                    mSecondScrollY += scrollOffset;
                     remainder = remainder - scrollOffset;
                 }
             }
 
         } while (scrollOffset < 0 && remainder < 0);
 
-        if (oldScrollY != mOwnScrollY) {
-            scrollChange(mOwnScrollY, oldScrollY);
+        int newScrollY = computeVerticalScrollOffset();
+        if (oldScrollY != newScrollY) {
+            scrollChange(newScrollY, oldScrollY);
         }
     }
 
     @Override
     public void scrollBy(int x, int y) {
-        scrollTo(0, mOwnScrollY + y);
+        scrollTo(0, mSecondScrollY + y);
     }
 
     @Override
     public void scrollTo(int x, int y) {
         //所有的scroll操作都交由dispatchScroll()来分发处理
-        dispatchScroll(y - mOwnScrollY);
+        dispatchScroll(y - mSecondScrollY);
     }
 
     private void scrollChange(int scrollY, int oldScrollY) {
@@ -1193,7 +1195,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
             return;
         }
 
-        int oldScrollY = mOwnScrollY;
+        int oldScrollY = computeVerticalScrollOffset();
         View target = findFirstVisibleView();
         if (target == null) {
             return;
@@ -1250,8 +1252,9 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
 
         computeOwnScrollOffset();
         if (isLayoutChange) {
-            if (oldScrollY != mOwnScrollY) {
-                scrollChange(mOwnScrollY, oldScrollY);
+            int newScrollY = computeVerticalScrollOffset();
+            if (oldScrollY != newScrollY) {
+                scrollChange(newScrollY, oldScrollY);
             }
         }
 
@@ -1300,7 +1303,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
      * @return
      */
     private void computeOwnScrollOffset() {
-        mOwnScrollY = computeVerticalScrollOffset();
+        mSecondScrollY = computeVerticalScrollOffset();
     }
 
     /**
@@ -1631,7 +1634,8 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
             return;
         }
         mScrollState = state;
-        scrollChange(mOwnScrollY, mOwnScrollY);
+        int newScrollY = computeVerticalScrollOffset();
+        scrollChange(newScrollY, newScrollY);
     }
 
     /**
@@ -1640,7 +1644,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
      * @return
      */
     public int getOwnScrollY() {
-        return mOwnScrollY;
+        return computeVerticalScrollOffset();
     }
 
     private View findScrollToTopView() {
@@ -2300,9 +2304,9 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
     }
 
     private void onNestedScrollInternal(int dyUnconsumed, int type) {
-        final int oldScrollY = mOwnScrollY;
+        final int oldScrollY = mSecondScrollY;
         dispatchScroll(dyUnconsumed);
-        final int myConsumed = mOwnScrollY - oldScrollY;
+        final int myConsumed = mSecondScrollY - oldScrollY;
         final int myUnconsumed = dyUnconsumed - myConsumed;
         mChildHelper.dispatchNestedScroll(0, myConsumed, 0, myUnconsumed, null, type);
     }
