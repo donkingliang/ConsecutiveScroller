@@ -1719,6 +1719,14 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                             return false;
                         }
                     }
+
+                    if (view instanceof ConsecutiveViewPager2) {
+                        ConsecutiveViewPager2 viewPager = (ConsecutiveViewPager2) view;
+                        if (viewPager.getAdjustHeight() > 0 && ScrollUtils.isConsecutiveScrollerChild(viewPager)
+                                && ScrollUtils.canScrollVertically(viewPager, -1)) {
+                            return false;
+                        }
+                    }
                 }
             }
 
