@@ -91,16 +91,22 @@ public class ConsecutiveViewPager2 extends FrameLayout implements IConsecutiveSc
      */
     @Override
     public View getCurrentScrollerView() {
+        View scrollerView = null;
         int currentItem = getCurrentItem();
         Adapter adapter = mRecyclerView.getAdapter();
         LayoutManager layoutManager = mRecyclerView.getLayoutManager();
         if (adapter != null && layoutManager != null) {
             if (currentItem >= 0 && currentItem < adapter.getItemCount()) {
                 View itemView = layoutManager.findViewByPosition(currentItem);
-                return findScrolledItemView(itemView);
+                scrollerView = findScrolledItemView(itemView);
             }
         }
-        return mRecyclerView;
+
+        if (scrollerView == null){
+            scrollerView = mRecyclerView;
+        }
+
+        return scrollerView;
     }
 
     /**
