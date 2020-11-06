@@ -35,4 +35,6 @@ dependencies {
     implementation  'com.scwang.smart:refresh-layout-kernel:2.0.1'      //核心必须依赖
     implementation  'com.scwang.smart:refresh-header-classics:2.0.1'    //经典刷新头
     implementation  'com.scwang.smart:refresh-footer-classics:2.0.1'    //经典加载
+
+    implementation 'androidx.viewpager2:viewpager2:1.1.0-alpha01'
 }

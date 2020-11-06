@@ -53,6 +53,14 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        findViewById(R.id.btn_viewpager2).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(MainActivity.this,ViewPager2Activity.class);
+                startActivity(intent);
+            }
+        });
+
         findViewById(R.id.btn_sticky_permanent).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
