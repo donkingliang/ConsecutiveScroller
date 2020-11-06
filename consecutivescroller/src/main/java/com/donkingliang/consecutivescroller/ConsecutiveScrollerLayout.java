@@ -667,6 +667,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                     deltaY -= mScrollConsumed[1];
                     ev.offsetLocation(0, mScrollOffset[1]);
                     mNestedYOffset += mScrollOffset[1];
+                    getParent().requestDisallowInterceptTouchEvent(true);
                 }
 
                 mTouchY = y - mScrollOffset[1];
@@ -687,6 +688,11 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                 }
 
                 final int scrolledDeltaY = mSecondScrollY - oldScrollY;
+
+                if (scrolledDeltaY != 0){
+                    getParent().requestDisallowInterceptTouchEvent(true);
+                }
+
                 deltaY = deltaY - scrolledDeltaY;
                 if (dispatchNestedScroll(0, scrolledDeltaY, 0, deltaY, mScrollOffset,
                         ViewCompat.TYPE_TOUCH)) {
@@ -694,6 +700,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                     mTouchY -= mScrollOffset[1];
                     mNestedYOffset += mScrollOffset[1];
                     ev.offsetLocation(0, mScrollOffset[1]);
+                    getParent().requestDisallowInterceptTouchEvent(true);
                 }
 
                 // 判断是否显示边界阴影
