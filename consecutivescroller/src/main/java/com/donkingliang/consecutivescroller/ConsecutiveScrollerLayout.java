@@ -45,7 +45,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
     /**
      * 联动容器可滚动的范围
      */
-    private int mScrollRange;
+    int mScrollRange;
 
     /**
      * 联动容器滚动定位子view
@@ -1273,7 +1273,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
      *
      * @param target
      */
-    private void scrollChildContentToTop(View target) {
+    void scrollChildContentToTop(View target) {
         int scrollY = 0;
         do {
             scrollY = 0;
@@ -1291,7 +1291,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
      *
      * @param target
      */
-    private void scrollChildContentToBottom(View target) {
+    void scrollChildContentToBottom(View target) {
         int scrollY = 0;
         do {
             scrollY = 0;
@@ -1376,7 +1376,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
     /**
      * 停止滑动
      */
-    private void stopScroll() {
+    public void stopScroll() {
         mScroller.abortAnimation();
         stopNestedScroll(ViewCompat.TYPE_NON_TOUCH);
         if (mScrollToIndex == -1) {

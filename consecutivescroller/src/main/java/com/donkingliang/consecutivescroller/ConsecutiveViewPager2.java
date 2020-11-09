@@ -3,9 +3,11 @@ package com.donkingliang.consecutivescroller;
 import android.content.Context;
 import android.util.AttributeSet;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.ViewParent;
 import android.widget.FrameLayout;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -31,6 +33,8 @@ public class ConsecutiveViewPager2 extends FrameLayout implements IConsecutiveSc
 
     private int mAdjustHeight;
 
+    private static final int TAG_KEY = -123;
+
     public ConsecutiveViewPager2(@NonNull Context context) {
         super(context);
         initialize(context);
@@ -50,12 +54,11 @@ public class ConsecutiveViewPager2 extends FrameLayout implements IConsecutiveSc
         mViewPager2 = new ViewPager2(context);
         addView(mViewPager2, LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
         mRecyclerView = (RecyclerView) mViewPager2.getChildAt(0);
-        mViewPager2.setOffscreenPageLimit(1);
     }
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        if (isConsecutiveParent() && mAdjustHeight > 0) {
+        if (isConsecutiveParentAndBottom() && mAdjustHeight > 0) {
             int height = getDefaultSize(0, heightMeasureSpec) - mAdjustHeight;
             super.onMeasure(widthMeasureSpec,
                     MeasureSpec.makeMeasureSpec(height, MeasureSpec.getMode(heightMeasureSpec)));
@@ -64,7 +67,10 @@ public class ConsecutiveViewPager2 extends FrameLayout implements IConsecutiveSc
         }
     }
 
-    private boolean isConsecutiveParent() {
+    /**
+     * 是否在ConsecutiveScrollerLayout的底部
+     */
+    private boolean isConsecutiveParentAndBottom() {
         ViewParent parent = getParent();
         if (parent instanceof ConsecutiveScrollerLayout) {
             ConsecutiveScrollerLayout layout = (ConsecutiveScrollerLayout) parent;
@@ -99,14 +105,70 @@ public class ConsecutiveViewPager2 extends FrameLayout implements IConsecutiveSc
             if (currentItem >= 0 && currentItem < adapter.getItemCount()) {
                 View itemView = layoutManager.findViewByPosition(currentItem);
                 scrollerView = findScrolledItemView(itemView);
+                if (scrollerView != null) {
+                    setAttachListener(scrollerView);
+                }
             }
         }
 
-        if (scrollerView == null){
+        if (scrollerView == null) {
             scrollerView = mRecyclerView;
         }
-
         return scrollerView;
+    }
+
+    /**
+     * 给scrollerView添加OnAttachStateChange监听，在item添加到屏幕是检查scrollerView滑动位置，放在布局显示断层。
+     *
+     * @param scrollerView
+     */
+    private void setAttachListener(View scrollerView) {
+        if (scrollerView.getTag(TAG_KEY) != null) {
+            AttachListener listener = (AttachListener) scrollerView.getTag(TAG_KEY);
+            if (listener.reference.get() == null) {
+                // 情况原来的监听器
+                scrollerView.removeOnAttachStateChangeListener(listener);
+                scrollerView.setTag(TAG_KEY, null);
+            }
+        }
+
+        if (scrollerView.getTag(TAG_KEY) == null) {
+            ViewGroup.LayoutParams lp = getLayoutParams();
+            if (lp instanceof ConsecutiveScrollerLayout.LayoutParams) {
+                if (((ConsecutiveScrollerLayout.LayoutParams) lp).isConsecutive) {
+                    AttachListener l = new AttachListener(this, scrollerView);
+                    scrollerView.addOnAttachStateChangeListener(l);
+                    scrollerView.setTag(TAG_KEY, l);
+                }
+            }
+        }
+    }
+
+    private void scrollChildContent(View v) {
+        if (v != null && getParent() instanceof ConsecutiveScrollerLayout) {
+            ConsecutiveScrollerLayout parent = (ConsecutiveScrollerLayout) getParent();
+            int thisIndex = parent.indexOfChild(this);
+
+            // 判断是否需要滑动内容到底部或顶部
+
+            if (thisIndex == parent.getChildCount() - 1
+                    && getHeight() < parent.getHeight()
+                    && parent.getScrollY() >= parent.mScrollRange) {
+                return;
+            }
+
+            View firstVisibleView = parent.findFirstVisibleView();
+            if (firstVisibleView == null) {
+                return;
+            }
+            int firstIndex = parent.indexOfChild(firstVisibleView);
+
+            if (thisIndex < firstIndex) {
+                parent.scrollChildContentToBottom(v);
+            } else if (thisIndex > firstIndex) {
+                parent.scrollChildContentToTop(v);
+            }
+        }
     }
 
     /**
@@ -186,5 +248,29 @@ public class ConsecutiveViewPager2 extends FrameLayout implements IConsecutiveSc
 
     public void unregisterOnPageChangeCallback(@NonNull ViewPager2.OnPageChangeCallback callback) {
         mViewPager2.unregisterOnPageChangeCallback(callback);
+    }
+
+    private static class AttachListener implements OnAttachStateChangeListener {
+
+        WeakReference<ConsecutiveViewPager2> reference;
+        View view;
+
+        public AttachListener(ConsecutiveViewPager2 parent, View view) {
+            reference = new WeakReference<ConsecutiveViewPager2>(parent);
+            this.view = view;
+        }
+
+        @Override
+        public void onViewAttachedToWindow(View v) {
+            if (reference.get() != null) {
+                reference.get().scrollChildContent(view);
+            }
+        }
+
+        @Override
+        public void onViewDetachedFromWindow(View v) {
+
+        }
+
     }
 }

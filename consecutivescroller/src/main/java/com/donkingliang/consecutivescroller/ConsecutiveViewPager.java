@@ -33,7 +33,7 @@ public class ConsecutiveViewPager extends ViewPager implements IConsecutiveScrol
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        if (isConsecutiveParent() && mAdjustHeight > 0) {
+        if (isConsecutiveParentAndBottom() && mAdjustHeight > 0) {
             int height = getDefaultSize(0, heightMeasureSpec) - mAdjustHeight;
             super.onMeasure(widthMeasureSpec,
                     MeasureSpec.makeMeasureSpec(height, MeasureSpec.getMode(heightMeasureSpec)));
@@ -69,7 +69,12 @@ public class ConsecutiveViewPager extends ViewPager implements IConsecutiveScrol
         ViewCompat.setNestedScrollingEnabled(child, false);
     }
 
-    private boolean isConsecutiveParent() {
+    /**
+     * 是否在ConsecutiveScrollerLayout的底部
+     *
+     * @return
+     */
+    private boolean isConsecutiveParentAndBottom() {
         ViewParent parent = getParent();
         if (parent instanceof ConsecutiveScrollerLayout) {
             ConsecutiveScrollerLayout layout = (ConsecutiveScrollerLayout) parent;
