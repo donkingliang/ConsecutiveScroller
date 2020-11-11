@@ -20,12 +20,12 @@ allprojects {
 在Module的build.gradle在添加以下代码
 ```groovy
 // 使用了Androidx
-implementation 'com.github.donkingliang:ConsecutiveScroller:4.3.1'
+implementation 'com.github.donkingliang:ConsecutiveScroller:4.4.0'
 
 // 或者
 
 // 使用Android support包
-implementation 'com.github.donkingliang:ConsecutiveScroller:4.3.1-support'
+implementation 'com.github.donkingliang:ConsecutiveScroller:4.4.0-support'
 ```
 
 **注意：** 如果你准备使用这个库，请务必认真阅读下面的文档。它能让你了解ConsecutiveScrollerLayout可以实现的功能，以及避免不必要的错误。
@@ -316,6 +316,12 @@ scrollerLayout.setOnPermanentStickyChangeListener(OnPermanentStickyChangeListene
 scrollerLayout.getCurrentStickyView(); 
 // 获取当前吸顶view(常驻模式)
 scrollerLayout.getCurrentStickyViews();
+// 设置吸顶常驻模式
+public void setPermanent(boolean isPermanent);
+// 判断子view是否处于吸顶状态
+public boolean theChildIsStick(View child);
+// 判断子view是否是吸顶view
+public boolean isStickyView(View child);
 
 /**
  * 在View吸顶的状态下，是否可以触摸view来滑动ConsecutiveScrollerLayout布局。
@@ -329,7 +335,7 @@ app:layout_isTriggerScroll="true"
  * 如果设置了下沉模式，则会相反，view在吸顶时会显示在下层，被其他布局覆盖，隐藏在下面。
  * 实现的效果可参考demo中的例子
  */
-app:layout_isSticky="true";
+app:layout_isSink="true";
 
 ```
 
@@ -509,6 +515,61 @@ tabLayout.post(new Runnable() {
 });
 ```
 
+#### 对ViewPager2的支持
+
+从4.4.0版本开始，支持在ConsecutiveScrollerLayout中使用ViewPager2。跟ViewPager一样，框架里专门提供了一个ViewPage2的自定义控件：**ConsecutiveViewPager2**。你必须使用它，而不能直接使用Androidx里的ViewPager2。不过你要使用它，依然需要引入ViewPager2依赖。
+
+```groovy
+// xxx：viewpager2版本号
+implementation 'androidx.viewpager2:viewpager2:xxx'
+```
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<com.donkingliang.consecutivescroller.ConsecutiveScrollerLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/scrollerLayout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:scrollbars="vertical">
+
+    <com.google.android.material.tabs.TabLayout
+        android:id="@+id/tabLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@android:color/white"
+        app:tabGravity="fill"
+        app:tabIndicatorColor="@color/colorPrimary"
+        app:tabIndicatorHeight="3dp"
+        app:tabMode="scrollable"
+        app:tabSelectedTextColor="@color/colorPrimary" />
+
+    <com.donkingliang.consecutivescroller.ConsecutiveViewPager2
+        android:id="@+id/viewPager"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+</com.donkingliang.consecutivescroller.ConsecutiveScrollerLayout>
+```
+
+ConsecutiveViewPager2提供了跟ConsecutiveViewPager一样的功能，同时也支持setAdjustHeight方法，使用的限制也与ConsecutiveViewPager一样，你可以阅读上一节：**对ViewPager的支持**了解。
+
+不过ConsecutiveViewPager2并不是ViewPager2的子类(ViewPager2不允许继承)，而是一个包含ViewPager2的控件，所以你不能把ConsecutiveViewPager2当作ViewPager2。但是ConsecutiveViewPager2提供了跟ViewPager2一样的常用方法，而且提供了获取ViewPager2对象的方法：
+
+```java
+public ViewPager2 getViewPager2();
+```
+
+所以你完全可以像使用ViewPager2一样使用它。
+
+**注意事项：**
+
+1、ConsecutiveViewPager2只能作为ConsecutiveScrollerLayout的子view，中间不能嵌套其他层级。
+
+2、不要给ConsecutiveViewPager2设置padding。
+
+3、ConsecutiveViewPager2不支持垂直翻页。也就是说，它只能跟ViewPager一样水平翻页和支持item垂直滑动。
+
 ### 使用腾讯x5的WebView
 
 由于腾讯x5的VebView是一个FrameLayout嵌套WebView的布局，而不是一个WebView的子类，所以要在ConsecutiveScrollerLayout里使用它，需要把它的滑动交给它里面的WebView。自定义MyWebView继承腾讯的WebView,重写它的scrollBy()方法即可。
@@ -572,6 +633,35 @@ refreshLayout.setOnMultiPurposeListener(new SimpleMultiPurposeListener() {
 });
 ```
 
+### 其他常用方法
+
+```java
+
+// 修改子view的LayoutParams属性，LayoutParams属性对应xml中的app:layout_属性
+ConsecutiveScrollerLayout.LayoutParams lp = (ConsecutiveScrollerLayout.LayoutParams)view.getLayoutParams();
+// 修改各种属性
+lp.isConsecutive = false;
+lp.isSticky = false;
+view.setLayoutParams(lp);
+
+// 滑动到指定view的位置，可以设置一个位置偏移量
+public void scrollToChild(View view);
+public void scrollToChildWithOffset(View view, int offset);
+public void smoothScrollToChild(View view);
+public void smoothScrollToChildWithOffset(View view, int offset);
+
+// 判断是否滑动到顶部
+public boolean isScrollTop();
+// 判断是否滑动到底部
+public boolean isScrollBottom();
+
+// 在fling的情况下停止布局滑动
+public void stopScroll();
+
+//监听滑动
+public void setOnVerticalScrollChangeListener(OnScrollChangeListener l);
+```
+
 ### 其他注意事项
 
 1、WebView在加载的过程中如果滑动的布局，可能会导致WebView与其他View在显示上断层，使用下面的方法一定程度上可以避免这个问题。
@@ -600,4 +690,8 @@ webView.setWebChromeClient(new WebChromeClient() {
 
 5、使用ConsecutiveScrollerLayout提供的setOnVerticalScrollChangeListener()方法监听布局的滑动事件。View所提供的setOnScrollChangeListener()方法已无效。
 
-6、通过getOwnScrollY()方法获取ConsecutiveScrollerLayout的垂直滑动距离，View的getScrollY()方法获取的不是ConsecutiveScrollerLayout的整体滑动距离。
+6、通过getOwnScrollY()方法获取ConsecutiveScrollerLayout的整体垂直滑动距离，这个滑动距离包含了ConsecutiveScrollerLayout本身和所有子view的滑动距离之和。View的getScrollY()方法获取的是ConsecutiveScrollerLayout本身的滑动距离。
+
+7、如果嵌套WebView，请确保WebView加载的网页是符合移动端的，则网页的body高度计算显示的内容高度。否则显示不全。[#109](https://github.com/donkingliang/ConsecutiveScroller/issues/109)
+
+8、4.4.0以下版本，如果使用水平滑动的RecyclerView，需要使用FrameLayout包裹一下，不用让它作为ConsecutiveScrollerLayout的子view，否则可能会有滑动冲突。这是个bug，在4.4.0时已修复。
