@@ -692,6 +692,6 @@ webView.setWebChromeClient(new WebChromeClient() {
 
 6、通过getOwnScrollY()方法获取ConsecutiveScrollerLayout的整体垂直滑动距离，这个滑动距离包含了ConsecutiveScrollerLayout本身和所有子view的滑动距离之和。View的getScrollY()方法获取的是ConsecutiveScrollerLayout本身的滑动距离。
 
-7、如果嵌套WebView，请确保WebView加载的网页是符合移动端的，则网页的body高度计算显示的内容高度。否则显示不全。[#109](https://github.com/donkingliang/ConsecutiveScroller/issues/109)
+7、如果嵌套WebView，请确保WebView加载的网页是符合移动端的，则网页的body高度就是显示的内容高度。否则显示不全。[#109](https://github.com/donkingliang/ConsecutiveScroller/issues/109)
 
 8、4.4.0以下版本，如果使用水平滑动的RecyclerView，需要使用FrameLayout包裹一下，不用让它作为ConsecutiveScrollerLayout的子view，否则可能会有滑动冲突。这是个bug，在4.4.0时已修复。
