@@ -188,7 +188,7 @@ public class ConsecutiveViewPager2 extends FrameLayout implements IConsecutiveSc
         return views;
     }
 
-    private View findScrolledItemView(View view) {
+    protected View findScrolledItemView(View view) {
         if (mRecyclerView.getAdapter() instanceof FragmentStateAdapter
                 && view instanceof FrameLayout) {
             FrameLayout frameLayout = (FrameLayout) view;

@@ -479,14 +479,6 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                 mDownLocation[1] = ScrollUtils.getRawY(this, ev, actionIndex);
                 isTouchNotTriggerScrollStick = ScrollUtils.isTouchNotTriggerScrollStick(this, mDownLocation[0], mDownLocation[1]);
 
-                if (mAdjustVelocityTracker != null) {
-                    mAdjustVelocityTracker.clear();
-                }
-
-                if (mAdjustVelocityTracker != null) {
-                    mVelocityTracker.clear();
-                }
-
                 initAdjustVelocityTrackerIfNotExists();
                 mAdjustVelocityTracker.addMovement(vtev);
 
@@ -538,14 +530,6 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                     mDownLocation[0] = ScrollUtils.getRawX(this, ev, newPointerIndex);
                     mDownLocation[1] = ScrollUtils.getRawY(this, ev, newPointerIndex);
                     isTouchNotTriggerScrollStick = ScrollUtils.isTouchNotTriggerScrollStick(this, mDownLocation[0], mDownLocation[1]);
-
-                    if (mAdjustVelocityTracker != null) {
-                        mAdjustVelocityTracker.clear();
-                    }
-
-                    if (mAdjustVelocityTracker != null) {
-                        mVelocityTracker.clear();
-                    }
                 }
                 initAdjustVelocityTrackerIfNotExists();
                 mAdjustVelocityTracker.addMovement(vtev);
