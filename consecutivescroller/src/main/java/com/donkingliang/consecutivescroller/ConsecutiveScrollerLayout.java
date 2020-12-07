@@ -1206,6 +1206,9 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
         for (int i = 0; i < index; i++) {
             final View child = getChildAt(i);
             if (ScrollUtils.isConsecutiveScrollerChild(child)) {
+                if (child.getVisibility() == GONE){
+                    continue;
+                }
                 if (child instanceof IConsecutiveScroller) {
                     List<View> views = ((IConsecutiveScroller) child).getScrolledViews();
                     if (views != null && !views.isEmpty()) {
@@ -1223,6 +1226,9 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
 
         for (int i = index + 1; i < getChildCount(); i++) {
             final View child = getChildAt(i);
+            if (child.getVisibility() == GONE){
+                continue;
+            }
             if (ScrollUtils.isConsecutiveScrollerChild(child)) {
                 if (i == getChildCount() - 1 && child.getHeight() < this.getHeight() && getScrollY() >= mScrollRange) {
                     continue;

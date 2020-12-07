@@ -123,6 +123,12 @@ public class ScrollUtils {
      */
     static boolean canScrollVertically(View view, int direction) {
         View scrolledView = getScrolledView(view);
+
+        if (scrolledView.getVisibility() == View.GONE){
+            // 隐藏状态，不能滑动
+            return false;
+        }
+
         if (scrolledView instanceof AbsListView) {
             AbsListView listView = (AbsListView) scrolledView;
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
@@ -138,7 +144,7 @@ public class ScrollUtils {
 
                 if (recyclerView.canScrollHorizontally(1) || recyclerView.canScrollVertically(-1)){
                     // 如果recyclerView可以水平滑动，并且使用canScrollVertically判断不能垂直滑动，这认定是不能垂直滑动的。
-                    // 这样做既兼顾了recyclerView了同时水平、垂直滑动的情况，有保证了垂直滑动的判断是通过自定义的方式判断的。
+                    // 这样做既兼顾了recyclerView同时水平、垂直滑动的情况，又保证了垂直滑动的判断是通过自定义的方式判断的。
                     if (!recyclerView.canScrollVertically(direction)){
                         return false;
                     }
