@@ -124,7 +124,7 @@ public class ScrollUtils {
     static boolean canScrollVertically(View view, int direction) {
         View scrolledView = getScrolledView(view);
 
-        if (scrolledView.getVisibility() == View.GONE){
+        if (scrolledView.getVisibility() == View.GONE) {
             // 隐藏状态，不能滑动
             return false;
         }
@@ -142,10 +142,10 @@ public class ScrollUtils {
             if (scrolledView instanceof RecyclerView) {
                 RecyclerView recyclerView = (RecyclerView) scrolledView;
 
-                if (recyclerView.canScrollHorizontally(1) || recyclerView.canScrollVertically(-1)){
+                if (recyclerView.canScrollHorizontally(1) || recyclerView.canScrollVertically(-1)) {
                     // 如果recyclerView可以水平滑动，并且使用canScrollVertically判断不能垂直滑动，这认定是不能垂直滑动的。
                     // 这样做既兼顾了recyclerView同时水平、垂直滑动的情况，又保证了垂直滑动的判断是通过自定义的方式判断的。
-                    if (!recyclerView.canScrollVertically(direction)){
+                    if (!recyclerView.canScrollVertically(direction)) {
                         return false;
                     }
                 }
@@ -442,7 +442,8 @@ public class ScrollUtils {
                 }
 
                 if (ViewCompat.getZ(child) > ViewCompat.getZ(topTouchView) // 判断View的Z高度
-                        || csl.getDrawingPosition(child) > csl.getDrawingPosition(topTouchView)) { // 判断绘制顺序
+                        || (ViewCompat.getZ(child) == ViewCompat.getZ(topTouchView)
+                        && csl.getDrawingPosition(child) > csl.getDrawingPosition(topTouchView))) { // 判断绘制顺序
                     topTouchView = child;
                 }
             }
