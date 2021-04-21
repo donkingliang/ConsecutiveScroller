@@ -1380,10 +1380,12 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
      * 停止滑动
      */
     public void stopScroll() {
-        mScroller.abortAnimation();
-        stopNestedScroll(ViewCompat.TYPE_NON_TOUCH);
-        if (mScrollToIndex == -1) {
-            setScrollState(SCROLL_STATE_IDLE);
+        if (!mScroller.isFinished()) {
+            mScroller.abortAnimation();
+            stopNestedScroll(ViewCompat.TYPE_NON_TOUCH);
+            if (mScrollToIndex == -1) {
+                setScrollState(SCROLL_STATE_IDLE);
+            }
         }
     }
 
