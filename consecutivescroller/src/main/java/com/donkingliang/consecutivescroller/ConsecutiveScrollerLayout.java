@@ -919,6 +919,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
 
             if (mScrollState == SCROLL_STATE_SETTLING && mScroller.isFinished()) {
                 // 滚动结束，校验子view内容的滚动位置
+                stopNestedScroll(ViewCompat.TYPE_NON_TOUCH);
                 checkTargetsScroll(false, false);
                 setScrollState(SCROLL_STATE_IDLE);
             }
