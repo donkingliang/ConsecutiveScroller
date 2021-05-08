@@ -20,19 +20,19 @@ allprojects {
 在Module的build.gradle在添加以下代码
 ```groovy
 // 使用了Androidx
-implementation 'com.github.donkingliang:ConsecutiveScroller:4.4.1'
+implementation 'com.github.donkingliang:ConsecutiveScroller:4.4.2'
 
 // 或者
 
 // 使用Android support包
-implementation 'com.github.donkingliang:ConsecutiveScroller:4.4.1-support'
+implementation 'com.github.donkingliang:ConsecutiveScroller:4.4.2-support'
 ```
 
 **注意：** 如果你准备使用这个库，请务必认真阅读下面的文档。它能让你了解ConsecutiveScrollerLayout可以实现的功能，以及避免不必要的错误。
 
 ### 基本使用
 
-ConsecutiveScrollerLayout的使用非常简单，把需要滑动的布局作为ConsecutiveScrollerLayout的直接子View即可。
+ConsecutiveScrollerLayout的使用非常简单，把需要滑动的布局作为ConsecutiveScrollerLayout的`直接子View`即可。
 
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
@@ -101,10 +101,15 @@ ConsecutiveScrollerLayout的使用非常简单，把需要滑动的布局作为C
     </com.donkingliang.consecutivescroller.ConsecutiveScrollerLayout>
 </com.donkingliang.consecutivescroller.ConsecutiveScrollerLayout>
 ```
+**注意：**
+
+1、ConsecutiveScrollerLayout只能处理它的`直接子View`的滑动事件，如果一个滑动控件不是ConsecutiveScrollerLayout的直接子View，而是中间嵌套了其他布局，那么这个滑动控件将无法滑动。需要设置[局部滑动](#局部滑动)或者实现[滑动子view的下级view](#滑动子view的下级view)。我们建议滑动控件都应该作为ConsecutiveScrollerLayout的直接子View。
+
+2、ConsecutiveScrollerLayout的非滑动子View(如：TextView、LinearLayout等)，如果它的内容有可能超出ConsecutiveScrollerLayout的显示高度，就需要使用滑动控件(如ScrollView等)包裹，否则可能内容显示不全。
 
 #### 关于margin
 
-ConsecutiveScrollerLayout支持左右margin，但是不支持上下margin，子View间的间距可以通过Space设置。
+ConsecutiveScrollerLayout支持左右margin，但是`不支持上下margin`，子View间的间距可以通过`Space`或者`空白View`设置。
 
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
@@ -149,7 +154,7 @@ ConsecutiveScrollerLayout支持左右margin，但是不支持上下margin，子V
 
 #### 布局对齐方式
 
-ConsecutiveScrollerLayout的布局方式类似于垂直的LinearLayout，但是它没有gravity和子view layout_gravity属性。ConsecutiveScrollerLayout为它的子view提供了layout_align属性，用于设置子view和父布局的对齐方式。layout_align有三个值：**左对齐(LEFT)** 、**右对齐(RIGHT)** 和**中间对齐(CENTER)**。
+ConsecutiveScrollerLayout的布局方式类似于垂直的LinearLayout，但是它没有gravity和子view layout_gravity属性。ConsecutiveScrollerLayout为它的子view提供了`layout_align`属性，用于设置子view和父布局的对齐方式。layout_align有三个值：`左对齐(LEFT)` 、`右对齐(RIGHT)` 和`中间对齐(CENTER)`。
 
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
@@ -175,7 +180,7 @@ ConsecutiveScrollerLayout的布局方式类似于垂直的LinearLayout，但是�
 
 #### 嵌套Fragment
 
-要想把一个Fragment嵌套在ConsecutiveScrollerLayout里。通常我们需要一个布局容器来承载我们的Fragment，或者直接把Fragment写在activity的布局里。如果Fragment是垂直滑动的，那么承载Fragment的容器需要是ConsecutiveScrollerLayout，以及Fragment的根布局也需要是垂直滑动的。我们推荐使用ConsecutiveScrollerLayout或者其他可垂直滑动的控件(比如：RecyclerView、NestedScrollView)作为Fragment的根布局。如果你的Fragment不是垂直滑动的，则可以忽略这个限制。
+要想把一个Fragment嵌套在ConsecutiveScrollerLayout里。通常我们需要一个布局容器来承载我们的Fragment，或者直接把Fragment写在activity的布局里。如果Fragment是垂直滑动的，那么承载Fragment的容器需要是ConsecutiveScrollerLayout，以及Fragment的根布局也需要是垂直滑动的。我们推荐使用`ConsecutiveScrollerLayout`或者其他`可垂直滑动的控件`(比如：RecyclerView、NestedScrollView)作为Fragment的根布局。如果你的Fragment不是垂直滑动的，则可以忽略这个限制。
 
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
@@ -287,7 +292,7 @@ ConsecutiveScrollerLayout的布局方式类似于垂直的LinearLayout，但是�
 
 #### 常驻吸顶
 
-如果你不希望吸顶的view被后面的吸顶view顶出屏幕，而且多个吸顶view排列吸附在顶部，你可以设置常驻吸顶模式：**app:isPermanent="true"**。
+如果你不希望吸顶的view被后面的吸顶view顶出屏幕，而且多个吸顶view排列吸附在顶部，你可以设置常驻吸顶模式：`app:isPermanent="true"`。
 
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
@@ -397,13 +402,13 @@ ConsecutiveScrollerLayout将所有的子View视作一个整体，由它统一处
 </com.donkingliang.consecutivescroller.ConsecutiveScrollerLayout>
 ```
 
-在这个例子中NestedScrollView希望在自己的高度里滑动自己的内容，而不是跟随ConsecutiveScrollerLayout滑动，只要给它设置layout_isConsecutive="false"就可以了。而LinearLayout虽然不是滑动布局，但是在下面嵌套了个滑动布局RecyclerView，所以它也需要设置layout_isConsecutive="false"。
+在这个例子中NestedScrollView希望在自己的高度里滑动自己的内容，而不是跟随ConsecutiveScrollerLayout滑动，只要给它设置`layout_isConsecutive="false"`就可以了。而LinearLayout虽然不是滑动布局，但是在下面嵌套了个滑动布局RecyclerView，所以它也需要设置layout_isConsecutive="false"。
 
-ConsecutiveScrollerLayout支持NestedScrolling机制，如果你的局部滑动的view实现了NestedScrollingChild接口(如：RecyclerView、NestedScrollView等)，它滑动完成后会把滑动事件交给父布局。如果你不想你的子view或它的下级view与父布局嵌套滑动，可以给子view设置app:layout_isNestedScroll="false"。它可以禁止子view与ConsecutiveScrollerLayout的嵌套滑动
+ConsecutiveScrollerLayout支持NestedScrolling机制，如果你的局部滑动的view实现了NestedScrollingChild接口(如：RecyclerView、NestedScrollView等)，它滑动完成后会把滑动事件交给父布局。如果你不想你的子view或它的下级view与父布局嵌套滑动，可以给子view设置`app:layout_isNestedScroll="false"`。它可以禁止子view与ConsecutiveScrollerLayout的嵌套滑动
 
 ### 滑动子view的下级view
 
-ConsecutiveScrollerLayout默认情况下只会处理它的直接子view的滑动，但有时候需要滑动的布局可能不是ConsecutiveScrollerLayout的直接子view，而是子view所嵌套的下级view。比如ConsecutiveScrollerLayout嵌套FrameLayout,FrameLayout嵌套ScrollView，我们希望ConsecutiveScrollerLayout也能正常处理ScrollView的滑动。为了支持这种需求，ConsecutiveScroller提供了一个接口：IConsecutiveScroller。子view实现IConsecutiveScroller接口，并通过实现接口方法告诉ConsecutiveScrollerLayout需要滑动的下级view,ConsecutiveScrollerLayout就能正确地处理它的滑动事件。IConsecutiveScroller需要实现两个方法：
+ConsecutiveScrollerLayout默认情况下只会处理它的直接子view的滑动，但有时候需要滑动的布局可能不是ConsecutiveScrollerLayout的直接子view，而是子view所嵌套的下级view。比如ConsecutiveScrollerLayout嵌套FrameLayout,FrameLayout嵌套ScrollView，我们希望ConsecutiveScrollerLayout也能正常处理ScrollView的滑动。为了支持这种需求，ConsecutiveScroller提供了一个接口：`IConsecutiveScroller`。子view实现IConsecutiveScroller接口，并通过实现接口方法告诉ConsecutiveScrollerLayout需要滑动的下级view,ConsecutiveScrollerLayout就能正确地处理它的滑动事件。IConsecutiveScroller需要实现两个方法：
 
 ```java
     /**
@@ -473,7 +478,7 @@ public class MyFrameLayout extends FrameLayout implements IConsecutiveScroller {
 
 #### 对ViewPager的支持
 
-如果你的ViewPager承载的子布局(或Fragment)不是可以垂直滑动的，那么使用普通的ViewPager即可。如果是可以垂直滑动的，那么你的ViewPager需要实现IConsecutiveScroller接口，并返回需要滑动的view对象。框架里提供了一个实现了IConsecutiveScroller接口自定义控件：**ConsecutiveViewPager**。使用这个控件，然后你的ConsecutiveViewPager的子view(或Fragment的根布局)是可垂直滑动的view，如：RecyclerView、NestedScrollView、ConsecutiveScrollerLayout即可。这样你的ViewPager就能正确地跟ConsecutiveScrollerLayout一起滑动了。
+如果你的ViewPager承载的子布局(或Fragment)不是可以垂直滑动的，那么使用普通的ViewPager即可。如果是可以垂直滑动的，那么你的ViewPager需要实现IConsecutiveScroller接口，并返回需要滑动的view对象。框架里提供了一个实现了IConsecutiveScroller接口自定义控件：`ConsecutiveViewPager`。使用这个控件，然后你的ConsecutiveViewPager的子view(或Fragment的根布局)是可垂直滑动的view，如：RecyclerView、NestedScrollView、ConsecutiveScrollerLayout即可。这样你的ViewPager就能正确地跟ConsecutiveScrollerLayout一起滑动了。
 
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
@@ -517,7 +522,7 @@ tabLayout.post(new Runnable() {
 
 #### 对ViewPager2的支持
 
-从4.4.0版本开始，支持在ConsecutiveScrollerLayout中使用ViewPager2。跟ViewPager一样，框架里专门提供了一个ViewPage2的自定义控件：**ConsecutiveViewPager2**。你必须使用它，而不能直接使用Androidx里的ViewPager2。不过你要使用它，依然需要引入ViewPager2依赖。
+从4.4.0版本开始，支持在ConsecutiveScrollerLayout中使用ViewPager2。跟ViewPager一样，框架里专门提供了一个ViewPage2的自定义控件：`ConsecutiveViewPager2`。你必须使用它，而不能直接使用Androidx里的ViewPager2。不过你要使用它，依然需要引入ViewPager2依赖。
 
 ```groovy
 // xxx：viewpager2版本号
