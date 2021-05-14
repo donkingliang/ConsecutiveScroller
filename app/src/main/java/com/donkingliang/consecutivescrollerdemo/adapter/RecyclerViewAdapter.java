@@ -20,6 +20,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
 
     private Context context;
     private String text;
+    private int count = 30;
 
     public RecyclerViewAdapter(Context context, String text) {
         this.context = context;
@@ -28,7 +29,16 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
 
     @Override
     public int getItemCount() {
-        return 30;
+        return count;
+    }
+
+    public int getCount() {
+        return count;
+    }
+
+    public void setCount(int count) {
+        this.count = count;
+        notifyDataSetChanged();
     }
 
     @Override
@@ -55,7 +65,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         public ViewHolder(View itemView) {
             super(itemView);
 
-            textView = itemView.findViewById(R.id.texView);
+            textView = itemView.findViewById(R.id.textView);
         }
     }
 

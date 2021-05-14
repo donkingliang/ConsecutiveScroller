@@ -140,6 +140,18 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
     private boolean isPermanent;
 
     /**
+     * 自动调整底部view的高度，使它不被吸顶布局覆盖。
+     * 为true时，底部view的最大高度不大于 (父布局高度 - (当前吸顶view高度总高度 + mAdjustHeightOffset))
+     */
+    private boolean mAutoAdjustHeightOnBottomView;
+
+    /**
+     * 自动调整底部view的高度时，额外的偏移量
+     * 底部view需要调整高度 = 当前吸顶view高度总高度 + mAdjustHeightOffset
+     */
+    private int mAdjustHeightOffset = 0;
+
+    /**
      * 吸顶view到顶部的偏移量
      */
     private int mStickyOffset = 0;
@@ -229,6 +241,9 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
         try {
             a = context.obtainStyledAttributes(attrs, R.styleable.ConsecutiveScrollerLayout);
             isPermanent = a.getBoolean(R.styleable.ConsecutiveScrollerLayout_isPermanent, false);
+            mStickyOffset = a.getDimensionPixelOffset(R.styleable.ConsecutiveScrollerLayout_stickyOffset, 0);
+            mAutoAdjustHeightOnBottomView = a.getBoolean(R.styleable.ConsecutiveScrollerLayout_autoAdjustHeightOnBottomView, false);
+            mAdjustHeightOffset = a.getDimensionPixelOffset(R.styleable.ConsecutiveScrollerLayout_adjustHeightOffset, 0);
         } finally {
             if (a != null) {
                 a.recycle();
@@ -302,13 +317,58 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
         int count = children.size();
         for (int i = 0; i < count; i++) {
             View child = children.get(i);
-            measureChildWithMargins(child, widthMeasureSpec, 0, heightMeasureSpec, 0);
+
+            // 父布局额外占用的高度空间，在测量子view时，子view的最大高度不大于父view的最大可用高度-heightUsed。
+            int heightUsed = 0;
+
+            // 测量底部view，并且需要自动调整高度时，计算吸顶部分占用的空间高度，作为测量子view的条件。
+            if (mAutoAdjustHeightOnBottomView && child == getChildAt(getChildCount() - 1)) {
+                heightUsed = getAdjustHeight();
+            }
+
+            measureChildWithMargins(child, widthMeasureSpec, 0, heightMeasureSpec, heightUsed);
             contentWidth = Math.max(contentWidth, getContentWidth(child));
             contentHeight += child.getMeasuredHeight();
         }
 
         setMeasuredDimension(measureSize(widthMeasureSpec, contentWidth + getPaddingLeft() + getPaddingRight()),
                 measureSize(heightMeasureSpec, contentHeight + getPaddingTop() + getPaddingBottom()));
+    }
+
+    /**
+     * 返回底部view需要调整的高度
+     * 普通吸顶模式：最后的吸顶view高度 + mAdjustHeightOffset
+     * 常驻吸顶模式：所有吸顶view高度 + mAdjustHeightOffset
+     * 需要过滤下沉吸顶
+     *
+     * @return
+     */
+    private int getAdjustHeight() {
+        List<View> children = getStickyChildren();
+
+        int adjustHeight = mAdjustHeightOffset;
+
+        int count = children.size();
+        if (isPermanent) {
+            // 常驻吸顶模式
+            for (int i = 0; i < count; i++) {
+                View child = children.get(i);
+                if (!isSink(child)) { // 过滤下沉吸顶View
+                    adjustHeight += child.getMeasuredHeight();
+                }
+            }
+        } else {
+            // 普通吸顶模式
+            for (int i = count - 1; i >= 0; i--) {
+                View child = children.get(i);
+                if (!isSink(child)) { // 过滤下沉吸顶View
+                    adjustHeight += child.getMeasuredHeight();
+                    break;
+                }
+            }
+        }
+
+        return adjustHeight;
     }
 
     private int getContentWidth(View child) {
@@ -1727,22 +1787,11 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
             boolean isScrollTop = getScrollY() <= 0 && !ScrollUtils.canScrollVertically(child, -1);
 
             if (isScrollTop) {
-                for (int i = 0; i < size; i++) {
+                for (int i = size - 1; i >= 0; i--) {
                     View view = children.get(i);
-                    if (view instanceof ConsecutiveViewPager) {
-                        ConsecutiveViewPager viewPager = (ConsecutiveViewPager) view;
-                        if (viewPager.getAdjustHeight() > 0 && ScrollUtils.isConsecutiveScrollerChild(viewPager)
-                                && ScrollUtils.canScrollVertically(viewPager, -1)) {
-                            return false;
-                        }
-                    }
-
-                    if (view instanceof ConsecutiveViewPager2) {
-                        ConsecutiveViewPager2 viewPager = (ConsecutiveViewPager2) view;
-                        if (viewPager.getAdjustHeight() > 0 && ScrollUtils.isConsecutiveScrollerChild(viewPager)
-                                && ScrollUtils.canScrollVertically(viewPager, -1)) {
-                            return false;
-                        }
+                    if (ScrollUtils.isConsecutiveScrollerChild(view)
+                            && ScrollUtils.canScrollVertically(view, -1)) {
+                        return false;
                     }
                 }
             }
@@ -2117,6 +2166,28 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
         return offset;
     }
 
+    public boolean isAutoAdjustHeightOnBottomView() {
+        return mAutoAdjustHeightOnBottomView;
+    }
+
+    public void setAutoAdjustHeightOnBottomView(boolean autoAdjustHeightOnBottomView) {
+        if (mAutoAdjustHeightOnBottomView != autoAdjustHeightOnBottomView) {
+            mAutoAdjustHeightOnBottomView = autoAdjustHeightOnBottomView;
+            requestLayout();
+        }
+    }
+
+    public int getAdjustHeightOffset() {
+        return mAdjustHeightOffset;
+    }
+
+    public void setAdjustHeightOffset(int adjustHeightOffset) {
+        if (mAdjustHeightOffset != adjustHeightOffset) {
+            mAdjustHeightOffset = adjustHeightOffset;
+            requestLayout();
+        }
+    }
+
     /**
      * 设置吸顶常驻
      *
@@ -2125,7 +2196,11 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
     public void setPermanent(boolean isPermanent) {
         if (this.isPermanent != isPermanent) {
             this.isPermanent = isPermanent;
-            resetSticky();
+            if (mAutoAdjustHeightOnBottomView) {
+                requestLayout();
+            } else {
+                resetSticky();
+            }
         }
     }
 

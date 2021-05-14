@@ -14,5 +14,8 @@
     </declare-styleable>
     <declare-styleable name="ConsecutiveScrollerLayout">
         <attr name="isPermanent" format="boolean"/>
+        <attr name="stickyOffset" format="dimension"/>
+        <attr name="autoAdjustHeightOnBottomView" format="boolean"/>
+        <attr name="adjustHeightOffset" format="dimension"/>
     </declare-styleable>
 </resources>

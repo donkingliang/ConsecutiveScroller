@@ -49,13 +49,6 @@ public class ViewPagerActivity extends AppCompatActivity {
         viewPager.setAdapter(mAdapter);
         tabLayout.setupWithViewPager(viewPager);
 
-        tabLayout.post(new Runnable() {
-            @Override
-            public void run() {
-                viewPager.setAdjustHeight(tabLayout.getHeight());
-            }
-        });
-
         refreshLayout.setOnRefreshLoadMoreListener(new OnRefreshLoadMoreListener() {
             @Override
             public void onLoadMore(@NonNull RefreshLayout r) {

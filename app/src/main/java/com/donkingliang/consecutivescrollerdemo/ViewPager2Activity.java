@@ -47,13 +47,6 @@ public class ViewPager2Activity extends AppCompatActivity {
         tabLayout = findViewById(R.id.tabLayout);
         refreshLayout = findViewById(R.id.refreshLayout);
 
-        tabLayout.post(new Runnable() {
-            @Override
-            public void run() {
-                viewPager2.setAdjustHeight(tabLayout.getHeight());
-            }
-        });
-
         fragments = getFragments();
 
         mAdapter = new MyFragmentPagerAdapter(this, fragments);
