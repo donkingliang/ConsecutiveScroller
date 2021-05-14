@@ -416,7 +416,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
     }
 
     private void resetScrollToTopView() {
-        mScrollToTopView = findScrollToTopView();
+        mScrollToTopView = findFirstVisibleView();
         if (mScrollToTopView != null) {
             mAdjust = getScrollY() - mScrollToTopView.getTop();
         }
@@ -616,7 +616,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
             case MotionEvent.ACTION_UP:
                 stopNestedScroll(ViewCompat.TYPE_TOUCH);
 
-                if (isBrake && SCROLL_ORIENTATION == SCROLL_NONE){
+                if (isBrake && SCROLL_ORIENTATION == SCROLL_NONE) {
                     return true;
                 }
                 break;
@@ -686,7 +686,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
 
                 final int scrolledDeltaY = mSecondScrollY - oldScrollY;
 
-                if (scrolledDeltaY != 0){
+                if (scrolledDeltaY != 0) {
                     getParent().requestDisallowInterceptTouchEvent(true);
                 }
 
@@ -1175,6 +1175,9 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
      * 布局发生变化，重新检查所有子View是否正确显示
      */
     private void checkLayoutChange(boolean changed, boolean isForce) {
+
+        int y = mSecondScrollY;
+
         if (mScrollToTopView != null && changed) {
             if (indexOfChild(mScrollToTopView) != -1) {
                 scrollSelf(mScrollToTopView.getTop() + mAdjust);
@@ -1182,9 +1185,20 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
         } else {
             scrollSelf(getScrollY());
         }
+
+        checkTargetsScroll(true, isForce);
+
+        // 如果正在显示的子布局和滑动偏移量mScrollToTopView都改变了，则有可能是因为布局发生改变，并且影响到正在显示的布局部分。
+        // scrollTo(0, y)把布局的滑动位置恢复为原来的mScrollToTopView，可以避免正在显示的布局显示异常。
+        // 注意：由于RecyclerView的computeVerticalScrollOffset()方法计算到的不是真实的滑动偏移量，而是根据item平均高度估算的值。
+        // 所以当RecyclerView的item高度不一致时，可能会导致mScrollToTopView计算的偏移量和布局的实际偏移量不一致，从而导致scrollTo(0, y)恢复
+        // 原滑动位置时产生上下偏移的误差。
+        if (y != mSecondScrollY && mScrollToTopView != findFirstVisibleView()) {
+            scrollTo(0, y);
+        }
+
         mScrollToTopView = null;
         mAdjust = 0;
-        checkTargetsScroll(true, isForce);
 
         resetChildren();
         resetSticky();
@@ -1207,18 +1221,22 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
         int index = indexOfChild(target);
 
         if (isLayoutChange) {
-            int bottomOffset = ScrollUtils.getScrollBottomOffset(target);
-            int scrollTopOffset = target.getTop() - getScrollY();
-            if (bottomOffset > 0 && scrollTopOffset < 0) {
-                int offset = Math.min(bottomOffset, -scrollTopOffset);
-                scrollSelf(getScrollY() - offset);
-                scrollChild(target, offset);
+            while (true) {
+                int bottomOffset = ScrollUtils.getScrollBottomOffset(target);
+                int scrollTopOffset = target.getTop() - getScrollY();
+                if (bottomOffset > 0 && scrollTopOffset < 0) {
+                    int offset = Math.min(bottomOffset, -scrollTopOffset);
+                    scrollSelf(getScrollY() - offset);
+                    scrollChild(target, offset);
+                } else {
+                    break;
+                }
             }
         }
 
         for (int i = 0; i < index; i++) {
             final View child = getChildAt(i);
-            if (child.getVisibility() == GONE){
+            if (child.getVisibility() == GONE) {
                 continue;
             }
             if (ScrollUtils.isConsecutiveScrollerChild(child)) {
@@ -1239,7 +1257,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
 
         for (int i = index + 1; i < getChildCount(); i++) {
             final View child = getChildAt(i);
-            if (child.getVisibility() == GONE){
+            if (child.getVisibility() == GONE) {
                 continue;
             }
             if (ScrollUtils.isConsecutiveScrollerChild(child)) {
@@ -1568,8 +1586,8 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
     private void stickyChild(View child, int offset) {
         child.setY(getStickyY() - offset);
 
-//        // 把View设置为可点击的，避免吸顶View与其他子View重叠是，触摸事件透过吸顶View传递给下面的View，
-//        // 导致ConsecutiveScrollerLayout追踪布局的滑动出现偏差
+        // 把View设置为可点击的，避免吸顶View与其他子View重叠是，触摸事件透过吸顶View传递给下面的View，
+        // 导致ConsecutiveScrollerLayout追踪布局的滑动出现偏差
         child.setClickable(true);
     }
 
@@ -1657,19 +1675,6 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
      */
     public int getOwnScrollY() {
         return computeVerticalScrollOffset();
-    }
-
-    private View findScrollToTopView() {
-        int offset = getScrollY() + getPaddingTop();
-        List<View> children = getNonGoneChildren();
-        int count = children.size();
-        for (int i = 0; i < count; i++) {
-            View child = children.get(i);
-            if (child.getTop() <= offset && child.getBottom() >= offset) {
-                return child;
-            }
-        }
-        return null;
     }
 
     /**
