@@ -1,58 +1,71 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:gravity="center"
-    android:orientation="vertical">
+    android:fillViewport="true">
 
-    <Button
-        android:id="@+id/btn_sample"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="基础示例" />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:orientation="vertical">
 
-    <Button
-        android:id="@+id/btn_sticky"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="布局吸顶" />
+        <Button
+            android:id="@+id/btn_sample"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="基础示例" />
 
-    <Button
-        android:id="@+id/btn_sticky_permanent"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="布局吸顶常驻" />
+        <Button
+            android:id="@+id/btn_sticky"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="布局吸顶" />
 
-    <Button
-        android:id="@+id/btn_sink_sticky"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="吸顶下沉模式" />
+        <Button
+            android:id="@+id/btn_sticky_permanent"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="布局吸顶常驻" />
 
-    <Button
-        android:id="@+id/btn_consecutive"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="局部滑动" />
+        <Button
+            android:id="@+id/btn_sink_sticky"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="吸顶下沉模式" />
 
-    <Button
-        android:id="@+id/btn_viewpager"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="支持ViewPager"
-        android:textAllCaps="false" />
+        <Button
+            android:id="@+id/btn_consecutive"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="局部滑动" />
 
-    <Button
-        android:id="@+id/btn_viewpager2"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="支持ViewPager2"
-        android:textAllCaps="false" />
+        <Button
+            android:id="@+id/btn_scroll_child"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="滑动下级子View"
+            android:textAllCaps="false"/>
 
-    <Button
-        android:id="@+id/btn_fragment"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="包裹Fragment"
-        android:textAllCaps="false"/>
-</LinearLayout>
+        <Button
+            android:id="@+id/btn_viewpager"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="支持ViewPager"
+            android:textAllCaps="false" />
+
+        <Button
+            android:id="@+id/btn_viewpager2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="支持ViewPager2"
+            android:textAllCaps="false" />
+
+        <Button
+            android:id="@+id/btn_fragment"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="包裹Fragment"
+            android:textAllCaps="false" />
+    </LinearLayout>
+</ScrollView>

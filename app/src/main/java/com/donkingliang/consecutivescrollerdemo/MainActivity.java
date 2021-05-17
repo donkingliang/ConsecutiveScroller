@@ -45,6 +45,14 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        findViewById(R.id.btn_scroll_child).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(MainActivity.this,ScrollChildActivity.class);
+                startActivity(intent);
+            }
+        });
+
         findViewById(R.id.btn_viewpager).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
