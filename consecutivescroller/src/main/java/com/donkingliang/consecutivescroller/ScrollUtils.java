@@ -32,7 +32,10 @@ public class ScrollUtils {
         try {
             Method method = View.class.getDeclaredMethod("computeVerticalScrollOffset");
             method.setAccessible(true);
-            return (int) method.invoke(scrolledView);
+            Object o = method.invoke(scrolledView);
+            if (o != null){
+                return (int) o;
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -49,7 +52,10 @@ public class ScrollUtils {
         try {
             Method method = View.class.getDeclaredMethod("computeVerticalScrollRange");
             method.setAccessible(true);
-            return (int) method.invoke(scrolledView);
+            Object o = method.invoke(scrolledView);
+            if (o != null){
+                return (int) o;
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -66,7 +72,10 @@ public class ScrollUtils {
         try {
             Method method = View.class.getDeclaredMethod("computeVerticalScrollExtent");
             method.setAccessible(true);
-            return (int) method.invoke(scrolledView);
+            Object o = method.invoke(scrolledView);
+            if (o != null){
+                return (int) o;
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -197,7 +206,7 @@ public class ScrollUtils {
      * @return
      */
     static List<View> getTouchViews(View rootView, int touchX, int touchY) {
-        List views = new ArrayList();
+        List<View> views = new ArrayList<>();
         addTouchViews(views, rootView, touchX, touchY);
         return views;
     }
@@ -293,7 +302,6 @@ public class ScrollUtils {
      * @return
      */
     static boolean isConsecutiveScrollerChild(View view) {
-
         if (view != null) {
             ViewGroup.LayoutParams lp = view.getLayoutParams();
 
@@ -312,9 +320,10 @@ public class ScrollUtils {
      * @return
      */
     static View getScrolledView(View view) {
-
         View consecutiveView = null;
-        View scrolledView = view;
+
+        // 先处理layout_scrollChild指定滑动view的情况
+        View scrolledView = getScrollChild(view);
 
         while (scrolledView instanceof IConsecutiveScroller) {
             consecutiveView = scrolledView;
@@ -326,6 +335,27 @@ public class ScrollUtils {
         }
 
         return scrolledView;
+    }
+
+    /**
+     * 如果通过layout_scrollChild指定的滑动子view，则返回子view，否则返回view
+     *
+     * @param view
+     * @return
+     */
+    static View getScrollChild(View view) {
+        if (view != null) {
+            ViewGroup.LayoutParams lp = view.getLayoutParams();
+
+            if (lp instanceof ConsecutiveScrollerLayout.LayoutParams) {
+                int childId = ((ConsecutiveScrollerLayout.LayoutParams) lp).scrollChild;
+                View child = view.findViewById(childId);
+                if (child != null) {
+                    return child;
+                }
+            }
+        }
+        return view;
     }
 
     static boolean startInterceptRequestLayout(RecyclerView view) {

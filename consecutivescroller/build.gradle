@@ -4,12 +4,12 @@ group='com.github.donkingliang' // 指定group，com.github.<用户名>
 
 android {
     compileSdkVersion 29
-    buildToolsVersion "29.0.2"
+    buildToolsVersion "29.0.3"
 
 
     defaultConfig {
         minSdkVersion 19
-        targetSdkVersion 29
+        targetSdkVersion 30
         versionCode 1
         versionName "1.0"
 
@@ -28,7 +28,7 @@ android {
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    compileOnly 'androidx.appcompat:appcompat:1.0.2'
+    compileOnly 'androidx.appcompat:appcompat:1.2.0'
     compileOnly 'androidx.recyclerview:recyclerview:1.0.0'
     compileOnly 'androidx.viewpager2:viewpager2:1.1.0-alpha01'
 }

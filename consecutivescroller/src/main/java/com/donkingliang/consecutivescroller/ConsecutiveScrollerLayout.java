@@ -276,9 +276,10 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
 
         // 去掉子View的滚动条。选择在这里做这个操作，而不是在onFinishInflate方法中完成，是为了兼顾用代码add子View的情况
         if (ScrollUtils.isConsecutiveScrollerChild(child)) {
-            disableChildScroll(child);
-            if (child instanceof IConsecutiveScroller) {
-                List<View> views = ((IConsecutiveScroller) child).getScrolledViews();
+            View scrollChild = ScrollUtils.getScrollChild(child);
+            disableChildScroll(scrollChild);
+            if (scrollChild instanceof IConsecutiveScroller) {
+                List<View> views = ((IConsecutiveScroller) scrollChild).getScrolledViews();
                 if (views != null && !views.isEmpty()) {
                     int size = views.size();
                     for (int i = 0; i < size; i++) {
@@ -1300,17 +1301,17 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                 continue;
             }
             if (ScrollUtils.isConsecutiveScrollerChild(child)) {
-                if (child instanceof IConsecutiveScroller) {
-                    List<View> views = ((IConsecutiveScroller) child).getScrolledViews();
+                View scrollChild = ScrollUtils.getScrollChild(child);
+                if (scrollChild instanceof IConsecutiveScroller) {
+                    List<View> views = ((IConsecutiveScroller) scrollChild).getScrolledViews();
                     if (views != null && !views.isEmpty()) {
                         int size = views.size();
                         for (int c = 0; c < size; c++) {
                             scrollChildContentToBottom(views.get(c));
                         }
                     }
-
                 } else {
-                    scrollChildContentToBottom(child);
+                    scrollChildContentToBottom(scrollChild);
                 }
             }
         }
@@ -1324,8 +1325,9 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                 if (i == getChildCount() - 1 && child.getHeight() < this.getHeight() && getScrollY() >= mScrollRange) {
                     continue;
                 }
-                if (child instanceof IConsecutiveScroller) {
-                    List<View> views = ((IConsecutiveScroller) child).getScrolledViews();
+                View scrollChild = ScrollUtils.getScrollChild(child);
+                if (scrollChild instanceof IConsecutiveScroller) {
+                    List<View> views = ((IConsecutiveScroller) scrollChild).getScrolledViews();
                     if (views != null && !views.isEmpty()) {
                         int size = views.size();
                         for (int c = 0; c < size; c++) {
@@ -1333,7 +1335,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                         }
                     }
                 } else {
-                    scrollChildContentToTop(child);
+                    scrollChildContentToTop(scrollChild);
                 }
             }
         }
@@ -1983,6 +1985,8 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
          */
         public boolean isSink = false;
 
+        public int scrollChild;
+
         /**
          * 子view与父布局的对齐方式
          */
@@ -2031,6 +2035,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                 isSink = a.getBoolean(R.styleable.ConsecutiveScrollerLayout_Layout_layout_isSink, false);
                 int type = a.getInt(R.styleable.ConsecutiveScrollerLayout_Layout_layout_align, 1);
                 align = Align.get(type);
+                scrollChild = a.getResourceId(R.styleable.ConsecutiveScrollerLayout_Layout_layout_scrollChild, 0);
             } catch (Exception e) {
                 e.printStackTrace();
             } finally {
