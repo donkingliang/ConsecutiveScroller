@@ -5,11 +5,16 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
+    <com.scwang.smartrefresh.layout.header.ClassicsHeader
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
+
     <com.donkingliang.consecutivescroller.ConsecutiveScrollerLayout
         android:id="@+id/scrollerLayout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:scrollbars="vertical">
+        android:scrollbars="vertical"
+        app:autoAdjustHeightAtBottomView="true">
 
         <TextView
             android:id="@+id/text"
@@ -35,7 +40,11 @@
         <com.donkingliang.consecutivescroller.ConsecutiveViewPager
             android:id="@+id/viewPager"
             android:layout_width="match_parent"
-            android:layout_height="match_parent" />
+            android:layout_height="match_parent"/>
 
     </com.donkingliang.consecutivescroller.ConsecutiveScrollerLayout>
+
+    <com.scwang.smartrefresh.layout.footer.ClassicsFooter
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
 </com.scwang.smartrefresh.layout.SmartRefreshLayout>

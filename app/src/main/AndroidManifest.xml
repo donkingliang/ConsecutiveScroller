@@ -12,6 +12,7 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity android:name=".ConsecutiveActivity"/>
+        <activity android:name=".ScrollChildActivity"/>
         <activity android:name=".StickyActivity" />
         <activity android:name=".SinkStickyActivity" />
         <activity android:name=".SampleActivity" />

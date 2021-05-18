@@ -6,7 +6,6 @@ import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
-import android.view.View;
 import android.widget.TextView;
 
 import com.donkingliang.consecutivescroller.ConsecutiveScrollerLayout;
@@ -50,13 +49,6 @@ public class ViewPagerActivity extends AppCompatActivity {
         viewPager.setAdapter(mAdapter);
         tabLayout.setupWithViewPager(viewPager);
 
-        tabLayout.post(new Runnable() {
-            @Override
-            public void run() {
-                viewPager.setAdjustHeight(tabLayout.getHeight());
-            }
-        });
-
         refreshLayout.setOnRefreshLoadMoreListener(new OnRefreshLoadMoreListener() {
             @Override
             public void onLoadMore(@NonNull RefreshLayout r) {
@@ -67,12 +59,7 @@ public class ViewPagerActivity extends AppCompatActivity {
 
             @Override
             public void onRefresh(@NonNull RefreshLayout r) {
-                refreshLayout.postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        refreshLayout.finishRefresh();
-                    }
-                }, 5000);
+                refreshLayout.finishRefresh(5000);
             }
         });
 
@@ -80,6 +67,7 @@ public class ViewPagerActivity extends AppCompatActivity {
             @Override
             public void onFooterMoving(RefreshFooter footer, boolean isDragging, float percent, int offset, int footerHeight, int maxDragHeight) {
                 // 上拉加载时，保证吸顶头部不被推出屏幕。
+                Log.e("eee","****" + offset);
                 scrollerLayout.setStickyOffset(offset);
             }
         });

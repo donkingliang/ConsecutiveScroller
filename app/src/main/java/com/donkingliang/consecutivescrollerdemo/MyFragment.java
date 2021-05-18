@@ -41,12 +41,6 @@ public class MyFragment extends Fragment {
 
     public void onLoadMore(final SmartRefreshLayout layout){
         // 模拟加载5秒钟
-        layout.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                // 加载完成
-                layout.finishLoadMore();
-            }
-        },5000);
+        layout.finishLoadMore(5000);
     }
 }

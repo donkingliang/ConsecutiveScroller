@@ -139,6 +139,18 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
     private boolean isPermanent;
 
     /**
+     * 自动调整底部view的高度，使它不被吸顶布局覆盖。
+     * 为true时，底部view的最大高度不大于 (父布局高度 - (当前吸顶view高度总高度 + mAdjustHeightOffset))
+     */
+    private boolean mAutoAdjustHeightAtBottomView;
+
+    /**
+     * 自动调整底部view的高度时，额外的偏移量
+     * 底部view需要调整高度 = 当前吸顶view高度总高度 + mAdjustHeightOffset
+     */
+    private int mAdjustHeightOffset = 0;
+
+    /**
      * 吸顶view到顶部的偏移量
      */
     private int mStickyOffset = 0;
@@ -228,6 +240,9 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
         try {
             a = context.obtainStyledAttributes(attrs, R.styleable.ConsecutiveScrollerLayout);
             isPermanent = a.getBoolean(R.styleable.ConsecutiveScrollerLayout_isPermanent, false);
+            mStickyOffset = a.getDimensionPixelOffset(R.styleable.ConsecutiveScrollerLayout_stickyOffset, 0);
+            mAutoAdjustHeightAtBottomView = a.getBoolean(R.styleable.ConsecutiveScrollerLayout_autoAdjustHeightAtBottomView, false);
+            mAdjustHeightOffset = a.getDimensionPixelOffset(R.styleable.ConsecutiveScrollerLayout_adjustHeightOffset, 0);
         } finally {
             if (a != null) {
                 a.recycle();
@@ -260,9 +275,10 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
 
         // 去掉子View的滚动条。选择在这里做这个操作，而不是在onFinishInflate方法中完成，是为了兼顾用代码add子View的情况
         if (ScrollUtils.isConsecutiveScrollerChild(child)) {
-            disableChildScroll(child);
-            if (child instanceof IConsecutiveScroller) {
-                List<View> views = ((IConsecutiveScroller) child).getScrolledViews();
+            View scrollChild = ScrollUtils.getScrollChild(child);
+            disableChildScroll(scrollChild);
+            if (scrollChild instanceof IConsecutiveScroller) {
+                List<View> views = ((IConsecutiveScroller) scrollChild).getScrolledViews();
                 if (views != null && !views.isEmpty()) {
                     int size = views.size();
                     for (int i = 0; i < size; i++) {
@@ -301,7 +317,16 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
         int count = children.size();
         for (int i = 0; i < count; i++) {
             View child = children.get(i);
-            measureChildWithMargins(child, widthMeasureSpec, 0, heightMeasureSpec, 0);
+
+            // 父布局额外占用的高度空间，在测量子view时，子view的最大高度不大于父view的最大可用高度-heightUsed。
+            int heightUsed = 0;
+
+            // 测量底部view，并且需要自动调整高度时，计算吸顶部分占用的空间高度，作为测量子view的条件。
+            if (mAutoAdjustHeightAtBottomView && child == getChildAt(getChildCount() - 1)) {
+                heightUsed = getAdjustHeight();
+            }
+
+            measureChildWithMargins(child, widthMeasureSpec, 0, heightMeasureSpec, heightUsed);
             contentWidth = Math.max(contentWidth, getContentWidth(child));
             contentHeight += child.getMeasuredHeight();
         }
@@ -310,9 +335,45 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                 measureSize(heightMeasureSpec, contentHeight + getPaddingTop() + getPaddingBottom()));
     }
 
+    /**
+     * 返回底部view需要调整的高度
+     * 普通吸顶模式：最后的吸顶view高度 + mAdjustHeightOffset
+     * 常驻吸顶模式：所有吸顶view高度 + mAdjustHeightOffset
+     * 需要过滤下沉吸顶
+     *
+     * @return
+     */
+    private int getAdjustHeight() {
+        List<View> children = getStickyChildren();
+
+        int adjustHeight = mAdjustHeightOffset;
+
+        int count = children.size();
+        if (isPermanent) {
+            // 常驻吸顶模式
+            for (int i = 0; i < count; i++) {
+                View child = children.get(i);
+                if (!isSink(child)) { // 过滤下沉吸顶View
+                    adjustHeight += child.getMeasuredHeight();
+                }
+            }
+        } else {
+            // 普通吸顶模式
+            for (int i = count - 1; i >= 0; i--) {
+                View child = children.get(i);
+                if (!isSink(child)) { // 过滤下沉吸顶View
+                    adjustHeight += child.getMeasuredHeight();
+                    break;
+                }
+            }
+        }
+
+        return adjustHeight;
+    }
+
     private int getContentWidth(View child) {
         int contentWidth = child.getMeasuredWidth();
-        ViewGroup.MarginLayoutParams params = (LayoutParams) child.getLayoutParams();
+        MarginLayoutParams params = (LayoutParams) child.getLayoutParams();
 
         contentWidth += params.leftMargin;
         contentWidth += params.rightMargin;
@@ -415,7 +476,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
     }
 
     private void resetScrollToTopView() {
-        mScrollToTopView = findScrollToTopView();
+        mScrollToTopView = findFirstVisibleView();
         if (mScrollToTopView != null) {
             mAdjust = getScrollY() - mScrollToTopView.getTop();
         }
@@ -615,7 +676,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
             case MotionEvent.ACTION_UP:
                 stopNestedScroll(ViewCompat.TYPE_TOUCH);
 
-                if (isBrake && SCROLL_ORIENTATION == SCROLL_NONE){
+                if (isBrake && SCROLL_ORIENTATION == SCROLL_NONE) {
                     return true;
                 }
                 break;
@@ -685,7 +746,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
 
                 final int scrolledDeltaY = mSecondScrollY - oldScrollY;
 
-                if (scrolledDeltaY != 0){
+                if (scrolledDeltaY != 0) {
                     getParent().requestDisallowInterceptTouchEvent(true);
                 }
 
@@ -1174,6 +1235,9 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
      * 布局发生变化，重新检查所有子View是否正确显示
      */
     private void checkLayoutChange(boolean changed, boolean isForce) {
+
+        int y = mSecondScrollY;
+
         if (mScrollToTopView != null && changed) {
             if (indexOfChild(mScrollToTopView) != -1) {
                 scrollSelf(mScrollToTopView.getTop() + mAdjust);
@@ -1181,9 +1245,20 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
         } else {
             scrollSelf(getScrollY());
         }
+
+        checkTargetsScroll(true, isForce);
+
+        // 如果正在显示的子布局和滑动偏移量mScrollToTopView都改变了，则有可能是因为布局发生改变，并且影响到正在显示的布局部分。
+        // scrollTo(0, y)把布局的滑动位置恢复为原来的mScrollToTopView，可以避免正在显示的布局显示异常。
+        // 注意：由于RecyclerView的computeVerticalScrollOffset()方法计算到的不是真实的滑动偏移量，而是根据item平均高度估算的值。
+        // 所以当RecyclerView的item高度不一致时，可能会导致mScrollToTopView计算的偏移量和布局的实际偏移量不一致，从而导致scrollTo(0, y)恢复
+        // 原滑动位置时产生上下偏移的误差。
+        if (y != mSecondScrollY && mScrollToTopView != findFirstVisibleView()) {
+            scrollTo(0, y);
+        }
+
         mScrollToTopView = null;
         mAdjust = 0;
-        checkTargetsScroll(true, isForce);
 
         resetChildren();
         resetSticky();
@@ -1206,47 +1281,52 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
         int index = indexOfChild(target);
 
         if (isLayoutChange) {
-            int bottomOffset = ScrollUtils.getScrollBottomOffset(target);
-            int scrollTopOffset = target.getTop() - getScrollY();
-            if (bottomOffset > 0 && scrollTopOffset < 0) {
-                int offset = Math.min(bottomOffset, -scrollTopOffset);
-                scrollSelf(getScrollY() - offset);
-                scrollChild(target, offset);
+            while (true) {
+                int bottomOffset = ScrollUtils.getScrollBottomOffset(target);
+                int scrollTopOffset = target.getTop() - getScrollY();
+                if (bottomOffset > 0 && scrollTopOffset < 0) {
+                    int offset = Math.min(bottomOffset, -scrollTopOffset);
+                    scrollSelf(getScrollY() - offset);
+                    scrollChild(target, offset);
+                } else {
+                    break;
+                }
             }
         }
 
         for (int i = 0; i < index; i++) {
             final View child = getChildAt(i);
-            if (child.getVisibility() == GONE){
+            if (child.getVisibility() == GONE) {
                 continue;
             }
             if (ScrollUtils.isConsecutiveScrollerChild(child)) {
-                if (child instanceof IConsecutiveScroller) {
-                    List<View> views = ((IConsecutiveScroller) child).getScrolledViews();
+                View scrollChild = ScrollUtils.getScrollChild(child);
+                if (scrollChild instanceof IConsecutiveScroller) {
+                    List<View> views = ((IConsecutiveScroller) scrollChild).getScrolledViews();
                     if (views != null && !views.isEmpty()) {
                         int size = views.size();
                         for (int c = 0; c < size; c++) {
                             scrollChildContentToBottom(views.get(c));
                         }
                     }
-
                 } else {
-                    scrollChildContentToBottom(child);
+                    scrollChildContentToBottom(scrollChild);
                 }
             }
         }
 
         for (int i = index + 1; i < getChildCount(); i++) {
             final View child = getChildAt(i);
-            if (child.getVisibility() == GONE){
+            if (child.getVisibility() == GONE) {
                 continue;
             }
             if (ScrollUtils.isConsecutiveScrollerChild(child)) {
                 if (i == getChildCount() - 1 && child.getHeight() < this.getHeight() && getScrollY() >= mScrollRange) {
                     continue;
                 }
-                if (child instanceof IConsecutiveScroller) {
-                    List<View> views = ((IConsecutiveScroller) child).getScrolledViews();
+                View scrollChild = ScrollUtils.getScrollChild(child);
+                if (scrollChild instanceof IConsecutiveScroller) {
+                    List<View> views = ((IConsecutiveScroller) scrollChild).getScrolledViews();
                     if (views != null && !views.isEmpty()) {
                         int size = views.size();
                         for (int c = 0; c < size; c++) {
@@ -1254,7 +1334,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                         }
                     }
                 } else {
-                    scrollChildContentToTop(child);
+                    scrollChildContentToTop(scrollChild);
                 }
             }
         }
@@ -1567,8 +1647,8 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
     private void stickyChild(View child, int offset) {
         child.setY(getStickyY() - offset);
 
-//        // 把View设置为可点击的，避免吸顶View与其他子View重叠是，触摸事件透过吸顶View传递给下面的View，
-//        // 导致ConsecutiveScrollerLayout追踪布局的滑动出现偏差
+        // 把View设置为可点击的，避免吸顶View与其他子View重叠是，触摸事件透过吸顶View传递给下面的View，
+        // 导致ConsecutiveScrollerLayout追踪布局的滑动出现偏差
         child.setClickable(true);
     }
 
@@ -1658,19 +1738,6 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
         return computeVerticalScrollOffset();
     }
 
-    private View findScrollToTopView() {
-        int offset = getScrollY() + getPaddingTop();
-        List<View> children = getNonGoneChildren();
-        int count = children.size();
-        for (int i = 0; i < count; i++) {
-            View child = children.get(i);
-            if (child.getTop() <= offset && child.getBottom() >= offset) {
-                return child;
-            }
-        }
-        return null;
-    }
-
     /**
      * 找到当前显示的第一个View
      *
@@ -1721,14 +1788,11 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
             boolean isScrollTop = getScrollY() <= 0 && !ScrollUtils.canScrollVertically(child, -1);
 
             if (isScrollTop) {
-                for (int i = 0; i < size; i++) {
+                for (int i = size - 1; i >= 0; i--) {
                     View view = children.get(i);
-                    if (view instanceof ConsecutiveViewPager) {
-                        ConsecutiveViewPager viewPager = (ConsecutiveViewPager) view;
-                        if (viewPager.getAdjustHeight() > 0 && ScrollUtils.isConsecutiveScrollerChild(viewPager)
-                                && ScrollUtils.canScrollVertically(viewPager, -1)) {
-                            return false;
-                        }
+                    if (ScrollUtils.isConsecutiveScrollerChild(view)
+                            && ScrollUtils.canScrollVertically(view, -1)) {
+                        return false;
                     }
                 }
             }
@@ -1888,7 +1952,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
         return false;
     }
 
-    public static class LayoutParams extends ViewGroup.MarginLayoutParams {
+    public static class LayoutParams extends MarginLayoutParams {
 
         /**
          * 是否与父布局整体滑动，设置为false时，父布局不会拦截它的事件，滑动事件将由子view处理。
@@ -1919,6 +1983,8 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
          * 如果设置了下沉模式，则会相反，view在吸顶时会显示在下层，被其他布局覆盖，隐藏在下面。
          */
         public boolean isSink = false;
+
+        public int scrollChild;
 
         /**
          * 子view与父布局的对齐方式
@@ -1968,6 +2034,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                 isSink = a.getBoolean(R.styleable.ConsecutiveScrollerLayout_Layout_layout_isSink, false);
                 int type = a.getInt(R.styleable.ConsecutiveScrollerLayout_Layout_layout_align, 1);
                 align = Align.get(type);
+                scrollChild = a.getResourceId(R.styleable.ConsecutiveScrollerLayout_Layout_layout_scrollChild, 0);
             } catch (Exception e) {
                 e.printStackTrace();
             } finally {
@@ -2103,6 +2170,28 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
         return offset;
     }
 
+    public boolean isAutoAdjustHeightAtBottomView() {
+        return mAutoAdjustHeightAtBottomView;
+    }
+
+    public void setAutoAdjustHeightAtBottomView(boolean autoAdjustHeightAtBottomView) {
+        if (mAutoAdjustHeightAtBottomView != autoAdjustHeightAtBottomView) {
+            mAutoAdjustHeightAtBottomView = autoAdjustHeightAtBottomView;
+            requestLayout();
+        }
+    }
+
+    public int getAdjustHeightOffset() {
+        return mAdjustHeightOffset;
+    }
+
+    public void setAdjustHeightOffset(int adjustHeightOffset) {
+        if (mAdjustHeightOffset != adjustHeightOffset) {
+            mAdjustHeightOffset = adjustHeightOffset;
+            requestLayout();
+        }
+    }
+
     /**
      * 设置吸顶常驻
      *
@@ -2111,7 +2200,11 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
     public void setPermanent(boolean isPermanent) {
         if (this.isPermanent != isPermanent) {
             this.isPermanent = isPermanent;
-            resetSticky();
+            if (mAutoAdjustHeightAtBottomView) {
+                requestLayout();
+            } else {
+                resetSticky();
+            }
         }
     }
 

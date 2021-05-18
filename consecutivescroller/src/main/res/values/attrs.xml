@@ -11,8 +11,12 @@
             <enum name="RIGHT" value="2" />
             <enum name="CENTER" value="3" />
         </attr>
+        <attr name="layout_scrollChild" format="reference"/>
     </declare-styleable>
     <declare-styleable name="ConsecutiveScrollerLayout">
         <attr name="isPermanent" format="boolean"/>
+        <attr name="stickyOffset" format="dimension"/>
+        <attr name="autoAdjustHeightAtBottomView" format="boolean"/>
+        <attr name="adjustHeightOffset" format="dimension"/>
     </declare-styleable>
 </resources>

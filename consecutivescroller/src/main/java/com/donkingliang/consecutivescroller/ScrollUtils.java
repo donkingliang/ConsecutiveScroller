@@ -31,7 +31,10 @@ public class ScrollUtils {
         try {
             Method method = View.class.getDeclaredMethod("computeVerticalScrollOffset");
             method.setAccessible(true);
-            return (int) method.invoke(scrolledView);
+            Object o = method.invoke(scrolledView);
+            if (o != null){
+                return (int) o;
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -48,7 +51,10 @@ public class ScrollUtils {
         try {
             Method method = View.class.getDeclaredMethod("computeVerticalScrollRange");
             method.setAccessible(true);
-            return (int) method.invoke(scrolledView);
+            Object o = method.invoke(scrolledView);
+            if (o != null){
+                return (int) o;
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -65,7 +71,10 @@ public class ScrollUtils {
         try {
             Method method = View.class.getDeclaredMethod("computeVerticalScrollExtent");
             method.setAccessible(true);
-            return (int) method.invoke(scrolledView);
+            Object o = method.invoke(scrolledView);
+            if (o != null){
+                return (int) o;
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -123,7 +132,7 @@ public class ScrollUtils {
     static boolean canScrollVertically(View view, int direction) {
         View scrolledView = getScrolledView(view);
 
-        if (scrolledView.getVisibility() == View.GONE){
+        if (scrolledView.getVisibility() == View.GONE) {
             // 隐藏状态，不能滑动
             return false;
         }
@@ -141,10 +150,10 @@ public class ScrollUtils {
             if (scrolledView instanceof RecyclerView) {
                 RecyclerView recyclerView = (RecyclerView) scrolledView;
 
-                if (recyclerView.canScrollHorizontally(1) || recyclerView.canScrollVertically(-1)){
+                if (recyclerView.canScrollHorizontally(1) || recyclerView.canScrollVertically(-1)) {
                     // 如果recyclerView可以水平滑动，并且使用canScrollVertically判断不能垂直滑动，这认定是不能垂直滑动的。
                     // 这样做既兼顾了recyclerView同时水平、垂直滑动的情况，又保证了垂直滑动的判断是通过自定义的方式判断的。
-                    if (!recyclerView.canScrollVertically(direction)){
+                    if (!recyclerView.canScrollVertically(direction)) {
                         return false;
                     }
                 }
@@ -196,7 +205,7 @@ public class ScrollUtils {
      * @return
      */
     static List<View> getTouchViews(View rootView, int touchX, int touchY) {
-        List views = new ArrayList();
+        List<View> views = new ArrayList<>();
         addTouchViews(views, rootView, touchX, touchY);
         return views;
     }
@@ -241,7 +250,7 @@ public class ScrollUtils {
     }
 
     static int getRawX(View rootView, MotionEvent ev, int pointerIndex) {
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             return (int) ev.getRawX(pointerIndex);
         } else {
             int[] position = new int[2];
@@ -252,7 +261,7 @@ public class ScrollUtils {
     }
 
     static int getRawY(View rootView, MotionEvent ev, int pointerIndex) {
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             return (int) ev.getRawY(pointerIndex);
         } else {
             int[] position = new int[2];
@@ -292,7 +301,6 @@ public class ScrollUtils {
      * @return
      */
     static boolean isConsecutiveScrollerChild(View view) {
-
         if (view != null) {
             ViewGroup.LayoutParams lp = view.getLayoutParams();
 
@@ -311,9 +319,10 @@ public class ScrollUtils {
      * @return
      */
     static View getScrolledView(View view) {
-
         View consecutiveView = null;
-        View scrolledView = view;
+
+        // 先处理layout_scrollChild指定滑动view的情况
+        View scrolledView = getScrollChild(view);
 
         while (scrolledView instanceof IConsecutiveScroller) {
             consecutiveView = scrolledView;
@@ -325,6 +334,27 @@ public class ScrollUtils {
         }
 
         return scrolledView;
+    }
+
+    /**
+     * 如果通过layout_scrollChild指定的滑动子view，则返回子view，否则返回view
+     *
+     * @param view
+     * @return
+     */
+    static View getScrollChild(View view) {
+        if (view != null) {
+            ViewGroup.LayoutParams lp = view.getLayoutParams();
+
+            if (lp instanceof ConsecutiveScrollerLayout.LayoutParams) {
+                int childId = ((ConsecutiveScrollerLayout.LayoutParams) lp).scrollChild;
+                View child = view.findViewById(childId);
+                if (child != null) {
+                    return child;
+                }
+            }
+        }
+        return view;
     }
 
     static boolean startInterceptRequestLayout(RecyclerView view) {

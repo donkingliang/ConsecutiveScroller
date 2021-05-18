@@ -82,10 +82,17 @@ public class ConsecutiveViewPager extends ViewPager implements IConsecutiveScrol
         return false;
     }
 
+    /**
+     * @deprecated
+     */
     public int getAdjustHeight() {
         return mAdjustHeight;
     }
 
+    /**
+     * @deprecated 如果你想调整ViewPager的高度，使它不被顶部吸顶view或者其他布局覆盖，
+     * 请使用ConsecutiveScrollerLayout的autoAdjustHeightAtBottomView和adjustHeightOffset属性。
+     */
     public void setAdjustHeight(int adjustHeight) {
         if (mAdjustHeight != adjustHeight) {
             mAdjustHeight = adjustHeight;
