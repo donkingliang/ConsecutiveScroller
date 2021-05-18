@@ -14,7 +14,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:scrollbars="vertical"
-        app:autoAdjustHeightOnBottomView="true">
+        app:autoAdjustHeightAtBottomView="true">
 
         <TextView
             android:id="@+id/text"

@@ -143,7 +143,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
      * 自动调整底部view的高度，使它不被吸顶布局覆盖。
      * 为true时，底部view的最大高度不大于 (父布局高度 - (当前吸顶view高度总高度 + mAdjustHeightOffset))
      */
-    private boolean mAutoAdjustHeightOnBottomView;
+    private boolean mAutoAdjustHeightAtBottomView;
 
     /**
      * 自动调整底部view的高度时，额外的偏移量
@@ -242,7 +242,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
             a = context.obtainStyledAttributes(attrs, R.styleable.ConsecutiveScrollerLayout);
             isPermanent = a.getBoolean(R.styleable.ConsecutiveScrollerLayout_isPermanent, false);
             mStickyOffset = a.getDimensionPixelOffset(R.styleable.ConsecutiveScrollerLayout_stickyOffset, 0);
-            mAutoAdjustHeightOnBottomView = a.getBoolean(R.styleable.ConsecutiveScrollerLayout_autoAdjustHeightOnBottomView, false);
+            mAutoAdjustHeightAtBottomView = a.getBoolean(R.styleable.ConsecutiveScrollerLayout_autoAdjustHeightAtBottomView, false);
             mAdjustHeightOffset = a.getDimensionPixelOffset(R.styleable.ConsecutiveScrollerLayout_adjustHeightOffset, 0);
         } finally {
             if (a != null) {
@@ -323,7 +323,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
             int heightUsed = 0;
 
             // 测量底部view，并且需要自动调整高度时，计算吸顶部分占用的空间高度，作为测量子view的条件。
-            if (mAutoAdjustHeightOnBottomView && child == getChildAt(getChildCount() - 1)) {
+            if (mAutoAdjustHeightAtBottomView && child == getChildAt(getChildCount() - 1)) {
                 heightUsed = getAdjustHeight();
             }
 
@@ -2171,13 +2171,13 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
         return offset;
     }
 
-    public boolean isAutoAdjustHeightOnBottomView() {
-        return mAutoAdjustHeightOnBottomView;
+    public boolean isAutoAdjustHeightAtBottomView() {
+        return mAutoAdjustHeightAtBottomView;
     }
 
-    public void setAutoAdjustHeightOnBottomView(boolean autoAdjustHeightOnBottomView) {
-        if (mAutoAdjustHeightOnBottomView != autoAdjustHeightOnBottomView) {
-            mAutoAdjustHeightOnBottomView = autoAdjustHeightOnBottomView;
+    public void setAutoAdjustHeightAtBottomView(boolean autoAdjustHeightAtBottomView) {
+        if (mAutoAdjustHeightAtBottomView != autoAdjustHeightAtBottomView) {
+            mAutoAdjustHeightAtBottomView = autoAdjustHeightAtBottomView;
             requestLayout();
         }
     }
@@ -2201,7 +2201,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
     public void setPermanent(boolean isPermanent) {
         if (this.isPermanent != isPermanent) {
             this.isPermanent = isPermanent;
-            if (mAutoAdjustHeightOnBottomView) {
+            if (mAutoAdjustHeightAtBottomView) {
                 requestLayout();
             } else {
                 resetSticky();

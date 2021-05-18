@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     app:isPermanent="true"
     android:scrollbars="vertical"
-    app:autoAdjustHeightOnBottomView="true">
+    app:autoAdjustHeightAtBottomView="true">
 
     <TextView
         android:layout_width="match_parent"
