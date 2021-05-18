@@ -2160,10 +2160,9 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
      */
     private int getViewsScrollOffset(int index) {
         int offset = 0;
-        List<View> children = getNonGoneChildren();
-        int count = children.size();
+        int count = getChildCount();
         for (int i = index; i < count; i++) {
-            View child = children.get(i);
+            View child = getChildAt(i);
             if (child.getVisibility() != GONE && ScrollUtils.isConsecutiveScrollerChild(child)) {
                 offset += ScrollUtils.computeVerticalScrollOffset(child);
             }
