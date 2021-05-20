@@ -720,14 +720,15 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                 mScrollConsumed[1] = 0;
                 int y = (int) ev.getY(pointerIndex);
                 int deltaY = mTouchY - y;
+                mTouchY = y;
                 if (dispatchNestedPreScroll(0, deltaY, mScrollConsumed, mScrollOffset, ViewCompat.TYPE_TOUCH)) {
                     deltaY -= mScrollConsumed[1];
                     ev.offsetLocation(0, mScrollOffset[1]);
                     mNestedYOffset += mScrollOffset[1];
+                    mTouchY -= mScrollOffset[1];
                     getParent().requestDisallowInterceptTouchEvent(true);
                 }
 
-                mTouchY = y - mScrollOffset[1];
                 int oldScrollY = mSecondScrollY;
 
                 if (mScrollState != SCROLL_STATE_DRAGGING) {
