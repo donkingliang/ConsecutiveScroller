@@ -29,7 +29,7 @@
            android:layout_marginTop="30dp"
            android:textColor="@android:color/white"
            android:textSize="16sp"
-           android:text="这是个下沉的吸顶view，它不会被推出屏幕，而且覆盖隐藏在其他布局下面。"/>
+           android:text="这是个下沉的吸顶view，它不会被推出屏幕，而是覆盖隐藏在其他布局下面。"/>
 
    </FrameLayout>
 
