@@ -323,9 +323,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
             int heightUsed = 0;
 
             // 测量底部view，并且需要自动调整高度时，计算吸顶部分占用的空间高度，作为测量子view的条件。
-            if (mAutoAdjustHeightAtBottomView && child == getChildAt(getChildCount() - 1)) {
-                heightUsed = getAdjustHeight();
-            }
+            heightUsed = getAdjustHeightForChild(child);
 
             measureChildWithMargins(child, widthMeasureSpec, 0, heightMeasureSpec, heightUsed);
             contentWidth = Math.max(contentWidth, getContentWidth(child));
@@ -334,6 +332,20 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
 
         setMeasuredDimension(measureSize(widthMeasureSpec, contentWidth + getPaddingLeft() + getPaddingRight()),
                 measureSize(heightMeasureSpec, contentHeight + getPaddingTop() + getPaddingBottom()));
+    }
+
+    /**
+     * 返回底部view需要调整的高度
+     * 只有mAutoAdjustHeightAtBottomView=true，并且child是底部view时有值，否则返回0
+     *
+     * @param child
+     * @return
+     */
+    private int getAdjustHeightForChild(View child) {
+        if (mAutoAdjustHeightAtBottomView && child == getChildAt(getChildCount() - 1)) {
+            return getAdjustHeight();
+        }
+        return 0;
     }
 
     /**
@@ -1039,6 +1051,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
             if (mScrollToIndex != -1) {
                 View view = getChildAt(mScrollToIndex);
                 scrollAnchor = view.getTop() - mScrollToIndexWithOffset;
+                scrollAnchor -= getAdjustHeightForChild(view);
                 if (mScrollToIndexWithOffset < 0) {
                     viewScrollOffset = getViewsScrollOffset(mScrollToIndex);
                 }
@@ -1105,6 +1118,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
             if (mScrollToIndex != -1) {
                 View view = getChildAt(mScrollToIndex);
                 scrollAnchor = view.getTop() - mScrollToIndexWithOffset;
+                scrollAnchor -= getAdjustHeightForChild(view);
                 viewScrollOffset = getViewsScrollOffset(mScrollToIndex);
                 if (getScrollY() + getPaddingTop() + viewScrollOffset <= scrollAnchor || isScrollTop()) {
                     mScrollToIndex = -1;
@@ -2069,6 +2083,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
         if (scrollToIndex != -1) {
 
             int scrollAnchor = view.getTop() - offset;
+            scrollAnchor -= getAdjustHeightForChild(view);
 
             // 滑动方向。
             int scrollOrientation = 0;
@@ -2078,6 +2093,8 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                     scrollOrientation = -1;
                 } else if (getScrollY() + getPaddingTop() < scrollAnchor) {
                     scrollOrientation = 1;
+                } else if (ScrollUtils.canScrollVertically(view, -1)) {
+                    scrollOrientation = -1;
                 }
             } else {
                 int viewScrollOffset = getViewsScrollOffset(scrollToIndex);
@@ -2119,6 +2136,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
         if (scrollToIndex != -1) {
 
             int scrollAnchor = view.getTop() - offset;
+            scrollAnchor -= getAdjustHeightForChild(view);
 
             // 滑动方向。
             int scrollOrientation = 0;
@@ -2128,6 +2146,8 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                     scrollOrientation = -1;
                 } else if (getScrollY() + getPaddingTop() < scrollAnchor) {
                     scrollOrientation = 1;
+                } else if (ScrollUtils.canScrollVertically(view, -1)) {
+                    scrollOrientation = -1;
                 }
             } else {
                 int viewScrollOffset = getViewsScrollOffset(scrollToIndex);
