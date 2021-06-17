@@ -31,12 +31,12 @@ allprojects {
 在Module的build.gradle在添加以下代码
 ```groovy
 // 使用了Androidx
-implementation 'com.github.donkingliang:ConsecutiveScroller:4.5.0'
+implementation 'com.github.donkingliang:ConsecutiveScroller:4.5.1'
 
 // 或者
 
 // 使用Android support包
-implementation 'com.github.donkingliang:ConsecutiveScroller:4.5.0-support'
+implementation 'com.github.donkingliang:ConsecutiveScroller:4.5.1-support'
 ```
 
 ## 使用文档
