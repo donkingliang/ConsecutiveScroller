@@ -57,6 +57,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
      */
     private VelocityTracker mVelocityTracker;
     private VelocityTracker mAdjustVelocityTracker;
+    private int mAdjustYVelocity;
 
     /**
      * MaximumVelocity
@@ -606,11 +607,12 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                 break;
             case MotionEvent.ACTION_CANCEL:
             case MotionEvent.ACTION_UP:
-
                 if (mAdjustVelocityTracker != null) {
                     mAdjustVelocityTracker.addMovement(vtev);
                     mAdjustVelocityTracker.computeCurrentVelocity(1000, mMaximumVelocity);
                     int yVelocity = (int) mAdjustVelocityTracker.getYVelocity();
+                    // 记录AdjustVelocity的fling速度
+                    mAdjustYVelocity = Math.max(-mMaximumVelocity, Math.min(yVelocity, mMaximumVelocity));
                     recycleAdjustVelocityTracker();
                     int touchX = ScrollUtils.getRawX(this, ev, actionIndex);
                     int touchY = ScrollUtils.getRawY(this, ev, actionIndex);
@@ -625,7 +627,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
 
                     if (SCROLL_ORIENTATION == SCROLL_NONE && !ScrollUtils.isConsecutiveScrollParent(this)
                             && isIntercept(ev) && Math.abs(yVelocity) >= mMinimumVelocity) {
-                        fling(-yVelocity);
+                        fling(-mAdjustYVelocity);
                     }
                 }
 
@@ -646,8 +648,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
             case MotionEvent.ACTION_CANCEL:
             case MotionEvent.ACTION_UP:
                 SCROLL_ORIENTATION = SCROLL_NONE;
-                recycleVelocityTracker();
-
+                mAdjustYVelocity = 0;
                 if (mScroller.isFinished()) {
                     setScrollState(SCROLL_STATE_IDLE);
                 }
@@ -807,6 +808,11 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                     mVelocityTracker.computeCurrentVelocity(1000, mMaximumVelocity);
                     int yVelocity = (int) mVelocityTracker.getYVelocity();
                     yVelocity = Math.max(-mMaximumVelocity, Math.min(yVelocity, mMaximumVelocity));
+                    if (yVelocity == 0 && mAdjustYVelocity != 0) {
+                        // 如果VelocityTracker没有检测到fling速度，并且mAdjustYVelocity记录到速度，就已mAdjustYVelocity为准，
+                        // 避免快速上下滑动时，fling失效。
+                        yVelocity = mAdjustYVelocity;
+                    }
                     fling(-yVelocity);
                     recycleVelocityTracker();
                 }
