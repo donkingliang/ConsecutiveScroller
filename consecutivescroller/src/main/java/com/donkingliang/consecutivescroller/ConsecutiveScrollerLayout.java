@@ -450,6 +450,11 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
         sortViews();
     }
 
+    @Override
+    public void requestLayout() {
+        super.requestLayout();
+    }
+
     private void sortViews() {
         List<View> list = new ArrayList<>();
         int count = getChildCount();
@@ -844,7 +849,10 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
     @Override
     protected int getChildDrawingOrder(int childCount, int drawingPosition) {
         if (mViews.size() > drawingPosition) {
-            return indexOfChild(mViews.get(drawingPosition));
+            int index = indexOfChild(mViews.get(drawingPosition));
+            if (index != -1) {
+                return index;
+            }
         }
         return super.getChildDrawingOrder(childCount, drawingPosition);
     }
@@ -942,6 +950,17 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
     @Override
     public void computeScroll() {
         if (mScrollToIndex != -1 && mSmoothScrollOffset != 0) {
+
+            if (mSmoothScrollOffset > 0 && mSmoothScrollOffset < 200){
+                // 逐渐加速
+                mSmoothScrollOffset += 5;
+            }
+
+            if (mSmoothScrollOffset < 0 && mSmoothScrollOffset > -200){
+                // 逐渐加速
+                mSmoothScrollOffset -= 5;
+            }
+
             // 正在平滑滑动到某个子view
             dispatchScroll(mSmoothScrollOffset);
             invalidate();
@@ -2171,9 +2190,9 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                 mScrollToIndexWithOffset = offset;
                 setScrollState(SCROLL_STATE_SETTLING);
                 if (scrollOrientation < 0) {
-                    mSmoothScrollOffset = -200;
+                    mSmoothScrollOffset = -50;
                 } else {
-                    mSmoothScrollOffset = 200;
+                    mSmoothScrollOffset = 50;
                 }
                 invalidate();
             }
