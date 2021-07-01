@@ -56,6 +56,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
      */
     private VelocityTracker mVelocityTracker;
     private VelocityTracker mAdjustVelocityTracker;
+    private int mAdjustYVelocity;
 
     /**
      * MaximumVelocity
@@ -385,7 +386,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
 
     private int getContentWidth(View child) {
         int contentWidth = child.getMeasuredWidth();
-        MarginLayoutParams params = (LayoutParams) child.getLayoutParams();
+        ViewGroup.MarginLayoutParams params = (LayoutParams) child.getLayoutParams();
 
         contentWidth += params.leftMargin;
         contentWidth += params.rightMargin;
@@ -446,6 +447,11 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
         checkLayoutChange(changed, false);
 
         sortViews();
+    }
+
+    @Override
+    public void requestLayout() {
+        super.requestLayout();
     }
 
     private void sortViews() {
@@ -617,15 +623,18 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                 break;
             case MotionEvent.ACTION_CANCEL:
             case MotionEvent.ACTION_UP:
-
                 if (mAdjustVelocityTracker != null) {
                     mAdjustVelocityTracker.addMovement(vtev);
                     mAdjustVelocityTracker.computeCurrentVelocity(1000, mMaximumVelocity);
                     int yVelocity = (int) mAdjustVelocityTracker.getYVelocity();
+                    // 记录AdjustVelocity的fling速度
+                    mAdjustYVelocity = Math.max(-mMaximumVelocity, Math.min(yVelocity, mMaximumVelocity));
                     recycleAdjustVelocityTracker();
                     int touchX = ScrollUtils.getRawX(this, ev, actionIndex);
                     int touchY = ScrollUtils.getRawY(this, ev, actionIndex);
-                    boolean canScrollVerticallyChild = ScrollUtils.canScrollVertically(getTouchTarget(touchX, touchY));
+                    View targetView = getTouchTarget(touchX, touchY);
+                    boolean canScrollVerticallyChild = ScrollUtils.canScrollVertically(targetView);
+                    boolean canScrollHorizontallyChild = ScrollUtils.canScrollHorizontally(targetView);
                     if (SCROLL_ORIENTATION != SCROLL_VERTICAL && canScrollVerticallyChild
                             && Math.abs(yVelocity) >= mMinimumVelocity
                             && !ScrollUtils.isHorizontalScroll(this, touchX, touchY)) {
@@ -634,9 +643,11 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                         ev.setAction(MotionEvent.ACTION_CANCEL);
                     }
 
-                    if (SCROLL_ORIENTATION == SCROLL_NONE && !ScrollUtils.isConsecutiveScrollParent(this)
+                    if (SCROLL_ORIENTATION != SCROLL_VERTICAL && !ScrollUtils.isConsecutiveScrollParent(this)
                             && isIntercept(ev) && Math.abs(yVelocity) >= mMinimumVelocity) {
-                        fling(-yVelocity);
+                        if (SCROLL_ORIENTATION == SCROLL_NONE || !canScrollHorizontallyChild){
+                            fling(-mAdjustYVelocity);
+                        }
                     }
                 }
 
@@ -657,8 +668,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
             case MotionEvent.ACTION_CANCEL:
             case MotionEvent.ACTION_UP:
                 SCROLL_ORIENTATION = SCROLL_NONE;
-                recycleVelocityTracker();
-
+                mAdjustYVelocity = 0;
                 if (mScroller.isFinished()) {
                     setScrollState(SCROLL_STATE_IDLE);
                 }
@@ -818,6 +828,11 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                     mVelocityTracker.computeCurrentVelocity(1000, mMaximumVelocity);
                     int yVelocity = (int) mVelocityTracker.getYVelocity();
                     yVelocity = Math.max(-mMaximumVelocity, Math.min(yVelocity, mMaximumVelocity));
+                    if (yVelocity == 0 && mAdjustYVelocity != 0) {
+                        // 如果VelocityTracker没有检测到fling速度，并且mAdjustYVelocity记录到速度，就已mAdjustYVelocity为准，
+                        // 避免快速上下滑动时，fling失效。
+                        yVelocity = mAdjustYVelocity;
+                    }
                     fling(-yVelocity);
                     recycleVelocityTracker();
                 }
@@ -837,7 +852,10 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
     @Override
     protected int getChildDrawingOrder(int childCount, int drawingPosition) {
         if (mViews.size() > drawingPosition) {
-            return indexOfChild(mViews.get(drawingPosition));
+            int index = indexOfChild(mViews.get(drawingPosition));
+            if (index != -1) {
+                return index;
+            }
         }
         return super.getChildDrawingOrder(childCount, drawingPosition);
     }
@@ -935,11 +953,21 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
     @Override
     public void computeScroll() {
         if (mScrollToIndex != -1 && mSmoothScrollOffset != 0) {
+
+            if (mSmoothScrollOffset > 0 && mSmoothScrollOffset < 200){
+                // 逐渐加速
+                mSmoothScrollOffset += 5;
+            }
+
+            if (mSmoothScrollOffset < 0 && mSmoothScrollOffset > -200){
+                // 逐渐加速
+                mSmoothScrollOffset -= 5;
+            }
+
             // 正在平滑滑动到某个子view
             dispatchScroll(mSmoothScrollOffset);
             invalidate();
         } else {
-
             // fling
             if (mScroller.computeScrollOffset()) {
                 int y = mScroller.getCurrY();
@@ -1967,7 +1995,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
         return false;
     }
 
-    public static class LayoutParams extends MarginLayoutParams {
+    public static class LayoutParams extends ViewGroup.MarginLayoutParams {
 
         /**
          * 是否与父布局整体滑动，设置为false时，父布局不会拦截它的事件，滑动事件将由子view处理。
@@ -2164,9 +2192,9 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                 mScrollToIndexWithOffset = offset;
                 setScrollState(SCROLL_STATE_SETTLING);
                 if (scrollOrientation < 0) {
-                    mSmoothScrollOffset = -200;
+                    mSmoothScrollOffset = -50;
                 } else {
-                    mSmoothScrollOffset = 200;
+                    mSmoothScrollOffset = 50;
                 }
                 invalidate();
             }

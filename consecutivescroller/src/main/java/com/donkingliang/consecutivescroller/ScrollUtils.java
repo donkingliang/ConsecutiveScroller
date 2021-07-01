@@ -111,7 +111,17 @@ public class ScrollUtils {
     }
 
     /**
-     * 是否是可以垂直滚动View。(内容可以滚动，或者本身就是个滚动布局)
+     * 是否是可以水平滚动View。
+     *
+     * @param view
+     * @return
+     */
+    static boolean canScrollHorizontally(View view) {
+        return isConsecutiveScrollerChild(view) && (view.canScrollHorizontally(1) || view.canScrollHorizontally(-1));
+    }
+
+    /**
+     * 是否是可以垂直滚动View。
      *
      * @param view
      * @return
