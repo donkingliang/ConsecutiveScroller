@@ -633,7 +633,9 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                     recycleAdjustVelocityTracker();
                     int touchX = ScrollUtils.getRawX(this, ev, actionIndex);
                     int touchY = ScrollUtils.getRawY(this, ev, actionIndex);
-                    boolean canScrollVerticallyChild = ScrollUtils.canScrollVertically(getTouchTarget(touchX, touchY));
+                    View targetView = getTouchTarget(touchX, touchY);
+                    boolean canScrollVerticallyChild = ScrollUtils.canScrollVertically(targetView);
+                    boolean canScrollHorizontallyChild = ScrollUtils.canScrollHorizontally(targetView);
                     if (SCROLL_ORIENTATION != SCROLL_VERTICAL && canScrollVerticallyChild
                             && Math.abs(yVelocity) >= mMinimumVelocity
                             && !ScrollUtils.isHorizontalScroll(this, touchX, touchY)) {
@@ -642,9 +644,11 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                         ev.setAction(MotionEvent.ACTION_CANCEL);
                     }
 
-                    if (SCROLL_ORIENTATION == SCROLL_NONE && !ScrollUtils.isConsecutiveScrollParent(this)
+                    if (SCROLL_ORIENTATION != SCROLL_VERTICAL && !ScrollUtils.isConsecutiveScrollParent(this)
                             && isIntercept(ev) && Math.abs(yVelocity) >= mMinimumVelocity) {
-                        fling(-mAdjustYVelocity);
+                        if (SCROLL_ORIENTATION == SCROLL_NONE || !canScrollHorizontallyChild){
+                            fling(-mAdjustYVelocity);
+                        }
                     }
                 }
 

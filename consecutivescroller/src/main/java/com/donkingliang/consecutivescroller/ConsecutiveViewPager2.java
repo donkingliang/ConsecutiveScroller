@@ -257,6 +257,16 @@ public class ConsecutiveViewPager2 extends FrameLayout implements IConsecutiveSc
         mViewPager2.unregisterOnPageChangeCallback(callback);
     }
 
+    @Override
+    public boolean canScrollHorizontally(int direction) {
+        return mViewPager2.canScrollHorizontally(direction);
+    }
+
+    @Override
+    public boolean canScrollVertically(int direction) {
+        return mViewPager2.canScrollVertically(direction);
+    }
+
     private static class AttachListener implements OnAttachStateChangeListener {
 
         WeakReference<ConsecutiveViewPager2> reference;
