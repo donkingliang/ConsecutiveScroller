@@ -1126,6 +1126,13 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                 }
             }
 
+            if (mScrollToIndex != -1 && scrollOffset == 0) {
+                mScrollToIndex = -1;
+                mSmoothScrollOffset = 0;
+                mScrollToIndexWithOffset = 0;
+                setScrollState(SCROLL_STATE_IDLE);
+            }
+
         } while (scrollOffset > 0 && remainder > 0);
 
         int newScrollY = computeVerticalScrollOffset();
@@ -1187,6 +1194,13 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                     mSecondScrollY += scrollOffset;
                     remainder = remainder - scrollOffset;
                 }
+            }
+
+            if (mScrollToIndex != -1 && scrollOffset == 0) {
+                mScrollToIndex = -1;
+                mSmoothScrollOffset = 0;
+                mScrollToIndexWithOffset = 0;
+                setScrollState(SCROLL_STATE_IDLE);
             }
 
         } while (scrollOffset < 0 && remainder < 0);
