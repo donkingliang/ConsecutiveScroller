@@ -32,7 +32,7 @@ public class ScrollUtils {
             Method method = View.class.getDeclaredMethod("computeVerticalScrollOffset");
             method.setAccessible(true);
             Object o = method.invoke(scrolledView);
-            if (o != null){
+            if (o != null) {
                 return (int) o;
             }
         } catch (Exception e) {
@@ -52,7 +52,7 @@ public class ScrollUtils {
             Method method = View.class.getDeclaredMethod("computeVerticalScrollRange");
             method.setAccessible(true);
             Object o = method.invoke(scrolledView);
-            if (o != null){
+            if (o != null) {
                 return (int) o;
             }
         } catch (Exception e) {
@@ -72,7 +72,7 @@ public class ScrollUtils {
             Method method = View.class.getDeclaredMethod("computeVerticalScrollExtent");
             method.setAccessible(true);
             Object o = method.invoke(scrolledView);
-            if (o != null){
+            if (o != null) {
                 return (int) o;
             }
         } catch (Exception e) {
@@ -358,9 +358,11 @@ public class ScrollUtils {
 
             if (lp instanceof ConsecutiveScrollerLayout.LayoutParams) {
                 int childId = ((ConsecutiveScrollerLayout.LayoutParams) lp).scrollChild;
-                View child = view.findViewById(childId);
-                if (child != null) {
-                    return child;
+                if (childId != View.NO_ID) {
+                    View child = view.findViewById(childId);
+                    if (child != null) {
+                        return child;
+                    }
                 }
             }
         }

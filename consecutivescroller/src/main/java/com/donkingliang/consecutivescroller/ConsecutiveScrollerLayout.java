@@ -645,7 +645,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
 
                     if (SCROLL_ORIENTATION != SCROLL_VERTICAL && !ScrollUtils.isConsecutiveScrollParent(this)
                             && isIntercept(ev) && Math.abs(yVelocity) >= mMinimumVelocity) {
-                        if (SCROLL_ORIENTATION == SCROLL_NONE || !canScrollHorizontallyChild){
+                        if (SCROLL_ORIENTATION == SCROLL_NONE || !canScrollHorizontallyChild) {
                             fling(-mAdjustYVelocity);
                         }
                     }
@@ -954,12 +954,12 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
     public void computeScroll() {
         if (mScrollToIndex != -1 && mSmoothScrollOffset != 0) {
 
-            if (mSmoothScrollOffset > 0 && mSmoothScrollOffset < 200){
+            if (mSmoothScrollOffset > 0 && mSmoothScrollOffset < 200) {
                 // 逐渐加速
                 mSmoothScrollOffset += 5;
             }
 
-            if (mSmoothScrollOffset < 0 && mSmoothScrollOffset > -200){
+            if (mSmoothScrollOffset < 0 && mSmoothScrollOffset > -200) {
                 // 逐渐加速
                 mSmoothScrollOffset -= 5;
             }
@@ -2091,7 +2091,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                 isSink = a.getBoolean(R.styleable.ConsecutiveScrollerLayout_Layout_layout_isSink, false);
                 int type = a.getInt(R.styleable.ConsecutiveScrollerLayout_Layout_layout_align, 1);
                 align = Align.get(type);
-                scrollChild = a.getResourceId(R.styleable.ConsecutiveScrollerLayout_Layout_layout_scrollChild, 0);
+                scrollChild = a.getResourceId(R.styleable.ConsecutiveScrollerLayout_Layout_layout_scrollChild, View.NO_ID);
             } catch (Exception e) {
                 e.printStackTrace();
             } finally {
