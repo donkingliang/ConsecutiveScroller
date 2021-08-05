@@ -2093,7 +2093,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                 isSink = a.getBoolean(R.styleable.ConsecutiveScrollerLayout_Layout_layout_isSink, false);
                 int type = a.getInt(R.styleable.ConsecutiveScrollerLayout_Layout_layout_align, 1);
                 align = Align.get(type);
-                scrollChild = a.getResourceId(R.styleable.ConsecutiveScrollerLayout_Layout_layout_scrollChild, 0);
+                scrollChild = a.getResourceId(R.styleable.ConsecutiveScrollerLayout_Layout_layout_scrollChild, View.NO_ID);
             } catch (Exception e) {
                 e.printStackTrace();
             } finally {

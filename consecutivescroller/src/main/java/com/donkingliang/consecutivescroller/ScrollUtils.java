@@ -359,9 +359,11 @@ public class ScrollUtils {
 
             if (lp instanceof ConsecutiveScrollerLayout.LayoutParams) {
                 int childId = ((ConsecutiveScrollerLayout.LayoutParams) lp).scrollChild;
-                View child = view.findViewById(childId);
-                if (child != null) {
-                    return child;
+                if (childId != View.NO_ID){
+                    View child = view.findViewById(childId);
+                    if (child != null) {
+                        return child;
+                    }
                 }
             }
         }
