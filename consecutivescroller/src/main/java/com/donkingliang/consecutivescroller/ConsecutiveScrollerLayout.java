@@ -1287,7 +1287,13 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
     }
 
     public void checkLayoutChange() {
-        checkLayoutChange(false, true);
+        postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                checkLayoutChange(false, true);
+            }
+        },20);
+
     }
 
     /**
@@ -1868,9 +1874,21 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
      */
     public boolean isScrollBottom() {
         List<View> children = getEffectiveChildren();
-        if (children.size() > 0) {
+        int size = children.size();
+        if (size > 0) {
             View child = children.get(children.size() - 1);
-            return getScrollY() >= mScrollRange && !ScrollUtils.canScrollVertically(child, 1);
+            boolean isScrollBottom = getScrollY() >= mScrollRange && !ScrollUtils.canScrollVertically(child, 1);
+
+            if (isScrollBottom) {
+                for (int i = size - 1; i >= 0; i--) {
+                    View view = children.get(i);
+                    if (ScrollUtils.isConsecutiveScrollerChild(view)
+                            && ScrollUtils.canScrollVertically(view, 1)) {
+                        return false;
+                    }
+                }
+            }
+            return isScrollBottom;
         }
         return true;
     }
