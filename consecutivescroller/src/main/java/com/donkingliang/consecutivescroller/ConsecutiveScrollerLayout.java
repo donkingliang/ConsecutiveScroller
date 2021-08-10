@@ -16,6 +16,7 @@ import android.widget.EdgeEffect;
 import android.widget.OverScroller;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import androidx.annotation.NonNull;
@@ -77,7 +78,8 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
     private int mTouchY;
     private int mEventX;
     private int mEventY;
-    private float mFixedY;
+
+    private HashMap<Integer, Float> mFixedYMap = new HashMap<>();
 
     /**
      * 记录手指按下时的位置
@@ -99,7 +101,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
      */
     protected OnScrollChangeListener mOnScrollChangeListener;
 
-    private int mActivePointerId;
+    private int mActivePointerId = -1;
 
     private NestedScrollingParentHelper mParentHelper;
     private NestedScrollingChildHelper mChildHelper;
@@ -526,7 +528,14 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
 
         if (SCROLL_ORIENTATION == SCROLL_HORIZONTAL) {
             // 如果是横向滑动，设置ev的y坐标始终为开始的坐标，避免子view自己消费了垂直滑动事件。
-            ev.setLocation(ev.getX(), mFixedY);
+            if (mActivePointerId != -1 && mFixedYMap.get(mActivePointerId) != null) {
+                final int pointerIndex = ev.findPointerIndex(mActivePointerId);
+                if (pointerIndex < 0 || pointerIndex >= ev.getPointerCount()) {
+                    return false;
+                }
+
+                ev.offsetLocation(ev.getX(), mFixedYMap.get(mActivePointerId) - ev.getY(pointerIndex));
+            }
         }
 
         MotionEvent vtev = MotionEvent.obtain(ev);
@@ -546,8 +555,8 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                 checkTargetsScroll(false, false);
                 mTouching = true;
                 SCROLL_ORIENTATION = SCROLL_NONE;
-                mFixedY = ev.getY();
                 mActivePointerId = ev.getPointerId(actionIndex);
+                mFixedYMap.put(mActivePointerId, ev.getY(actionIndex));
                 mEventY = (int) ev.getY(actionIndex);
                 mEventX = (int) ev.getX(actionIndex);
 
@@ -562,6 +571,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                 break;
             case MotionEvent.ACTION_POINTER_DOWN:
                 mActivePointerId = ev.getPointerId(actionIndex);
+                mFixedYMap.put(mActivePointerId, ev.getY(actionIndex));
                 mEventY = (int) ev.getY(actionIndex);
                 mEventX = (int) ev.getX(actionIndex);
                 // 改变滑动的手指，重新询问事件拦截
@@ -592,7 +602,13 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                         if (Math.abs(offsetX) >= mTouchSlop) {
                             SCROLL_ORIENTATION = SCROLL_HORIZONTAL;
                             // 如果是横向滑动，设置ev的y坐标始终为开始的坐标，避免子view自己消费了垂直滑动事件。
-                            ev.setLocation(ev.getX(), mFixedY);
+                            if (mActivePointerId != -1 && mFixedYMap.get(mActivePointerId) != null) {
+                                final int pointerIn = ev.findPointerIndex(mActivePointerId);
+                                if (pointerIn < 0 || pointerIndex >= ev.getPointerCount()) {
+                                    return false;
+                                }
+                                ev.offsetLocation(ev.getX(), mFixedYMap.get(mActivePointerId) - ev.getY(pointerIn));
+                            }
                         }
                     } else {
                         if (Math.abs(offsetY) >= mTouchSlop) {
@@ -610,12 +626,14 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
 
                 break;
             case MotionEvent.ACTION_POINTER_UP:
+                mFixedYMap.remove(ev.getPointerId(actionIndex));
                 if (mActivePointerId == ev.getPointerId(actionIndex)) { // 如果松开的是活动手指, 让还停留在屏幕上的最后一根手指作为活动手指
                     // This was our active pointer going up. Choose a new
                     // active pointer and adjust accordingly.
                     // pointerIndex都是像0, 1, 2这样连续的
                     final int newPointerIndex = actionIndex == 0 ? 1 : 0;
                     mActivePointerId = ev.getPointerId(newPointerIndex);
+                    mFixedYMap.put(mActivePointerId, ev.getY(newPointerIndex));
                     mEventY = (int) ev.getY(newPointerIndex);
                     mEventX = (int) ev.getX(newPointerIndex);
                     mDownLocation[0] = ScrollUtils.getRawX(this, ev, newPointerIndex);
@@ -674,6 +692,8 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
             case MotionEvent.ACTION_UP:
                 SCROLL_ORIENTATION = SCROLL_NONE;
                 mAdjustYVelocity = 0;
+                mFixedYMap.clear();
+                mActivePointerId = -1;
                 if (mScroller.isFinished()) {
                     setScrollState(SCROLL_STATE_IDLE);
                 }
