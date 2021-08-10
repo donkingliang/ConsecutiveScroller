@@ -125,7 +125,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
 
     // 滑动到指定view时，为了防止滑动时间长或者死循环，限制最大循环次数
     private int mCycleCount = 0;
-    private static final int MAX_CYCLE_COUNT = 600;
+    private static final int MAX_CYCLE_COUNT = 1000;
 
     /**
      * 上边界阴影
@@ -145,6 +145,12 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
      * 吸顶view是否常驻，不被推出屏幕
      */
     private boolean isPermanent;
+
+    /**
+     * 禁用子view的水平滑动，如果ConsecutiveScrollerLayout下没有需要水平滑动的子view，应该把它设置为true
+     * 为true时，将不会分发滑动事件给子view，而是有ConsecutiveScrollerLayout处理，可以优化ConsecutiveScrollerLayout的滑动
+     */
+    private boolean disableChildHorizontalScroll = false;
 
     /**
      * 自动调整底部view的高度，使它不被吸顶布局覆盖。
@@ -248,6 +254,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
         try {
             a = context.obtainStyledAttributes(attrs, R.styleable.ConsecutiveScrollerLayout);
             isPermanent = a.getBoolean(R.styleable.ConsecutiveScrollerLayout_isPermanent, false);
+            disableChildHorizontalScroll = a.getBoolean(R.styleable.ConsecutiveScrollerLayout_disableChildHorizontalScroll, false);
             mStickyOffset = a.getDimensionPixelOffset(R.styleable.ConsecutiveScrollerLayout_stickyOffset, 0);
             mAutoAdjustHeightAtBottomView = a.getBoolean(R.styleable.ConsecutiveScrollerLayout_autoAdjustHeightAtBottomView, false);
             mAdjustHeightOffset = a.getDimensionPixelOffset(R.styleable.ConsecutiveScrollerLayout_adjustHeightOffset, 0);
@@ -598,21 +605,27 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                 int offsetX = (int) ev.getX(pointerIndex) - mEventX;
                 if (SCROLL_ORIENTATION == SCROLL_NONE
                         && (isIntercept(ev) || isIntercept(mDownLocation[0], mDownLocation[1]))) {
-                    if (Math.abs(offsetX) > Math.abs(offsetY)) {
-                        if (Math.abs(offsetX) >= mTouchSlop) {
-                            SCROLL_ORIENTATION = SCROLL_HORIZONTAL;
-                            // 如果是横向滑动，设置ev的y坐标始终为开始的坐标，避免子view自己消费了垂直滑动事件。
-                            if (mActivePointerId != -1 && mFixedYMap.get(mActivePointerId) != null) {
-                                final int pointerIn = ev.findPointerIndex(mActivePointerId);
-                                if (pointerIn < 0 || pointerIndex >= ev.getPointerCount()) {
-                                    return false;
-                                }
-                                ev.offsetLocation(ev.getX(), mFixedYMap.get(mActivePointerId) - ev.getY(pointerIn));
-                            }
-                        }
-                    } else {
+                    if (SCROLL_ORIENTATION == SCROLL_NONE && disableChildHorizontalScroll) {
                         if (Math.abs(offsetY) >= mTouchSlop) {
                             SCROLL_ORIENTATION = SCROLL_VERTICAL;
+                        }
+                    } else {
+                        if (Math.abs(offsetX) > Math.abs(offsetY)) {
+                            if (Math.abs(offsetX) >= mTouchSlop) {
+                                SCROLL_ORIENTATION = SCROLL_HORIZONTAL;
+                                // 如果是横向滑动，设置ev的y坐标始终为开始的坐标，避免子view自己消费了垂直滑动事件。
+                                if (mActivePointerId != -1 && mFixedYMap.get(mActivePointerId) != null) {
+                                    final int pointerIn = ev.findPointerIndex(mActivePointerId);
+                                    if (pointerIn < 0 || pointerIndex >= ev.getPointerCount()) {
+                                        return false;
+                                    }
+                                    ev.offsetLocation(ev.getX(), mFixedYMap.get(mActivePointerId) - ev.getY(pointerIn));
+                                }
+                            }
+                        } else {
+                            if (Math.abs(offsetY) >= mTouchSlop) {
+                                SCROLL_ORIENTATION = SCROLL_VERTICAL;
+                            }
                         }
                     }
 

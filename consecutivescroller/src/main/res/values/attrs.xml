@@ -18,5 +18,6 @@
         <attr name="stickyOffset" format="dimension"/>
         <attr name="autoAdjustHeightAtBottomView" format="boolean"/>
         <attr name="adjustHeightOffset" format="dimension"/>
+        <attr name="disableChildHorizontalScroll" format="boolean"/>
     </declare-styleable>
 </resources>
