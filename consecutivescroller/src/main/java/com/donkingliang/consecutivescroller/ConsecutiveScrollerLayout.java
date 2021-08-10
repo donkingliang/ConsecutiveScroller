@@ -121,6 +121,10 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
 
     private int mScrollToIndexWithOffset = 0;
 
+    // 滑动到指定view时，为了防止滑动时间长或者死循环，限制最大循环次数
+    private int mCycleCount = 0;
+    private static final int MAX_CYCLE_COUNT = 600;
+
     /**
      * 上边界阴影
      */
@@ -646,7 +650,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
 
                     if (SCROLL_ORIENTATION != SCROLL_VERTICAL && !ScrollUtils.isConsecutiveScrollParent(this)
                             && isIntercept(ev) && Math.abs(yVelocity) >= mMinimumVelocity) {
-                        if (SCROLL_ORIENTATION == SCROLL_NONE || !canScrollHorizontallyChild){
+                        if (SCROLL_ORIENTATION == SCROLL_NONE || !canScrollHorizontallyChild) {
                             fling(-mAdjustYVelocity);
                         }
                     }
@@ -955,18 +959,19 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
     public void computeScroll() {
         if (mScrollToIndex != -1 && mSmoothScrollOffset != 0) {
 
-            if (mSmoothScrollOffset > 0 && mSmoothScrollOffset < 200){
+            if (mSmoothScrollOffset > 0 && mSmoothScrollOffset < 200) {
                 // 逐渐加速
                 mSmoothScrollOffset += 5;
             }
 
-            if (mSmoothScrollOffset < 0 && mSmoothScrollOffset > -200){
+            if (mSmoothScrollOffset < 0 && mSmoothScrollOffset > -200) {
                 // 逐渐加速
                 mSmoothScrollOffset -= 5;
             }
 
             // 正在平滑滑动到某个子view
             dispatchScroll(mSmoothScrollOffset);
+            mCycleCount++;
             invalidate();
         } else {
 
@@ -1084,10 +1089,11 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                 if (mScrollToIndexWithOffset < 0) {
                     viewScrollOffset = getViewsScrollOffset(mScrollToIndex);
                 }
-                if (getScrollY() + getPaddingTop() + viewScrollOffset >= scrollAnchor || isScrollBottom()) {
+                if (mCycleCount >= MAX_CYCLE_COUNT || getScrollY() + getPaddingTop() + viewScrollOffset >= scrollAnchor || isScrollBottom()) {
                     mScrollToIndex = -1;
                     mSmoothScrollOffset = 0;
                     mScrollToIndexWithOffset = 0;
+                    mCycleCount = 0;
                     setScrollState(SCROLL_STATE_IDLE);
                     break;
                 }
@@ -1127,14 +1133,6 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                     remainder = remainder - scrollOffset;
                 }
             }
-
-            if (mScrollToIndex != -1 && scrollOffset == 0) {
-                mScrollToIndex = -1;
-                mSmoothScrollOffset = 0;
-                mScrollToIndexWithOffset = 0;
-                setScrollState(SCROLL_STATE_IDLE);
-            }
-
         } while (scrollOffset > 0 && remainder > 0);
 
         int newScrollY = computeVerticalScrollOffset();
@@ -1156,10 +1154,11 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                 scrollAnchor = view.getTop() - mScrollToIndexWithOffset;
                 scrollAnchor -= getAdjustHeightForChild(view);
                 viewScrollOffset = getViewsScrollOffset(mScrollToIndex);
-                if (getScrollY() + getPaddingTop() + viewScrollOffset <= scrollAnchor || isScrollTop()) {
+                if (mCycleCount >= MAX_CYCLE_COUNT || getScrollY() + getPaddingTop() + viewScrollOffset <= scrollAnchor || isScrollTop()) {
                     mScrollToIndex = -1;
                     mSmoothScrollOffset = 0;
                     mScrollToIndexWithOffset = 0;
+                    mCycleCount = 0;
                     setScrollState(SCROLL_STATE_IDLE);
                     break;
                 }
@@ -1197,14 +1196,6 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                     remainder = remainder - scrollOffset;
                 }
             }
-
-            if (mScrollToIndex != -1 && scrollOffset == 0) {
-                mScrollToIndex = -1;
-                mSmoothScrollOffset = 0;
-                mScrollToIndexWithOffset = 0;
-                setScrollState(SCROLL_STATE_IDLE);
-            }
-
         } while (scrollOffset < 0 && remainder < 0);
 
         int newScrollY = computeVerticalScrollOffset();
@@ -1292,7 +1283,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
             public void run() {
                 checkLayoutChange(false, true);
             }
-        },20);
+        }, 20);
 
     }
 
@@ -2178,6 +2169,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                     } else {
                         dispatchScroll(200);
                     }
+                    mCycleCount++;
                 } while (mScrollToIndex != -1);
             }
         }
