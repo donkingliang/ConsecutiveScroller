@@ -147,8 +147,8 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
     private boolean isPermanent;
 
     /**
-     * 禁用子view的水平滑动，如果ConsecutiveScrollerLayout下没有需要水平滑动的子view，应该把它设置为true
-     * 为true时，将不会分发滑动事件给子view，而是有ConsecutiveScrollerLayout处理，可以优化ConsecutiveScrollerLayout的滑动
+     * 禁用子view的水平滑动，如果ConsecutiveScrollerLayout下没有水平滑动的下级view，应该把它设置为true
+     * 为true时，将不会分发滑动事件给子view，而是由ConsecutiveScrollerLayout处理，可以优化ConsecutiveScrollerLayout的滑动
      */
     private boolean disableChildHorizontalScroll;
 
@@ -277,6 +277,9 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
         mChildHelper = new NestedScrollingChildHelper(this);
         setNestedScrollingEnabled(true);
         setChildrenDrawingOrderEnabled(true);
+
+        setMotionEventSplittingEnabled(false);
+
     }
 
     @Override
@@ -2315,6 +2318,23 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
 
     public boolean isPermanent() {
         return isPermanent;
+    }
+
+
+    public boolean isDisableChildHorizontalScroll() {
+        return disableChildHorizontalScroll;
+    }
+
+    /**
+     * 禁用子view的水平滑动，如果ConsecutiveScrollerLayout下没有水平滑动的下级view，应该把它设置为true
+     * 为true时，将不会分发滑动事件给子view，而是由ConsecutiveScrollerLayout处理，可以优化ConsecutiveScrollerLayout的滑动
+     * 注意：如果你的ConsecutiveScrollerLayout下使用了ViewPager、HorizontalScrollView、水平滑动RecyclerView等，
+     * 就不要设置disableChildHorizontalScroll为true.因为它会禁止水平滑动
+     *
+     * @param disableChildHorizontalScroll
+     */
+    public void setDisableChildHorizontalScroll(boolean disableChildHorizontalScroll) {
+        this.disableChildHorizontalScroll = disableChildHorizontalScroll;
     }
 
     /**
