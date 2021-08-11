@@ -150,7 +150,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
      * 禁用子view的水平滑动，如果ConsecutiveScrollerLayout下没有需要水平滑动的子view，应该把它设置为true
      * 为true时，将不会分发滑动事件给子view，而是有ConsecutiveScrollerLayout处理，可以优化ConsecutiveScrollerLayout的滑动
      */
-    private boolean disableChildHorizontalScroll = false;
+    private boolean disableChildHorizontalScroll;
 
     /**
      * 自动调整底部view的高度，使它不被吸顶布局覆盖。
@@ -541,7 +541,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                     return false;
                 }
 
-                ev.offsetLocation(ev.getX(), mFixedYMap.get(mActivePointerId) - ev.getY(pointerIndex));
+                ev.offsetLocation(0, mFixedYMap.get(mActivePointerId) - ev.getY(pointerIndex));
             }
         }
 
@@ -605,7 +605,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                 int offsetX = (int) ev.getX(pointerIndex) - mEventX;
                 if (SCROLL_ORIENTATION == SCROLL_NONE
                         && (isIntercept(ev) || isIntercept(mDownLocation[0], mDownLocation[1]))) {
-                    if (SCROLL_ORIENTATION == SCROLL_NONE && disableChildHorizontalScroll) {
+                    if (disableChildHorizontalScroll) {
                         if (Math.abs(offsetY) >= mTouchSlop) {
                             SCROLL_ORIENTATION = SCROLL_VERTICAL;
                         }
@@ -616,10 +616,9 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                                 // 如果是横向滑动，设置ev的y坐标始终为开始的坐标，避免子view自己消费了垂直滑动事件。
                                 if (mActivePointerId != -1 && mFixedYMap.get(mActivePointerId) != null) {
                                     final int pointerIn = ev.findPointerIndex(mActivePointerId);
-                                    if (pointerIn < 0 || pointerIndex >= ev.getPointerCount()) {
-                                        return false;
+                                    if (pointerIn >= 0 && pointerIndex < ev.getPointerCount()) {
+                                        ev.offsetLocation(0, mFixedYMap.get(mActivePointerId) - ev.getY(pointerIn));
                                     }
-                                    ev.offsetLocation(ev.getX(), mFixedYMap.get(mActivePointerId) - ev.getY(pointerIn));
                                 }
                             }
                         } else {
@@ -1317,7 +1316,6 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                 checkLayoutChange(false, true);
             }
         }, 20);
-
     }
 
     /**
