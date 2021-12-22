@@ -22,6 +22,10 @@ import java.util.List;
  */
 public class ScrollUtils {
 
+    static Method computeVerticalScrollOffsetMethod;
+    static Method computeVerticalScrollRangeMethod;
+    static Method computeVerticalScrollExtentMethod;
+
     static int computeVerticalScrollOffset(View view) {
         View scrolledView = getScrolledView(view);
 
@@ -30,9 +34,11 @@ public class ScrollUtils {
         }
 
         try {
-            Method method = View.class.getDeclaredMethod("computeVerticalScrollOffset");
-            method.setAccessible(true);
-            Object o = method.invoke(scrolledView);
+            if (computeVerticalScrollOffsetMethod == null){
+                computeVerticalScrollOffsetMethod = View.class.getDeclaredMethod("computeVerticalScrollOffset");
+                computeVerticalScrollOffsetMethod.setAccessible(true);
+            }
+            Object o = computeVerticalScrollOffsetMethod.invoke(scrolledView);
             if (o != null){
                 return (int) o;
             }
@@ -50,9 +56,11 @@ public class ScrollUtils {
         }
 
         try {
-            Method method = View.class.getDeclaredMethod("computeVerticalScrollRange");
-            method.setAccessible(true);
-            Object o = method.invoke(scrolledView);
+            if (computeVerticalScrollRangeMethod == null) {
+                computeVerticalScrollRangeMethod = View.class.getDeclaredMethod("computeVerticalScrollRange");
+                computeVerticalScrollRangeMethod.setAccessible(true);
+            }
+            Object o = computeVerticalScrollRangeMethod.invoke(scrolledView);
             if (o != null){
                 return (int) o;
             }
@@ -70,9 +78,12 @@ public class ScrollUtils {
         }
 
         try {
-            Method method = View.class.getDeclaredMethod("computeVerticalScrollExtent");
-            method.setAccessible(true);
-            Object o = method.invoke(scrolledView);
+            if (computeVerticalScrollExtentMethod == null){
+                computeVerticalScrollExtentMethod = View.class.getDeclaredMethod("computeVerticalScrollExtent");
+                computeVerticalScrollExtentMethod.setAccessible(true);
+            }
+
+            Object o = computeVerticalScrollExtentMethod.invoke(scrolledView);
             if (o != null){
                 return (int) o;
             }
