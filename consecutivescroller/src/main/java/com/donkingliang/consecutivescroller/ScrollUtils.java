@@ -9,7 +9,9 @@ import android.widget.AbsListView;
 
 import androidx.core.view.ScrollingView;
 import androidx.core.view.ViewCompat;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -34,12 +36,12 @@ public class ScrollUtils {
         }
 
         try {
-            if (computeVerticalScrollOffsetMethod == null){
+            if (computeVerticalScrollOffsetMethod == null) {
                 computeVerticalScrollOffsetMethod = View.class.getDeclaredMethod("computeVerticalScrollOffset");
                 computeVerticalScrollOffsetMethod.setAccessible(true);
             }
             Object o = computeVerticalScrollOffsetMethod.invoke(scrolledView);
-            if (o != null){
+            if (o != null) {
                 return (int) o;
             }
         } catch (Exception e) {
@@ -61,7 +63,7 @@ public class ScrollUtils {
                 computeVerticalScrollRangeMethod.setAccessible(true);
             }
             Object o = computeVerticalScrollRangeMethod.invoke(scrolledView);
-            if (o != null){
+            if (o != null) {
                 return (int) o;
             }
         } catch (Exception e) {
@@ -78,13 +80,13 @@ public class ScrollUtils {
         }
 
         try {
-            if (computeVerticalScrollExtentMethod == null){
+            if (computeVerticalScrollExtentMethod == null) {
                 computeVerticalScrollExtentMethod = View.class.getDeclaredMethod("computeVerticalScrollExtent");
                 computeVerticalScrollExtentMethod.setAccessible(true);
             }
 
             Object o = computeVerticalScrollExtentMethod.invoke(scrolledView);
-            if (o != null){
+            if (o != null) {
                 return (int) o;
             }
         } catch (Exception e) {
@@ -184,7 +186,22 @@ public class ScrollUtils {
                 RecyclerView.Adapter adapter = recyclerView.getAdapter();
 
                 if (layoutManager != null && adapter != null && adapter.getItemCount() > 0) {
-                    View itemView = layoutManager.findViewByPosition(direction > 0 ? adapter.getItemCount() - 1 : 0);
+
+                    boolean isReverseLayout = false;
+                    if (layoutManager instanceof LinearLayoutManager) {
+                        isReverseLayout = ((LinearLayoutManager) layoutManager).getReverseLayout();
+                    } else if (layoutManager instanceof StaggeredGridLayoutManager){
+                        isReverseLayout = ((StaggeredGridLayoutManager) layoutManager).getReverseLayout();
+                    }
+
+                    int targetPosition = 0;
+                    if (isReverseLayout) {
+                        targetPosition = direction < 0 ? adapter.getItemCount() - 1 : 0;
+                    } else {
+                        targetPosition = direction > 0 ? adapter.getItemCount() - 1 : 0;
+                    }
+
+                    View itemView = layoutManager.findViewByPosition(targetPosition);
                     if (itemView == null) {
                         return true;
                     }
@@ -370,7 +387,7 @@ public class ScrollUtils {
 
             if (lp instanceof ConsecutiveScrollerLayout.LayoutParams) {
                 int childId = ((ConsecutiveScrollerLayout.LayoutParams) lp).scrollChild;
-                if (childId != View.NO_ID){
+                if (childId != View.NO_ID) {
                     View child = view.findViewById(childId);
                     if (child != null) {
                         return child;
