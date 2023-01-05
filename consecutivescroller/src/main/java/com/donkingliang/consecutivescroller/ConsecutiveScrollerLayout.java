@@ -312,6 +312,10 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                             R.styleable.ConsecutiveScrollerLayout_overDragMaxDistanceOfBottom, defaultDistance);
                 }
             }
+            if (a.hasValue(R.styleable.ConsecutiveScrollerLayout_overDragRate)) {
+                mDragRate = a.getFloat(
+                        R.styleable.ConsecutiveScrollerLayout_overDragRate, .5f);
+            }
             isPermanent = a.getBoolean(R.styleable.ConsecutiveScrollerLayout_isPermanent, false);
             disableChildHorizontalScroll = a.getBoolean(R.styleable.ConsecutiveScrollerLayout_disableChildHorizontalScroll, false);
             mStickyOffset = a.getDimensionPixelOffset(R.styleable.ConsecutiveScrollerLayout_stickyOffset, 0);
@@ -2936,6 +2940,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
 
     /**
      * 设置越界拖动阻尼
+     *
      * @param rate 阻尼
      */
     public void setOverDragRate(float rate) {
