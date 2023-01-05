@@ -1397,7 +1397,6 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                 scrollOffset = Math.min(Math.abs(mScrollY), remainder);
                 int newSelfScrollY = mScrollY + scrollOffset;
                 scrollSelf(newSelfScrollY);
-                setStickyOffset(mStickyOffset + scrollOffset);
                 mSecondScrollY += scrollOffset;
                 remainder = remainder - scrollOffset;
             } else {
@@ -1411,7 +1410,6 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                     newSelfScrollY = mScrollY + scrollOffset;
                 }
                 scrollSelf(newSelfScrollY);
-                setStickyOffset(mStickyOffset + scrollOffset);
                 mSecondScrollY += scrollOffset;
                 remainder = 0;
             }
@@ -1488,7 +1486,6 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                 scrollOffset = Math.max(-(mScrollY - mScrollRange), remainder);
                 int newSelfScrollY = mScrollY + scrollOffset;
                 scrollSelf(newSelfScrollY);
-                setStickyOffset(mStickyOffset + scrollOffset);
                 mSecondScrollY += scrollOffset;
                 //去掉刚消费了的距离，如果还有剩余未消费的，则继续循环
                 remainder = remainder - scrollOffset;
@@ -1502,7 +1499,6 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                     newSelfScrollY = mScrollY + scrollOffset;
                 }
                 scrollSelf(newSelfScrollY);
-                setStickyOffset(mStickyOffset + scrollOffset);
                 mSecondScrollY += scrollOffset;
                 remainder = 0;
             }
