@@ -1,23 +1,26 @@
 package com.donkingliang.consecutivescroller;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
+import android.animation.ValueAnimator;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.VelocityTracker;
 import android.view.View;
 import android.view.ViewConfiguration;
 import android.view.ViewGroup;
+import android.view.animation.AnimationUtils;
 import android.view.animation.Interpolator;
 import android.widget.AbsListView;
 import android.widget.EdgeEffect;
 import android.widget.OverScroller;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -30,12 +33,58 @@ import androidx.core.view.ViewCompat;
 import androidx.core.widget.EdgeEffectCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+
 /**
  * @Author donkingliang QQ:1043214265 github:https://github.com/donkingliang
  * @Description
  * @Date 2020/3/13
+ * <p>
+ * 修改：
+ * 新增越界滑动功能
  */
 public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingView, NestedScrollingParent2, NestedScrollingChild2 {
+
+    private String TAG;
+
+    /**
+     * 屏幕高度
+     */
+    protected int mScreenHeightPixels;
+
+    /**
+     * 越界拖动阻尼
+     */
+    protected float mDragRate = .5f;
+
+    /**
+     * 是否开启越界滚动模式
+     */
+    private boolean overDragMode;
+
+    /**
+     * 底部越界最大距离
+     * 单位：像素
+     */
+    private int overDragMaxDistanceOfBottom;
+
+    /**
+     * 顶部越界最大距离
+     * 单位：像素
+     */
+    private int overDragMaxDistanceOfTop;
+
+    /**
+     * 越界回弹动画时长
+     */
+    protected int mReboundDuration = 300;
+    protected int mCurrentVelocity;
+    protected Interpolator mReboundInterpolator;
+    protected ValueAnimator reboundAnimator;
+    protected Runnable animationRunnable;
+    protected Handler mHandler = new Handler(Looper.getMainLooper());
 
     /**
      * 记录布局垂直的偏移量，它是包括了自己的偏移量(mScrollY)和所有子View的偏移量的总和，
@@ -250,9 +299,23 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
 
     public ConsecutiveScrollerLayout(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
+        TAG = this.getClass().getName();
         TypedArray a = null;
         try {
             a = context.obtainStyledAttributes(attrs, R.styleable.ConsecutiveScrollerLayout);
+            //是否开启越界滚动模式
+            if (a.hasValue(R.styleable.ConsecutiveScrollerLayout_overDragMode)) {
+                overDragMode = a.getBoolean(
+                        R.styleable.ConsecutiveScrollerLayout_overDragMode, false);
+                if (overDragMode) {
+                    //默认最大越界拖动距离为 180dp
+                    int defaultDistance = Util.dp2px(180);
+                    overDragMaxDistanceOfTop = a.getDimensionPixelOffset(
+                            R.styleable.ConsecutiveScrollerLayout_overDragMaxDistanceOfTop, defaultDistance);
+                    overDragMaxDistanceOfBottom = a.getDimensionPixelOffset(
+                            R.styleable.ConsecutiveScrollerLayout_overDragMaxDistanceOfBottom, defaultDistance);
+                }
+            }
             isPermanent = a.getBoolean(R.styleable.ConsecutiveScrollerLayout_isPermanent, false);
             disableChildHorizontalScroll = a.getBoolean(R.styleable.ConsecutiveScrollerLayout_disableChildHorizontalScroll, false);
             mStickyOffset = a.getDimensionPixelOffset(R.styleable.ConsecutiveScrollerLayout_stickyOffset, 0);
@@ -280,6 +343,8 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
 
         setMotionEventSplittingEnabled(false);
 
+        //越界拖动回弹动画差值器
+        mReboundInterpolator = new OverScrollInterpolator(OverScrollInterpolator.INTERPOLATOR_VISCOUS_FLUID);
     }
 
     @Override
@@ -403,7 +468,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
 
     private int getContentWidth(View child) {
         int contentWidth = child.getMeasuredWidth();
-        ViewGroup.MarginLayoutParams params = (LayoutParams) child.getLayoutParams();
+        MarginLayoutParams params = (LayoutParams) child.getLayoutParams();
 
         contentWidth += params.leftMargin;
         contentWidth += params.rightMargin;
@@ -436,6 +501,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
 
     @Override
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
+        mScreenHeightPixels = getResources().getDisplayMetrics().heightPixels;
         mScrollRange = 0;
         int childTop = getPaddingTop();
         int paddingLeft = getPaddingLeft();
@@ -555,15 +621,22 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
         }
         vtev.offsetLocation(0, mNestedYOffset);
 
+        /**
+         * 打断动画，如果成功打断则不继续了
+         */
+        if (interceptAnimatorByAction(vtev.getAction())) {
+//            return false;
+        }
+
         switch (ev.getActionMasked()) {
             case MotionEvent.ACTION_DOWN:
-
+                mCurrentVelocity = 0;
                 isBrake = mScrollState == SCROLL_STATE_SETTLING;
 
                 // 停止滑动
                 stopScroll();
-                checkTargetsScroll(false, false);
                 mTouching = true;
+                checkTargetsScroll(false, false);
                 SCROLL_ORIENTATION = SCROLL_NONE;
                 mActivePointerId = ev.getPointerId(actionIndex);
                 mFixedYMap.put(mActivePointerId, ev.getY(actionIndex));
@@ -665,6 +738,8 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                     mAdjustVelocityTracker.addMovement(vtev);
                     mAdjustVelocityTracker.computeCurrentVelocity(1000, mMaximumVelocity);
                     int yVelocity = (int) mAdjustVelocityTracker.getYVelocity();
+                    mCurrentVelocity = yVelocity;
+
                     // 记录AdjustVelocity的fling速度
                     mAdjustYVelocity = Math.max(-mMaximumVelocity, Math.min(yVelocity, mMaximumVelocity));
                     recycleAdjustVelocityTracker();
@@ -695,6 +770,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                 mDownLocation[0] = 0;
                 mDownLocation[1] = 0;
                 isTouchNotTriggerScrollStick = false;
+                overSpinner();
                 break;
         }
 
@@ -823,7 +899,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                     getParent().requestDisallowInterceptTouchEvent(true);
                 }
 
-                // 判断是否显示边界阴影
+                // 判断是否显示边界阴影 额外判断是否设置了越界拖动，如果设置了越界拖动，则不显示边界阴影
                 final int range = getScrollRange();
                 final int overscrollMode = getOverScrollMode();
                 boolean canOverscroll = overscrollMode == View.OVER_SCROLL_ALWAYS
@@ -831,14 +907,14 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                 if (canOverscroll) {
                     ensureGlows();
                     final int pulledToY = oldScrollY + deltaY;
-                    if (pulledToY < 0) {
+                    if (pulledToY < 0 && overDragMaxDistanceOfTop <= 0) {
                         // 滑动距离超出顶部边界，设置阴影
                         EdgeEffectCompat.onPull(mEdgeGlowTop, (float) deltaY / getHeight(),
                                 ev.getX(pointerIndex) / getWidth());
                         if (!mEdgeGlowBottom.isFinished()) {
                             mEdgeGlowBottom.onRelease();
                         }
-                    } else if (pulledToY > range) {
+                    } else if (pulledToY > range && overDragMaxDistanceOfBottom <= 0) {
                         // 滑动距离超出底部边界，设置阴影
                         EdgeEffectCompat.onPull(mEdgeGlowBottom, (float) deltaY / getHeight(),
                                 1.f - ev.getX(pointerIndex)
@@ -886,7 +962,8 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
     }
 
     private boolean canScrollVertically() {
-        return !isScrollTop() || !isScrollBottom();
+        //新增判断是否开启了越界滑动模式
+        return !isScrollTop() || !isScrollBottom() || overDragMode;
     }
 
     @Override
@@ -976,7 +1053,6 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
             if (!dispatchNestedPreFling(0, (float) velocityY)) {
                 boolean canScroll = (velocityY < 0 && !isScrollTop()) || (velocityY > 0 && !isScrollBottom());
                 this.dispatchNestedFling(0, (float) velocityY, canScroll);
-//                if (canScroll) {
                 mScroller.fling(0, mSecondScrollY,
                         1, velocityY,
                         Integer.MIN_VALUE, Integer.MIN_VALUE,
@@ -985,7 +1061,6 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                 setScrollState(SCROLL_STATE_SETTLING);
                 mLastScrollerY = mSecondScrollY;
                 invalidate();
-//                }
             }
         }
     }
@@ -1023,12 +1098,10 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                 unconsumed -= mScrollConsumed[1];
 
                 final int oldScrollY = mSecondScrollY;
-
                 dispatchScroll(unconsumed);
 
                 final int scrolledByMe = mSecondScrollY - oldScrollY;
                 unconsumed -= scrolledByMe;
-
                 if ((unconsumed < 0 && isScrollTop()) || (unconsumed > 0 && isScrollBottom())) {
                     dispatchNestedScroll(0, scrolledByMe, 0, unconsumed, mScrollOffset,
                             ViewCompat.TYPE_NON_TOUCH);
@@ -1037,24 +1110,33 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
 
                 // 判断滑动方向和是否滑动到边界
                 if ((unconsumed < 0 && isScrollTop()) || (unconsumed > 0 && isScrollBottom())) {
-                    final int mode = getOverScrollMode();
-                    final boolean canOverscroll = mode == OVER_SCROLL_ALWAYS
-                            || (mode == OVER_SCROLL_IF_CONTENT_SCROLLS && getScrollRange() > 0);
-                    if (canOverscroll) {
-                        ensureGlows();
-                        if (unconsumed < 0) {
-                            // 设置上边界阴影
-                            if (mEdgeGlowTop.isFinished()) {
-                                mEdgeGlowTop.onAbsorb((int) mScroller.getCurrVelocity());
-                            }
-                        } else {
-                            // 设置下边界阴影
-                            if (mEdgeGlowBottom.isFinished()) {
-                                mEdgeGlowBottom.onAbsorb((int) mScroller.getCurrVelocity());
+                    if (overDragMode) {
+                        //fling 越界了, 停止滑动，转为动画控制继续滑动
+                        int finalY = mScroller.getFinalY();
+                        float velocity = finalY > 0 ? mScroller.getCurrVelocity() : -mScroller.getCurrVelocity();
+                        animSpinnerBounce(velocity);
+                        stopScroll();
+                        mScroller.forceFinished(true);
+                    } else {
+                        final int mode = getOverScrollMode();
+                        final boolean canOverscroll = mode == OVER_SCROLL_ALWAYS
+                                || (mode == OVER_SCROLL_IF_CONTENT_SCROLLS && getScrollRange() > 0);
+                        if (canOverscroll) {
+                            ensureGlows();
+                            if (unconsumed < 0) {
+                                // 设置上边界阴影
+                                if (mEdgeGlowTop.isFinished()) {
+                                    mEdgeGlowTop.onAbsorb((int) mScroller.getCurrVelocity());
+                                }
+                            } else {
+                                // 设置下边界阴影
+                                if (mEdgeGlowBottom.isFinished()) {
+                                    mEdgeGlowBottom.onAbsorb((int) mScroller.getCurrVelocity());
+                                }
                             }
                         }
+                        stopScroll();
                     }
-                    stopScroll();
                 }
 
                 invalidate();
@@ -1065,6 +1147,189 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                 stopNestedScroll(ViewCompat.TYPE_NON_TOUCH);
                 checkTargetsScroll(false, false);
                 setScrollState(SCROLL_STATE_IDLE);
+            }
+        }
+    }
+
+    /**
+     * 在动画执行时，触摸屏幕，打断动画，转为拖动状态
+     *
+     * @param action MotionEvent
+     * @return 是否成功打断
+     */
+    protected boolean interceptAnimatorByAction(int action) {
+        if (action == MotionEvent.ACTION_DOWN) {
+            if (reboundAnimator != null) {
+                reboundAnimator.setDuration(0);//cancel会触发End调用，可以判断0来确定是否被cancel
+                reboundAnimator.cancel();//会触发 cancel 和 end 调用
+                reboundAnimator = null;
+            }
+            animationRunnable = null;
+        }
+        return reboundAnimator != null;
+    }
+
+    protected class BounceRunnable implements Runnable {
+        int mFrame = 0;
+        int mFrameDelay = 10;
+        int mSmoothDistance;
+        long mLastTime;
+        float mOffset = 0;
+        float mVelocity;
+
+        /**
+         * @param velocity 大于0 为往底部走 否则 为往顶部走
+         */
+        BounceRunnable(float velocity, int smoothDistance) {
+            mVelocity = velocity;
+            mSmoothDistance = smoothDistance;
+            mLastTime = AnimationUtils.currentAnimationTimeMillis();
+            mHandler.postDelayed(this, mFrameDelay);
+        }
+
+        @Override
+        public void run() {
+            if (animationRunnable == this) {
+//                mVelocity *= Math.pow(0.45f, ++mFrame * 2);//回弹滚动数度衰减
+                mVelocity *= Math.pow(0.85f, ++mFrame * 2);//回弹滚动数度衰减
+                long now = AnimationUtils.currentAnimationTimeMillis();
+                float t = 1f * (now - mLastTime) / 1000;
+                float velocity = mVelocity * t;
+                if (Math.abs(velocity) >= 1) {
+                    mLastTime = now;
+                    mOffset += velocity;
+                    moveSpinnerInfinitely(mOffset);
+                    mHandler.postDelayed(this, mFrameDelay);
+                } else {
+                    animationRunnable = null;
+                    int startY = getScrollY();
+                    int duration;
+                    duration = 10 * Math.min(Math.max((int) Util.px2dp(Math.abs(startY - mSmoothDistance)), 30), 100);
+                    animSpinner(startY, mSmoothDistance, 0, mReboundInterpolator, duration);
+                }
+            }
+        }
+    }
+
+    /**
+     * 黏性移动
+     *
+     * @param spinner 偏移量
+     */
+    protected void moveSpinnerInfinitely(float spinner) {
+        final View thisView = this;
+
+        final float maxDragHeight;
+
+        final double M;
+        final double H = Math.max(mScreenHeightPixels / 2, thisView.getHeight());
+        final double x;
+        final double y;
+        int finalScrollY;
+        if (spinner > 0) {
+            //偏移量为正数 则是 底部越界 向上拖拽
+            maxDragHeight = overDragMaxDistanceOfBottom;
+            M = maxDragHeight;
+            x = Math.max(0, spinner * mDragRate);
+            y = Math.min(M * (1 - Math.pow(100, -x / (H == 0 ? 1 : H))), x);// 公式 y = M(1-100^(-x/H))
+        } else {
+            //偏移量为负数 则是 顶部越界 拖拽
+            maxDragHeight = overDragMaxDistanceOfBottom;
+            M = maxDragHeight;
+            x = -Math.min(0, spinner * mDragRate);
+            y = -Math.min(M * (1 - Math.pow(100, -x / (H == 0 ? 1 : H))), x);// 公式 y = M(1-100^(-x/H))
+        }
+        int mSpinner = (int) y;
+        finalScrollY = getScrollY() + mSpinner;
+        mSecondScrollY += mSpinner;
+        scrollSelf(finalScrollY);
+    }
+
+    /**
+     * 执行回弹动画
+     *
+     * @param endSpinner   目标值
+     * @param startDelay   延时参数
+     * @param interpolator 加速器
+     * @param duration     时长
+     * @return ValueAnimator or null
+     */
+    protected ValueAnimator animSpinner(int startSpinner, int endSpinner, int startDelay, Interpolator interpolator, int duration) {
+        if (startSpinner != endSpinner) {
+            if (reboundAnimator != null) {
+                reboundAnimator.setDuration(0);//cancel会触发End调用，可以判断0来确定是否被cancel
+                reboundAnimator.cancel();//会触发 cancel 和 end 调用
+                reboundAnimator = null;
+            }
+            animationRunnable = null;
+            reboundAnimator = ValueAnimator.ofInt(startSpinner, endSpinner);
+            reboundAnimator.setDuration(duration);
+            reboundAnimator.setInterpolator(interpolator);
+            reboundAnimator.addListener(new AnimatorListenerAdapter() {
+                @Override
+                public void onAnimationEnd(Animator animation) {
+                    if (animation != null && animation.getDuration() == 0) {
+                        /*
+                         * 2020-3-15 修复
+                         * onAnimationEnd 因为 cancel 调用是, 同样触发 onAnimationEnd 导致的各种问题
+                         * 在取消之前调用 reboundAnimator.setDuration(0) 来标记动画被取消
+                         */
+                        return;
+                    }
+                    reboundAnimator = null;
+                    checkTargetsScroll(false, false);
+                }
+            });
+            reboundAnimator.addUpdateListener(animation -> {
+                int animatedValue = (int) animation.getAnimatedValue();
+                int oldScrollY = computeVerticalScrollOffset();
+                scrollSelf(animatedValue);
+                mSecondScrollY = computeVerticalScrollOffset();
+                if (oldScrollY != mSecondScrollY) {
+                    scrollChange(mSecondScrollY, oldScrollY);
+                }
+            });
+            reboundAnimator.setStartDelay(startDelay);
+            reboundAnimator.start();
+            return reboundAnimator;
+        }
+        return null;
+    }
+
+    /**
+     * 越界回弹动画
+     *
+     * @param velocity 速度
+     */
+    protected void animSpinnerBounce(final float velocity) {
+        if (reboundAnimator == null) {
+            if (velocity < 0 && overDragMaxDistanceOfTop > 0) {
+                //顶部越界 回弹到 0
+                animationRunnable = new BounceRunnable(velocity, 0);
+            } else if (velocity > 0 && overDragMaxDistanceOfBottom > 0) {
+                //底部越界 回弹到 mScrollRange
+                animationRunnable = new BounceRunnable(velocity, mScrollRange);
+            }
+        }
+    }
+
+    /**
+     * 手势拖动结束
+     * 开始执行回弹动画
+     */
+    protected void overSpinner() {
+        //还在滑动中则无视
+        int mScrollY = getScrollY();
+        if (mScrollY < 0) {
+            if (reboundAnimator == null) {
+                animSpinner(mScrollY, 0,
+                        0, mReboundInterpolator, mReboundDuration);
+            }
+        } else if (mScrollY > mScrollRange) {
+            if (reboundAnimator == null) {
+                //这里是底部回弹，需要用总滑动高度减去超出的部分
+                animSpinner(mScrollY, mScrollRange,
+                        0, mReboundInterpolator, mReboundDuration);
             }
         }
     }
@@ -1102,18 +1367,16 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
         }
     }
 
-
     /**
-     * 向上滑动
+     * 将内容面板向上移动（手指拖动从下往上）
      *
-     * @param offset
+     * @param offset 移动距离，正数
      */
     private void scrollUp(int offset) {
         int scrollOffset = 0;
         int remainder = offset;
         int oldScrollY = computeVerticalScrollOffset();
         do {
-
             int scrollAnchor = 0;
             int viewScrollOffset = 0;
             // 如果是要滑动到指定的View，判断滑动到目标位置，就停止滑动
@@ -1133,10 +1396,9 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                     break;
                 }
             }
-
             scrollOffset = 0;
-
-            if (!isScrollBottom()) {
+            int scrollY = getScrollY();
+            if (!isScrollBottom() && scrollY >= 0) {
                 // 找到当前显示的第一个View
                 View firstVisibleView = null;
                 if (getScrollY() < mScrollRange) {
@@ -1149,23 +1411,49 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                     int bottomOffset = ScrollUtils.getScrollBottomOffset(firstVisibleView);
                     if (bottomOffset > 0) {
                         scrollOffset = Math.min(remainder, bottomOffset);
-
                         if (mScrollToIndex != -1) {
                             scrollOffset = Math.min(scrollOffset, scrollAnchor - (getScrollY() + getPaddingTop() + viewScrollOffset));
                         }
-
                         scrollChild(firstVisibleView, scrollOffset);
-
                     } else {
                         scrollOffset = Math.min(remainder,
                                 firstVisibleView.getBottom() - getPaddingTop() - getScrollY());
                         if (mScrollToIndex != -1) {
                             scrollOffset = Math.min(scrollOffset, scrollAnchor - (getScrollY() + getPaddingTop() + viewScrollOffset));
                         }
-                        scrollSelf(getScrollY() + scrollOffset);
+                        scrollSelf(scrollY + scrollOffset);
                     }
                     mSecondScrollY += scrollOffset;
                     remainder = remainder - scrollOffset;
+                }
+            } else if (mTouching) {
+                //底部越界 向上拖动增加越界距离 或 顶部越界 向上拖动自身退回顶部，减少越界距离
+                if (scrollY < 0 && remainder > Math.abs(scrollY)) {
+                    //向上拖动自身退回顶部, 自身只消费该消费的，剩余的给到子view
+                    scrollOffset = remainder - Math.abs(scrollY);
+                    remainder -= scrollOffset;
+                    moveSpinnerInfinitely(scrollOffset);
+                } else {
+                    //向上越界拖动，全消费掉
+                    moveSpinnerInfinitely(remainder);
+                    remainder = 0;
+                }
+            } else {
+                //如果还在惯性滑动中，并且顶部没有越界，则维持惯性滑动速度
+                if (mScroller.computeScrollOffset() && scrollY < mScrollRange) {
+                    //如果正在走回弹动画，这里直接截停回弹动画
+                    if (reboundAnimator != null) {
+                        interceptAnimatorByAction(MotionEvent.ACTION_DOWN);
+                    }
+                    if (remainder > Math.abs(scrollY)) {
+                        scrollOffset = remainder - Math.abs(scrollY);
+                        remainder -= scrollOffset;
+                    } else {
+                        scrollOffset = remainder;
+                        remainder = 0;
+                    }
+                    mSecondScrollY += scrollOffset;
+                    scrollSelf(scrollY + scrollOffset);
                 }
             }
         } while (scrollOffset > 0 && remainder > 0);
@@ -1176,6 +1464,11 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
         }
     }
 
+    /**
+     * 将内容面板向下移动（手指拖动从上往下）
+     *
+     * @param offset 移动距离，负数
+     */
     private void scrollDown(int offset) {
         int scrollOffset = 0;
         int remainder = offset;
@@ -1200,7 +1493,8 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
             }
 
             scrollOffset = 0;
-            if (!isScrollTop()) {
+            int scrollY = getScrollY();
+            if (!isScrollTop() && getScrollY() <= mScrollRange) {
                 // 找到当前显示的最后一个View
                 View lastVisibleView = null;
                 if (getScrollY() < mScrollRange) {
@@ -1218,7 +1512,6 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                         }
                         scrollChild(lastVisibleView, scrollOffset);
                     } else {
-                        int scrollY = getScrollY();
                         scrollOffset = Math.max(remainder,
                                 lastVisibleView.getTop() + getPaddingBottom() - scrollY - getHeight());
                         scrollOffset = Math.max(scrollOffset, -scrollY);
@@ -1229,6 +1522,38 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                     }
                     mSecondScrollY += scrollOffset;
                     remainder = remainder - scrollOffset;
+                }
+            } else if (mTouching) {
+                //顶部越界 向下拖动增加越界距离 或 底部越界 向下拖动自身退回底部，减少越界距离
+                int diff = mScrollRange - scrollY;
+                //remainder和diff均是负数时，remainder更小则代表还需要先自身回退到底部
+                if (scrollY > mScrollRange && remainder < diff) {
+                    //向下拖动自身退回底部, 自身只消费该消费的，剩余的给到子view
+                    scrollOffset = diff;
+                    remainder -= scrollOffset;
+                    moveSpinnerInfinitely(scrollOffset);
+                } else {
+                    //向下越界拖动，全消费掉
+                    moveSpinnerInfinitely(remainder);
+                    remainder = 0;
+                }
+            } else {
+                //如果还在惯性滑动中，并且顶部没有越界，则维持惯性滑动速度
+                if (mScroller.computeScrollOffset() && scrollY > 0) {
+                    //如果正在走回弹动画，这里直接截停回弹动画
+                    if (reboundAnimator != null) {
+                        interceptAnimatorByAction(MotionEvent.ACTION_DOWN);
+                    }
+                    int diff = mScrollRange - scrollY;
+                    if (remainder < diff) {
+                        scrollOffset = diff;
+                        remainder -= scrollOffset;
+                    } else {
+                        scrollOffset = remainder;
+                        remainder = 0;
+                    }
+                    mSecondScrollY += scrollOffset;
+                    scrollSelf(scrollY + scrollOffset);
                 }
             }
         } while (scrollOffset < 0 && remainder < 0);
@@ -1275,12 +1600,11 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
      */
     private void scrollSelf(int y) {
         int scrollY = y;
-
-        // 边界检测
-        if (scrollY < 0) {
-            scrollY = 0;
-        } else if (scrollY > mScrollRange) {
-            scrollY = mScrollRange;
+        // 边界检测 新增条件为 超过最大越界距离才重设
+        if (scrollY < 0 && Math.abs(scrollY) > Math.abs(overDragMaxDistanceOfTop)) {
+            scrollY = overDragMaxDistanceOfTop <= 0 ? 0 : -overDragMaxDistanceOfTop;
+        } else if (scrollY > mScrollRange && scrollY > mScrollRange + Math.abs(overDragMaxDistanceOfBottom)) {
+            scrollY = overDragMaxDistanceOfBottom <= 0 ? mScrollRange : mScrollRange + overDragMaxDistanceOfBottom;
         }
         super.scrollTo(0, scrollY);
     }
@@ -1358,11 +1682,9 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
      * 校验子view内容滚动位置是否正确
      */
     private void checkTargetsScroll(boolean isLayoutChange, boolean isForce) {
-
         if (!isForce && (mTouching || !mScroller.isFinished() || mScrollToIndex != -1)) {
             return;
         }
-
         int oldScrollY = computeVerticalScrollOffset();
         View target = findFirstVisibleView();
         if (target == null) {
@@ -2054,7 +2376,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
         return false;
     }
 
-    public static class LayoutParams extends ViewGroup.MarginLayoutParams {
+    public static class LayoutParams extends MarginLayoutParams {
 
         /**
          * 是否与父布局整体滑动，设置为false时，父布局不会拦截它的事件，滑动事件将由子view处理。
@@ -2519,12 +2841,14 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
         mParentHelper.onNestedScrollAccepted(child, target, axes, type);
         checkTargetsScroll(false, false);
         startNestedScroll(ViewCompat.SCROLL_AXIS_VERTICAL, type);
+        interceptAnimatorByAction(MotionEvent.ACTION_DOWN);
     }
 
     @Override
     public void onStopNestedScroll(@NonNull View target, int type) {
         mParentHelper.onStopNestedScroll(target, type);
         stopNestedScroll(type);
+        overSpinner();
     }
 
     @Override
@@ -2589,6 +2913,88 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
     @Override
     public boolean onNestedPreFling(@NonNull View target, float velocityX, float velocityY) {
         return dispatchNestedPreFling(velocityX, velocityY);
+    }
+
+    /**
+     * @return 是否开启了越界滑动
+     */
+    public boolean isEnableOverDragMode() {
+        return overDragMode || overDragMaxDistanceOfTop > 0 || overDragMaxDistanceOfBottom > 0;
+    }
+
+    /**
+     * 配置越界滑动
+     * 若未设置越界滑动距离，则默认最大滑动距离为180dp
+     *
+     * @param enable 是否启用
+     */
+    public void enableOverDragMode(boolean enable) {
+        overDragMode = enable;
+        if (enable) {
+            int defaultDistance = Util.dp2px(180);
+            if (overDragMaxDistanceOfTop <= 0) {
+                overDragMaxDistanceOfTop = defaultDistance;
+            }
+            if (overDragMaxDistanceOfBottom <= 0) {
+                overDragMaxDistanceOfBottom = defaultDistance;
+            }
+        } else {
+            overDragMaxDistanceOfTop = 0;
+            overDragMaxDistanceOfBottom = 0;
+        }
+    }
+
+    /**
+     * 配置越界滑动
+     *
+     * @param enable         是否启用
+     * @param topDistance    顶部最大越界滑动距离，单位px
+     * @param bottomDistance 底部最大越界滑动距离，单位px
+     */
+    public void enableOverDragMode(boolean enable, int topDistance, int bottomDistance) {
+        overDragMode = enable;
+        if (enable) {
+            overDragMaxDistanceOfTop = topDistance;
+            overDragMaxDistanceOfBottom = bottomDistance;
+        } else {
+            overDragMaxDistanceOfTop = 0;
+            overDragMaxDistanceOfBottom = 0;
+        }
+    }
+
+    /**
+     * 设置顶部最大越界滑动距离
+     *
+     * @param distance 最大越界滑动距离，单位px
+     */
+    public void setOverDragMaxDistanceOfTop(int distance) {
+        if (!isEnableOverDragMode()) {
+            enableOverDragMode(true, distance, overDragMaxDistanceOfBottom);
+        } else {
+            overDragMaxDistanceOfTop = distance;
+        }
+    }
+
+    /**
+     * 设置底部最大越界滑动距离
+     *
+     * @param distance 最大越界滑动距离，单位px
+     */
+    public void setOverDragMaxDistanceOfBottom(int distance) {
+        if (!isEnableOverDragMode()) {
+            enableOverDragMode(true, overDragMaxDistanceOfTop, distance);
+        } else {
+            overDragMaxDistanceOfBottom = distance;
+        }
+    }
+
+    /**
+     * 设置越界拖动阻尼
+     *
+     * @param rate 阻尼
+     */
+    public void setOverDragRate(float rate) {
+        mDragRate = rate;
     }
 
 }

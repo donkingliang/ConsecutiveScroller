@@ -1,23 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <resources>
     <declare-styleable name="ConsecutiveScrollerLayout_Layout">
-        <attr name="layout_isConsecutive" format="boolean"/>
-        <attr name="layout_isNestedScroll" format="boolean"/>
-        <attr name="layout_isSticky" format="boolean"/>
-        <attr name="layout_isTriggerScroll" format="boolean"/>
-        <attr name="layout_isSink" format="boolean"/>
+        <attr name="layout_isConsecutive" format="boolean" />
+        <attr name="layout_isNestedScroll" format="boolean" />
+        <attr name="layout_isSticky" format="boolean" />
+        <attr name="layout_isTriggerScroll" format="boolean" />
+        <attr name="layout_isSink" format="boolean" />
         <attr name="layout_align" format="enum">
             <enum name="LEFT" value="1" />
             <enum name="RIGHT" value="2" />
             <enum name="CENTER" value="3" />
         </attr>
-        <attr name="layout_scrollChild" format="reference"/>
+        <attr name="layout_scrollChild" format="reference" />
     </declare-styleable>
     <declare-styleable name="ConsecutiveScrollerLayout">
-        <attr name="isPermanent" format="boolean"/>
-        <attr name="stickyOffset" format="dimension"/>
-        <attr name="autoAdjustHeightAtBottomView" format="boolean"/>
-        <attr name="adjustHeightOffset" format="dimension"/>
-        <attr name="disableChildHorizontalScroll" format="boolean"/>
+        <attr name="isPermanent" format="boolean" />
+        <attr name="overDragMode" format="boolean" />
+        <attr name="overDragMaxDistanceOfTop" format="dimension" />
+        <attr name="overDragMaxDistanceOfBottom" format="dimension" />
+        <attr name="overDragRate" format="float" />
+        <attr name="stickyOffset" format="dimension" />
+        <attr name="autoAdjustHeightAtBottomView" format="boolean" />
+        <attr name="adjustHeightOffset" format="dimension" />
+        <attr name="disableChildHorizontalScroll" format="boolean" />
     </declare-styleable>
 </resources>
