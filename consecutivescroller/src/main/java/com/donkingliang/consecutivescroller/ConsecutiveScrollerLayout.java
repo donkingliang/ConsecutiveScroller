@@ -625,7 +625,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
          * 打断动画，如果成功打断则不继续了
          */
         if (interceptAnimatorByAction(vtev.getAction())) {
-            return false;
+//            return false;
         }
 
         switch (ev.getActionMasked()) {
