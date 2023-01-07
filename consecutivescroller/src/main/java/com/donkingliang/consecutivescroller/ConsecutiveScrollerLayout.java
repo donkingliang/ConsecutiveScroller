@@ -10,6 +10,7 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.VelocityTracker;
 import android.view.View;
@@ -985,6 +986,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
         super.draw(canvas);
         if (mOldScrollY != getScrollY()) {
             mOldScrollY = getScrollY();
+            Log.d(TAG, "draw: 难道不走这个吗");
             resetSticky();
         }
 
@@ -2007,7 +2009,10 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                 // 找到需要吸顶的View
                 for (int i = count - 1; i >= 0; i--) {
                     View child = children.get(i);
-                    if (child.getTop() <= getStickyY()) {
+                    //新增处理顶部越界下拉时，让吸顶view继续吸在顶部
+                    int scrollY = getScrollY();
+                    boolean find = scrollY < 0 && child.getTop() + scrollY <= getStickyY();
+                    if (find || child.getTop() <= getStickyY()){
                         stickyView = child;
                         if (i != count - 1) {
                             nextStickyView = children.get(i + 1);
@@ -2022,7 +2027,9 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                 if (stickyView != null) {
                     int offset = 0;
                     if (nextStickyView != null && !isSink(stickyView)) {
-                        offset = Math.max(0, stickyView.getHeight() - (nextStickyView.getTop() - getStickyY()));
+                        int mOffset = stickyView.getHeight() - (nextStickyView.getTop() - getStickyY());
+                        Log.d(TAG, "resetSticky: " + mOffset);
+                        offset = Math.max(0, mOffset);
                     }
                     stickyChild(stickyView, offset);
                 }
