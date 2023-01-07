@@ -986,7 +986,6 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
         super.draw(canvas);
         if (mOldScrollY != getScrollY()) {
             mOldScrollY = getScrollY();
-            Log.d(TAG, "draw: 难道不走这个吗");
             resetSticky();
         }
 
@@ -2028,7 +2027,6 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                     int offset = 0;
                     if (nextStickyView != null && !isSink(stickyView)) {
                         int mOffset = stickyView.getHeight() - (nextStickyView.getTop() - getStickyY());
-                        Log.d(TAG, "resetSticky: " + mOffset);
                         offset = Math.max(0, mOffset);
                     }
                     stickyChild(stickyView, offset);
