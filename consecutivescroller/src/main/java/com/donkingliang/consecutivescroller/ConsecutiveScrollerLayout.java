@@ -1240,6 +1240,9 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
             y = -Math.min(M * (1 - Math.pow(100, -x / (H == 0 ? 1 : H))), x);// 公式 y = M(1-100^(-x/H))
         }
         int mSpinner = (int) y;
+        if (Math.abs(spinner) >= 1 && mSpinner == 0) {
+            mSpinner = (int) spinner;
+        }
         finalScrollY = getScrollY() + mSpinner;
         mSecondScrollY += mSpinner;
         scrollSelf(finalScrollY);
@@ -1427,7 +1430,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                     remainder = remainder - scrollOffset;
                 }
             } else if (mTouching) {
-                //底部越界 向上拖动增加越界距离 或 顶部越界 向上拖动自身退回顶部，减少越界距离
+                //向上拖动底部越界 或 顶部越界 向上拖动自身退回顶部
                 if (scrollY < 0 && remainder > Math.abs(scrollY)) {
                     //向上拖动自身退回顶部, 自身只消费该消费的，剩余的给到子view
                     scrollOffset = remainder - Math.abs(scrollY);
@@ -1440,7 +1443,8 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                 }
             } else {
                 //如果还在惯性滑动中，并且顶部没有越界，则维持惯性滑动速度
-                if (mScroller.computeScrollOffset() && scrollY < mScrollRange) {
+                //2023.1.7修改判断方式，修复越界拖动后可能会卡住不回弹的问题
+                if (!mScroller.isFinished() && mScroller.getFinalY() > 0 && scrollY < mScrollRange) {
                     //如果正在走回弹动画，这里直接截停回弹动画
                     if (reboundAnimator != null) {
                         interceptAnimatorByAction(MotionEvent.ACTION_DOWN);
@@ -1494,10 +1498,10 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
 
             scrollOffset = 0;
             int scrollY = getScrollY();
-            if (!isScrollTop() && getScrollY() <= mScrollRange) {
+            if (!isScrollTop() && scrollY <= mScrollRange) {
                 // 找到当前显示的最后一个View
                 View lastVisibleView = null;
-                if (getScrollY() < mScrollRange) {
+                if (scrollY < mScrollRange) {
                     lastVisibleView = findLastVisibleView();
                 } else {
                     lastVisibleView = getBottomView();
@@ -1525,11 +1529,11 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                 }
             } else if (mTouching) {
                 //顶部越界 向下拖动增加越界距离 或 底部越界 向下拖动自身退回底部，减少越界距离
-                int diff = mScrollRange - scrollY;
-                //remainder和diff均是负数时，remainder更小则代表还需要先自身回退到底部
-                if (scrollY > mScrollRange && remainder < diff) {
+                //当前越界距离
+                int diff = scrollY - mScrollRange;
+                if (scrollY > mScrollRange && Math.abs(remainder) > diff) {
                     //向下拖动自身退回底部, 自身只消费该消费的，剩余的给到子view
-                    scrollOffset = diff;
+                    scrollOffset = -diff;
                     remainder -= scrollOffset;
                     moveSpinnerInfinitely(scrollOffset);
                 } else {
@@ -1539,7 +1543,8 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                 }
             } else {
                 //如果还在惯性滑动中，并且顶部没有越界，则维持惯性滑动速度
-                if (mScroller.computeScrollOffset() && scrollY > 0) {
+                //2023.1.7修改判断方式，修复越界拖动后可能会卡住不回弹的问题
+                if (!mScroller.isFinished() && mScroller.getFinalY() < mScrollRange && scrollY > 0) {
                     //如果正在走回弹动画，这里直接截停回弹动画
                     if (reboundAnimator != null) {
                         interceptAnimatorByAction(MotionEvent.ACTION_DOWN);
@@ -2003,7 +2008,10 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                 // 找到需要吸顶的View
                 for (int i = count - 1; i >= 0; i--) {
                     View child = children.get(i);
-                    if (child.getTop() <= getStickyY()) {
+                    //新增处理顶部越界下拉时，让吸顶view继续吸在顶部
+                    int scrollY = getScrollY();
+                    boolean find = scrollY < 0 && child.getTop() + scrollY <= getStickyY();
+                    if (find || child.getTop() <= getStickyY()){
                         stickyView = child;
                         if (i != count - 1) {
                             nextStickyView = children.get(i + 1);
@@ -2018,7 +2026,8 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                 if (stickyView != null) {
                     int offset = 0;
                     if (nextStickyView != null && !isSink(stickyView)) {
-                        offset = Math.max(0, stickyView.getHeight() - (nextStickyView.getTop() - getStickyY()));
+                        int mOffset = stickyView.getHeight() - (nextStickyView.getTop() - getStickyY());
+                        offset = Math.max(0, mOffset);
                     }
                     stickyChild(stickyView, offset);
                 }
