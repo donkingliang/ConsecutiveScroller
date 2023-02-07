@@ -2434,7 +2434,10 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
          */
         public boolean isSink = false;
 
-        public int scrollChild;
+        /**
+         * 可滑动子 View 的 id
+         */
+        public int scrollChild = View.NO_ID;
 
         /**
          * 子view与父布局的对齐方式
