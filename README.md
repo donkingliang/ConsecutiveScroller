@@ -31,7 +31,7 @@ allprojects {
 在Module的build.gradle在添加以下代码
 ```groovy
 
-implementation 'com.github.donkingliang:ConsecutiveScroller:4.6.3'
+implementation 'com.github.donkingliang:ConsecutiveScroller:4.6.4'
 ```
 
 ## 使用文档
