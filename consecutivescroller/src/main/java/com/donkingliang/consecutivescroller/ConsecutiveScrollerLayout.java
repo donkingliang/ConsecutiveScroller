@@ -284,6 +284,11 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
     private boolean isTouchNotTriggerScrollStick = false;
 
     /**
+     * 判断手指触摸的view是否需要拦截事件
+     */
+    private boolean isIntercept = false;
+
+    /**
      * 在快速滑动的过程中，触摸停止滑动
      */
     private boolean isBrake = false;
@@ -647,6 +652,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
 
                 mDownLocation[0] = ScrollUtils.getRawX(this, ev, actionIndex);
                 mDownLocation[1] = ScrollUtils.getRawY(this, ev, actionIndex);
+                isIntercept = isIntercept(mDownLocation[0], mDownLocation[1]);
                 isTouchNotTriggerScrollStick = ScrollUtils.isTouchNotTriggerScrollStick(this, mDownLocation[0], mDownLocation[1]);
                 break;
             case MotionEvent.ACTION_POINTER_DOWN:
@@ -658,6 +664,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                 requestDisallowInterceptTouchEvent(false);
                 mDownLocation[0] = ScrollUtils.getRawX(this, ev, actionIndex);
                 mDownLocation[1] = ScrollUtils.getRawY(this, ev, actionIndex);
+                isIntercept = isIntercept(mDownLocation[0], mDownLocation[1]);
                 isTouchNotTriggerScrollStick = ScrollUtils.isTouchNotTriggerScrollStick(this, mDownLocation[0], mDownLocation[1]);
 
                 initAdjustVelocityTrackerIfNotExists();
@@ -677,7 +684,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                 int offsetY = (int) ev.getY(pointerIndex) - mEventY;
                 int offsetX = (int) ev.getX(pointerIndex) - mEventX;
                 if (SCROLL_ORIENTATION == SCROLL_NONE
-                        && (isIntercept(ev) || isIntercept(mDownLocation[0], mDownLocation[1]))) {
+                        && (isIntercept || isIntercept(ev))) {
                     if (disableChildHorizontalScroll) {
                         if (Math.abs(offsetY) >= mTouchSlop) {
                             SCROLL_ORIENTATION = SCROLL_VERTICAL;
@@ -723,6 +730,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                     mEventX = (int) ev.getX(newPointerIndex);
                     mDownLocation[0] = ScrollUtils.getRawX(this, ev, newPointerIndex);
                     mDownLocation[1] = ScrollUtils.getRawY(this, ev, newPointerIndex);
+                    isIntercept = isIntercept(mDownLocation[0], mDownLocation[1]);
                     isTouchNotTriggerScrollStick = ScrollUtils.isTouchNotTriggerScrollStick(this, mDownLocation[0], mDownLocation[1]);
                 }
                 initAdjustVelocityTrackerIfNotExists();
@@ -767,6 +775,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                 mDownLocation[0] = 0;
                 mDownLocation[1] = 0;
                 isTouchNotTriggerScrollStick = false;
+                isIntercept = false;
                 overSpinner();
                 break;
         }
@@ -803,7 +812,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
 
                 // 需要拦截事件
                 if (SCROLL_ORIENTATION != SCROLL_HORIZONTAL
-                        && (isIntercept(ev) || isIntercept(mDownLocation[0], mDownLocation[1]))) {
+                        && (isIntercept || isIntercept(ev))) {
                     return true;
                 }
                 break;

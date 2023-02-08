@@ -39,7 +39,7 @@ public class SinkStickyActivity extends AppCompatActivity {
         scrollerLayout.setOnVerticalScrollChangeListener(new ConsecutiveScrollerLayout.OnScrollChangeListener() {
             @Override
             public void onScrollChange(View v, int scrollY, int oldScrollY, int scrollState) {
-                if (scrollY > flSink.getHeight()){
+                if (scrollY > flSink.getHeight() || scrollY < 0){
                     scrollerLayout.setStickyOffset(0); // 恢复吸顶偏移量
                 } else {
                     // 通过设置吸顶便宜量，实现flSink滑动隐藏时的向上移动效果
