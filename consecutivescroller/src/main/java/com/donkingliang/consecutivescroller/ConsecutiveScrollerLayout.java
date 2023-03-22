@@ -293,6 +293,11 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
      */
     private boolean isBrake = false;
 
+    /**
+     * 当前是否不允许拦截滑动事件
+     */
+    private boolean isDisallowInterceptTouchEvent = false;
+
     public ConsecutiveScrollerLayout(Context context) {
         this(context, null);
     }
@@ -603,6 +608,12 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
     }
 
     @Override
+    public void requestDisallowInterceptTouchEvent(boolean disallowIntercept) {
+        super.requestDisallowInterceptTouchEvent(disallowIntercept);
+        isDisallowInterceptTouchEvent = disallowIntercept;
+    }
+
+    @Override
     public boolean dispatchTouchEvent(MotionEvent ev) {
         final int actionIndex = ev.getActionIndex();
 
@@ -660,8 +671,10 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                 mFixedYMap.put(mActivePointerId, ev.getY(actionIndex));
                 mEventY = (int) ev.getY(actionIndex);
                 mEventX = (int) ev.getX(actionIndex);
-                // 改变滑动的手指，重新询问事件拦截
-                requestDisallowInterceptTouchEvent(false);
+                if (!isDisallowInterceptTouchEvent) {
+                    // 改变滑动的手指，如果能够拦截事件, 重新询问事件拦截
+                    requestDisallowInterceptTouchEvent(false);
+                }
                 mDownLocation[0] = ScrollUtils.getRawX(this, ev, actionIndex);
                 mDownLocation[1] = ScrollUtils.getRawY(this, ev, actionIndex);
                 isIntercept = isIntercept(mDownLocation[0], mDownLocation[1]);
