@@ -2016,7 +2016,9 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
     private void resetChildren() {
         List<View> children = getNonGoneChildren();
         for (View child : children) {
-            child.setTranslationY(0);
+            if (isStickyView(child)) {
+                child.setTranslationY(0);
+            }
         }
     }
 
