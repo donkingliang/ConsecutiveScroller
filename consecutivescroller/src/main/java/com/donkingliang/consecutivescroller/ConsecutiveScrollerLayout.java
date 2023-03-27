@@ -1720,6 +1720,10 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
 
         resetChildren();
         resetSticky();
+
+        //为了解决因 某些子控件位置由滑动事件做处理，但因为调用了resetChildren()导致的位置不正确的问题
+        int scrollY = computeVerticalScrollOffset();
+        scrollChange(scrollY, scrollY);
     }
 
     /**
