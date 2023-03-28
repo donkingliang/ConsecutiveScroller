@@ -1718,7 +1718,7 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
         mScrollToTopView = null;
         mAdjust = 0;
 
-        resetChildren();
+//        resetChildren();
         resetSticky();
     }
 
@@ -2010,14 +2010,31 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
         return false;
     }
 
+//    /**
+//     * 布局发生变化，可能是某个吸顶布局的isSticky发生改变，需要重新重置一下所有子View的translationY、translationZ
+//     */
+//    private void resetChildren() {
+//        List<View> children = getNonGoneChildren();
+//        for (View child : children) {
+//            if (isStickyView(child)) {
+//                child.setTranslationY(0);
+//            }
+//        }
+//    }
+
     /**
-     * 布局发生变化，可能是某个吸顶布局的isSticky发生改变，需要重新重置一下所有子View的translationY、translationZ
+     * 重置脱离吸顶的view的TranslationY
+     *
+     * @param child
      */
-    private void resetChildren() {
-        List<View> children = getNonGoneChildren();
-        for (View child : children) {
-            if (isStickyView(child)) {
-                child.setTranslationY(0);
+    private void resetTranslationYOffSticky(View child) {
+        child.setTranslationY(0);
+    }
+
+    private void resetTranslationYOffSticky(List<View> newStickyViews, List<View> oldStickyViews) {
+        for (View child : oldStickyViews) {
+            if (!newStickyViews.contains(child)) {
+                resetTranslationYOffSticky(child);
             }
         }
     }
@@ -2075,6 +2092,9 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
 
                 if (oldStickyView != newStickyView) {
                     mCurrentStickyView = newStickyView;
+                    if (oldStickyView != null) {
+                        resetTranslationYOffSticky(oldStickyView);
+                    }
                     stickyChange(oldStickyView, newStickyView);
                 }
             }
@@ -2089,12 +2109,16 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
         if (mCurrentStickyView != null) {
             View oldStickyView = mCurrentStickyView;
             mCurrentStickyView = null;
+            resetTranslationYOffSticky(oldStickyView);
             stickyChange(oldStickyView, null);
         }
     }
 
     private void clearCurrentStickyViews() {
         if (!mCurrentStickyViews.isEmpty()) {
+            for (View child : mCurrentStickyViews) {
+                resetTranslationYOffSticky(child);
+            }
             mCurrentStickyViews.clear();
             permanentStickyChange(mCurrentStickyViews);
         }
@@ -2139,6 +2163,8 @@ public class ConsecutiveScrollerLayout extends ViewGroup implements ScrollingVie
                 mTempStickyViews.add(child);
             }
         }
+
+        resetTranslationYOffSticky(mTempStickyViews, mCurrentStickyViews);
 
         if (!isListEqual()) {
             mCurrentStickyViews.clear();
